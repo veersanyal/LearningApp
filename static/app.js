@@ -694,7 +694,16 @@ function app() {
                         method: 'POST',
                         body: formData
                     });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({ error: 'Unknown error occurred' }));
+                        statusDiv.textContent = 'Error: ' + (errorData.error || `Server error: ${response.status}`);
+                        console.error('Upload error:', errorData);
+                        return;
+                    }
+                    
                     const data = await response.json();
+                    console.log('Upload response:', data); // Debug log
                     
                     if (data.error) {
                         statusDiv.textContent = 'Error: ' + data.error;
@@ -704,6 +713,8 @@ function app() {
                     if (!data.topics || !Array.isArray(data.topics)) {
                         statusDiv.textContent = 'Error: Invalid response from server. Topics not found.';
                         console.error('Invalid topics data:', data);
+                        console.error('Response status:', response.status);
+                        console.error('Full response:', await response.clone().json());
                         return;
                     }
                     

@@ -465,9 +465,10 @@ def upload():
             return jsonify({"error": "Unsupported file type"}), 400
         
         # Check if any topics were extracted
-        if not topic_data.get("topics"):
-            error_msg = topic_data.get("error", "No topics could be extracted from the document. Try a different file.")
+        if not topic_data or not topic_data.get("topics"):
+            error_msg = topic_data.get("error", "No topics could be extracted from the document. Try a different file.") if topic_data else "Failed to extract topics from document."
             print(f"Topic extraction failed: {error_msg}")
+            print(f"Topic data received: {topic_data}")
             return jsonify({"error": error_msg}), 400
         
         # Save file to disk
