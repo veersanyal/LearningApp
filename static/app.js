@@ -12,7 +12,8 @@ function app() {
         // Login/Register Forms
         loginForm: {
             username: '',
-            password: ''
+            password: '',
+            remember: true  // Default to true for better UX
         },
         registerForm: {
             username: '',

@@ -36,10 +36,17 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 
+# Configure session to use permanent cookies
+app.config['PERMANENT_SESSION_LIFETIME'] = 31 * 24 * 60 * 60  # 31 days in seconds
+app.config['SESSION_COOKIE_SECURE'] = os.getenv('FLASK_ENV') == 'production'  # HTTPS only in production
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent JavaScript access
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF protection
+
 # Configure flask-login
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'index'  # Redirect to index if not logged in
+login_manager.remember_cookie_duration = 31 * 24 * 60 * 60  # 31 days
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -67,15 +74,15 @@ vision_model = genai.GenerativeModel('gemini-2.5-flash-lite')
 def extract_text_from_pdf(file_bytes):
     """Extract text from a PDF file."""
     try:
-        reader = PdfReader(io.BytesIO(file_bytes))
-        text = ""
-        for page in reader.pages:
+    reader = PdfReader(io.BytesIO(file_bytes))
+    text = ""
+    for page in reader.pages:
             page_text = page.extract_text() or ""
             text += page_text
         if not text or len(text.strip()) < 50:
             print("Warning: PDF extraction returned very little or no text")
         print(f"Extracted {len(text)} characters from PDF ({len(reader.pages)} pages)")
-        return text
+    return text
     except Exception as e:
         print(f"Error extracting text from PDF: {e}")
         import traceback
@@ -151,7 +158,7 @@ Only return the JSON, no other text."""
         
         # Try to parse JSON
         try:
-            result = json.loads(response_text)
+        result = json.loads(response_text)
         except json.JSONDecodeError as json_err:
             print(f"JSON parsing error: {json_err}")
             print(f"Full response text: {response_text}")
@@ -302,6 +309,7 @@ def auth_login():
     data = request.json
     username = data.get('username')
     password = data.get('password')
+    remember = data.get('remember', True)  # Default to True for better UX
     
     if not username or not password:
         return jsonify({"error": "Username and password are required"}), 400
@@ -311,8 +319,8 @@ def auth_login():
     if not user:
         return jsonify({"error": "Invalid username or password"}), 401
     
-    # Login with flask-login
-    login_user(user, remember=True)
+    # Login with flask-login (remember parameter controls cookie persistence)
+    login_user(user, remember=remember)
     
     return jsonify({
         "success": True,
@@ -372,7 +380,7 @@ def auth_google():
         if not user:
             return jsonify({"error": "Failed to create user"}), 500
         
-        # Login user
+        # Login user (always remember for OAuth logins)
         login_user(user, remember=True)
         
         return jsonify({
