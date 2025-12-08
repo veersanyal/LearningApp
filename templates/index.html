@@ -199,6 +199,13 @@
                     <span class="font-medium">Home</span>
                 </button>
                 
+                <button @click="currentView = 'documents'" 
+                        :class="currentView === 'documents' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700'"
+                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                    <span class="text-xl">📄</span>
+                    <span class="font-medium">Documents</span>
+                </button>
+                
                 <button @click="currentView = 'study'" 
                         :class="currentView === 'study' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700'"
                         class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition">
@@ -306,6 +313,59 @@
                             <div class="text-3xl mb-2">📈</div>
                             <div class="text-2xl font-bold" x-text="topicsStudied"></div>
                             <div class="text-sm text-slate-400">Topics Studied</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- DOCUMENTS VIEW -->
+                <div x-show="currentView === 'documents'" x-transition>
+                    <h2 class="text-3xl font-bold mb-6">My Documents</h2>
+                    <p class="text-slate-400 mb-6">View and manage your uploaded study materials</p>
+                    
+                    <!-- Documents List -->
+                    <div class="space-y-4">
+                        <template x-for="doc in documents" :key="doc.document_id">
+                            <div class="bg-slate-800 rounded-xl p-6 hover:bg-slate-750 transition">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <div class="flex items-center space-x-3 mb-2">
+                                            <span class="text-2xl">
+                                                <template x-if="doc.file_type === 'pdf'">📄</template>
+                                                <template x-if="doc.file_type === 'image'">🖼️</template>
+                                                <template x-if="doc.file_type === 'text'">📝</template>
+                                            </span>
+                                            <div>
+                                                <h3 class="text-lg font-semibold" x-text="doc.filename"></h3>
+                                                <p class="text-sm text-slate-400">
+                                                    <span x-text="doc.topics_count"></span> topics extracted • 
+                                                    <span x-text="formatFileSize(doc.file_size)"></span> • 
+                                                    <span x-text="formatDate(doc.uploaded_at)"></span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <button @click="loadDocument(doc.document_id)" 
+                                                class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition text-sm">
+                                            Load Topics
+                                        </button>
+                                        <button @click="deleteDocument(doc.document_id)" 
+                                                class="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg font-medium transition text-sm">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                        
+                        <div x-show="documents.length === 0" class="bg-slate-800 rounded-xl p-12 text-center">
+                            <div class="text-6xl mb-4">📄</div>
+                            <h3 class="text-xl font-semibold mb-2">No documents yet</h3>
+                            <p class="text-slate-400 mb-4">Upload your first study material to get started</p>
+                            <button @click="currentView = 'home'" 
+                                    class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition">
+                                Go to Upload
+                            </button>
                         </div>
                     </div>
                 </div>

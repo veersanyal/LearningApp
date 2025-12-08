@@ -1,7 +1,9 @@
 import os
 import json
 import base64
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+import uuid
+from datetime import datetime
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_from_directory
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 import google.generativeai as genai
 from PyPDF2 import PdfReader
@@ -17,7 +19,7 @@ from learning_analytics import (calculate_study_streak, identify_weak_topics,
                                  identify_strong_topics, export_analytics_report)
 from auth import (User, register_user, login_user as auth_login_user, get_users_online_count, 
                   update_user_streak, get_or_create_oauth_user)
-from database import init_db
+from database import init_db, get_db
 from gamification import (calculate_xp, award_xp, check_achievements, get_user_achievements,
                           get_all_achievements_with_status, get_xp_progress)
 from leaderboards import (calculate_leaderboard, get_user_rank, get_course_statistics,
@@ -342,18 +344,33 @@ def upload():
     if file.filename == '':
         return jsonify({"error": "No file selected"}), 400
     
-    filename = file.filename.lower()
+    original_filename = file.filename
+    filename = original_filename.lower()
     file_bytes = file.read()
+    file_size = len(file_bytes)
+    
+    # Create uploads directory if it doesn't exist
+    uploads_dir = os.path.join(os.path.dirname(__file__), 'uploads', str(current_user.id))
+    os.makedirs(uploads_dir, exist_ok=True)
+    
+    # Generate unique filename to avoid conflicts
+    file_ext = os.path.splitext(filename)[1]
+    unique_filename = f"{uuid.uuid4()}{file_ext}"
+    file_path = os.path.join(uploads_dir, unique_filename)
     
     try:
+        # Determine file type
         if filename.endswith('.pdf'):
+            file_type = 'pdf'
             # Extract text from PDF
             content = extract_text_from_pdf(file_bytes)
             topic_data = extract_topics_from_content(content)
         elif filename.endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
+            file_type = 'image'
             # Use vision model for images
             topic_data = extract_topics_from_content(None, is_image=True, image_bytes=file_bytes)
         elif filename.endswith('.txt'):
+            file_type = 'text'
             # Plain text file
             content = file_bytes.decode('utf-8')
             topic_data = extract_topics_from_content(content)
@@ -363,6 +380,23 @@ def upload():
         # Check if any topics were extracted
         if not topic_data.get("topics"):
             return jsonify({"error": "No topics could be extracted from the document. Try a different file."}), 400
+        
+        # Save file to disk
+        with open(file_path, 'wb') as f:
+            f.write(file_bytes)
+        
+        # Store document metadata in database
+        db = get_db()
+        try:
+            topics_json = json.dumps(topic_data.get("topics", []))
+            db.cursor.execute('''
+                INSERT INTO documents (user_id, filename, file_path, file_type, file_size, topics_extracted)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (current_user.id, original_filename, file_path, file_type, file_size, topics_json))
+            db.conn.commit()
+            document_id = db.cursor.lastrowid
+        finally:
+            db.disconnect()
         
         # Clear existing topics and user state, then load new ones
         topics.clear()
@@ -374,9 +408,16 @@ def upload():
         
         return jsonify({
             "success": True,
-            "topics": get_all_topics()
+            "topics": get_all_topics(),
+            "document_id": document_id
         })
     except Exception as e:
+        # Clean up file if database insert failed
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+            except:
+                pass
         return jsonify({"error": str(e)}), 500
 
 
@@ -640,6 +681,126 @@ def get_exam_prep(exam_id):
     # This would retrieve saved exam prep data
     # For now, return placeholder
     return jsonify({"message": "Exam prep retrieval not yet implemented"}), 501
+
+
+@app.route('/documents', methods=['GET'])
+@login_required
+def get_documents():
+    """Get all documents for the current user."""
+    try:
+        db = get_db()
+        try:
+            documents = db.cursor.execute('''
+                SELECT document_id, filename, file_type, file_size, uploaded_at, topics_extracted
+                FROM documents
+                WHERE user_id = ?
+                ORDER BY uploaded_at DESC
+            ''', (current_user.id,)).fetchall()
+            
+            result = []
+            for doc in documents:
+                topics = []
+                if doc['topics_extracted']:
+                    try:
+                        topics = json.loads(doc['topics_extracted'])
+                    except:
+                        pass
+                
+                result.append({
+                    'document_id': doc['document_id'],
+                    'filename': doc['filename'],
+                    'file_type': doc['file_type'],
+                    'file_size': doc['file_size'],
+                    'uploaded_at': doc['uploaded_at'],
+                    'topics_count': len(topics) if isinstance(topics, list) else 0
+                })
+            
+            return jsonify({"documents": result})
+        finally:
+            db.disconnect()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/documents/<int:document_id>/load', methods=['POST'])
+@login_required
+def load_document(document_id):
+    """Load a document's topics into the current session."""
+    try:
+        db = get_db()
+        try:
+            # Get document
+            doc = db.cursor.execute('''
+                SELECT file_path, topics_extracted, user_id
+                FROM documents
+                WHERE document_id = ?
+            ''', (document_id,)).fetchone()
+            
+            if not doc:
+                return jsonify({"error": "Document not found"}), 404
+            
+            if doc['user_id'] != current_user.id:
+                return jsonify({"error": "Unauthorized"}), 403
+            
+            # Parse topics
+            topics_data = json.loads(doc['topics_extracted']) if doc['topics_extracted'] else []
+            
+            if not topics_data:
+                return jsonify({"error": "No topics found in document"}), 400
+            
+            # Load topics
+            topic_data = {"topics": topics_data}
+            topics.clear()
+            clear_user_state(current_user.id)
+            load_topics_from_json(topic_data)
+            init_user_state(current_user.id)
+            
+            return jsonify({
+                "success": True,
+                "topics": get_all_topics()
+            })
+        finally:
+            db.disconnect()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/documents/<int:document_id>/delete', methods=['DELETE'])
+@login_required
+def delete_document(document_id):
+    """Delete a document."""
+    try:
+        db = get_db()
+        try:
+            # Get document info
+            doc = db.cursor.execute('''
+                SELECT file_path, user_id
+                FROM documents
+                WHERE document_id = ?
+            ''', (document_id,)).fetchone()
+            
+            if not doc:
+                return jsonify({"error": "Document not found"}), 404
+            
+            if doc['user_id'] != current_user.id:
+                return jsonify({"error": "Unauthorized"}), 403
+            
+            # Delete file
+            if os.path.exists(doc['file_path']):
+                try:
+                    os.remove(doc['file_path'])
+                except Exception as e:
+                    print(f"Error deleting file: {e}")
+            
+            # Delete from database
+            db.cursor.execute('DELETE FROM documents WHERE document_id = ?', (document_id,))
+            db.conn.commit()
+            
+            return jsonify({"success": True})
+        finally:
+            db.disconnect()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # Gamification Endpoints

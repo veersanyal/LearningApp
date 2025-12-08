@@ -51,6 +51,9 @@ function app() {
         // Achievements
         allAchievements: [],
         
+        // Documents
+        documents: [],
+        
         // Charts
         forgettingCurveChart: null,
         masteryProgressChart: null,
@@ -68,6 +71,7 @@ function app() {
                 this.setupEventListeners();
                 this.loadSocialProof();
                 this.loadAchievements();
+                this.loadDocuments();
                 
                 // Load activity feed
                 this.loadActivityFeed();
@@ -87,6 +91,8 @@ function app() {
                         this.loadLeaderboard();
                     } else if (newView === 'achievements') {
                         this.loadAchievements();
+                    } else if (newView === 'documents') {
+                        this.loadDocuments();
                     }
                 });
             } else {
@@ -697,6 +703,8 @@ function app() {
                     this.allTopics = data.topics;
                     this.displayTopics(data.topics);
                     this.populateExamTopics(data.topics);
+                    // Reload documents list
+                    this.loadDocuments();
                 } catch (err) {
                     statusDiv.textContent = 'Error: ' + err.message;
                 }
@@ -914,7 +922,8 @@ function app() {
                     
                     // Show achievements if any
                     if (data.new_achievements && data.new_achievements.length > 0) {
-                        alert(`🎉 Achievement Unlocked: ${data.new_achievements.join(', ')}!`);
+                        const achievementNames = data.new_achievements.map(a => a.achievement_name || a.name || 'Achievement').join(', ');
+                        alert(`🎉 Achievement Unlocked: ${achievementNames}!`);
                     }
                 } else {
                     // Fallback to loading stats
@@ -1260,6 +1269,86 @@ function app() {
                     </div>
                 `;
             }).join('');
+        },
+        
+        async loadDocuments() {
+            try {
+                const response = await fetch('/documents');
+                const data = await response.json();
+                if (response.ok) {
+                    this.documents = data.documents || [];
+                }
+            } catch (err) {
+                console.error('Error loading documents:', err);
+            }
+        },
+        
+        async loadDocument(documentId) {
+            try {
+                const response = await fetch(`/documents/${documentId}/load`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('Document loaded successfully! Topics are now available for study.');
+                    this.allTopics = data.topics || [];
+                    this.currentView = 'home';
+                    // Refresh topics display if on home view
+                    if (this.allTopics.length > 0) {
+                        this.displayTopics(this.allTopics);
+                    }
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to load document'));
+                }
+            } catch (err) {
+                console.error('Error loading document:', err);
+                alert('Error loading document');
+            }
+        },
+        
+        async deleteDocument(documentId) {
+            if (!confirm('Are you sure you want to delete this document?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/documents/${documentId}/delete`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Remove from list
+                    this.documents = this.documents.filter(d => d.document_id !== documentId);
+                    alert('Document deleted successfully');
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to delete document'));
+                }
+            } catch (err) {
+                console.error('Error deleting document:', err);
+                alert('Error deleting document');
+            }
+        },
+        
+        formatFileSize(bytes) {
+            if (!bytes) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        },
+        
+        formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
         },
         
         async loadAchievements() {

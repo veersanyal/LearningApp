@@ -271,6 +271,21 @@ class Database:
             )
         ''')
         
+        # Documents table (for storing uploaded files)
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS documents (
+                document_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                filename TEXT NOT NULL,
+                file_path TEXT NOT NULL,
+                file_type TEXT NOT NULL,
+                file_size INTEGER,
+                topics_extracted TEXT,
+                uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+            )
+        ''')
+        
         self.conn.commit()
     
     def create_indexes(self):
