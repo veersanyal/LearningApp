@@ -206,6 +206,9 @@ Only return the JSON, no other text."""
 
 def generate_question_for_topic(topic, difficulty):
     """Use Gemini to generate a question for a topic."""
+    if not text_model:
+        return None
+    
     prompt = f"""Generate a {difficulty} difficulty multiple choice question about: {topic['name']}
 
 Return ONLY this JSON structure:
