@@ -349,7 +349,7 @@ def generate_question():
                 return jsonify({"error": f"Topic '{topic_id}' not found"}), 404
         else:
             # Pick the next topic automatically
-            topic_id = pick_next_topic()
+            topic_id = pick_next_topic(current_user.id)
             topic = next((t for t in all_topics if t['topic_id'] == topic_id), None)
             if not topic:
                 return jsonify({"error": "Topic not found"}), 404

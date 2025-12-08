@@ -11,19 +11,19 @@ from topic_map import get_all_topics
 from user_state import get_user_state, calculate_review_priority, get_topics_needing_review
 
 
-def pick_next_topic():
+def pick_next_topic(user_id):
     """
     Choose the next topic to test using advanced priority algorithm.
     Combines spaced repetition, mastery levels, and forgetting curves.
     """
-    user_state = get_user_state()
+    user_state = get_user_state(user_id)
     
     # Error checking
     if not user_state or len(user_state) == 0:
         raise ValueError("user_state is empty; call init_user_state() first")
     
     # First priority: Topics that are overdue for review
-    overdue_topics = get_topics_needing_review()
+    overdue_topics = get_topics_needing_review(user_id)
     
     # IF-ELSE structure
     if overdue_topics and len(overdue_topics) > 0:
