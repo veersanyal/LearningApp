@@ -43,7 +43,7 @@ class Database:
             CREATE TABLE IF NOT EXISTS users (
                 user_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT UNIQUE NOT NULL,
-                password_hash TEXT NOT NULL,
+                password_hash TEXT,
                 email TEXT UNIQUE,
                 full_name TEXT,
                 major TEXT,
@@ -51,9 +51,23 @@ class Database:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 last_login TIMESTAMP,
                 study_streak INTEGER DEFAULT 0,
-                total_xp INTEGER DEFAULT 0
+                total_xp INTEGER DEFAULT 0,
+                oauth_provider TEXT,
+                oauth_id TEXT,
+                UNIQUE(oauth_provider, oauth_id)
             )
         ''')
+        
+        # Add OAuth columns if they don't exist (migration)
+        try:
+            self.cursor.execute('ALTER TABLE users ADD COLUMN oauth_provider TEXT')
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+        
+        try:
+            self.cursor.execute('ALTER TABLE users ADD COLUMN oauth_id TEXT')
+        except sqlite3.OperationalError:
+            pass  # Column already exists
         
         # User progress table (replaces JSON file)
         self.cursor.execute('''

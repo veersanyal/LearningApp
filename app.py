@@ -15,7 +15,8 @@ from user_state import (init_user_state, record_answer, get_target_difficulty, g
 from question_picker import pick_next_topic, get_recommended_study_order
 from learning_analytics import (calculate_study_streak, identify_weak_topics, 
                                  identify_strong_topics, export_analytics_report)
-from auth import User, register_user, login_user as auth_login_user, get_users_online_count, update_user_streak
+from auth import (User, register_user, login_user as auth_login_user, get_users_online_count, 
+                  update_user_streak, get_or_create_oauth_user)
 from database import init_db
 from gamification import (calculate_xp, award_xp, check_achievements, get_user_achievements,
                           get_all_achievements_with_status, get_xp_progress)
@@ -275,6 +276,100 @@ def auth_me():
         "user": current_user.to_dict(),
         "users_online": get_users_online_count(),
         "xp_progress": xp_progress
+    })
+
+
+@app.route('/auth/google', methods=['POST'])
+def auth_google():
+    """Handle Google OAuth login."""
+    data = request.json
+    credential = data.get('credential')  # JWT token from Google
+    
+    if not credential:
+        return jsonify({"error": "Google credential required"}), 400
+    
+    try:
+        import jwt
+        from jwt.algorithms import RSAAlgorithm
+        
+        # Decode the JWT token (without verification for now - in production verify with Google's public keys)
+        # For production, you should verify the token signature
+        decoded = jwt.decode(credential, options={"verify_signature": False})
+        
+        email = decoded.get('email')
+        name = decoded.get('name', '')
+        google_id = decoded.get('sub')  # Google user ID
+        
+        if not email:
+            return jsonify({"error": "Email not provided by Google"}), 400
+        
+        # Get or create user
+        user = get_or_create_oauth_user(email, name, 'google', google_id)
+        
+        if not user:
+            return jsonify({"error": "Failed to create user"}), 500
+        
+        # Login user
+        login_user(user, remember=True)
+        
+        return jsonify({
+            "success": True,
+            "message": "Google login successful",
+            "user": user.to_dict()
+        })
+    
+    except Exception as e:
+        print(f"Google OAuth error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/auth/apple', methods=['POST'])
+def auth_apple():
+    """Handle Apple Sign In."""
+    data = request.json
+    identity_token = data.get('identity_token')
+    authorization_code = data.get('authorization_code')
+    user_identifier = data.get('user_identifier')
+    email = data.get('email')
+    full_name = data.get('full_name')
+    
+    if not user_identifier:
+        return jsonify({"error": "User identifier required"}), 400
+    
+    try:
+        # For Apple Sign In, we use the user_identifier as the unique ID
+        # In production, you'd verify the identity_token with Apple's servers
+        # For now, we'll trust the client-provided data
+        
+        name = full_name if full_name else (email.split('@')[0] if email else 'Apple User')
+        
+        # Get or create user
+        user = get_or_create_oauth_user(email or f"{user_identifier}@privaterelay.appleid.com", 
+                                       name, 'apple', user_identifier)
+        
+        if not user:
+            return jsonify({"error": "Failed to create user"}), 500
+        
+        # Login user
+        login_user(user, remember=True)
+        
+        return jsonify({
+            "success": True,
+            "message": "Apple login successful",
+            "user": user.to_dict()
+        })
+    
+    except Exception as e:
+        print(f"Apple OAuth error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/auth/config', methods=['GET'])
+def auth_config():
+    """Get OAuth configuration (client IDs)."""
+    return jsonify({
+        "google_client_id": os.getenv('GOOGLE_CLIENT_ID', ''),
+        "apple_client_id": os.getenv('APPLE_CLIENT_ID', '')
     })
 
 

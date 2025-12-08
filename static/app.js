@@ -168,6 +168,121 @@ function app() {
             }
         },
         
+        async loginWithGoogle() {
+            this.authError = '';
+            
+            try {
+                // Wait for Google Identity Services to load
+                await new Promise((resolve) => {
+                    if (typeof google !== 'undefined' && google.accounts) {
+                        resolve();
+                    } else {
+                        const checkInterval = setInterval(() => {
+                            if (typeof google !== 'undefined' && google.accounts) {
+                                clearInterval(checkInterval);
+                                resolve();
+                            }
+                        }, 100);
+                        
+                        // Timeout after 5 seconds
+                        setTimeout(() => {
+                            clearInterval(checkInterval);
+                            resolve();
+                        }, 5000);
+                    }
+                });
+                
+                if (typeof google === 'undefined' || !google.accounts) {
+                    this.authError = 'Google Sign In not loaded. Please refresh the page.';
+                    return;
+                }
+                
+                // Get Google Client ID from environment or use a placeholder
+                const clientId = await this.getGoogleClientId();
+                
+                if (!clientId || clientId === 'YOUR_GOOGLE_CLIENT_ID') {
+                    this.authError = 'Google Sign In not configured. Please contact support or use username/password.';
+                    return;
+                }
+                
+                // Initialize Google Sign In
+                google.accounts.id.initialize({
+                    client_id: clientId,
+                    callback: async (response) => {
+                        try {
+                            // Send credential to backend
+                            const authResponse = await fetch('/auth/google', {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/json'},
+                                body: JSON.stringify({
+                                    credential: response.credential
+                                })
+                            });
+                            
+                            const data = await authResponse.json();
+                            
+                            if (authResponse.ok) {
+                                this.isAuthenticated = true;
+                                this.currentUser = data.user;
+                                await this.init();
+                            } else {
+                                this.authError = data.error || 'Google login failed';
+                            }
+                        } catch (err) {
+                            console.error('Google login error:', err);
+                            this.authError = 'Error processing Google login';
+                        }
+                    }
+                });
+                
+                // Trigger sign in popup
+                google.accounts.id.prompt((notification) => {
+                    if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                        // Fallback: show one tap
+                        google.accounts.id.renderButton(
+                            document.getElementById('google-signin-button'),
+                            { theme: 'outline', size: 'large' }
+                        );
+                    }
+                });
+                
+            } catch (err) {
+                console.error('Google OAuth error:', err);
+                this.authError = 'Google Sign In error. Please try again or use username/password.';
+            }
+        },
+        
+        async getGoogleClientId() {
+            // Try to get from backend config
+            try {
+                const response = await fetch('/auth/config');
+                const data = await response.json();
+                return data.google_client_id;
+            } catch (err) {
+                // Return placeholder - in production, this should be set in Railway env vars
+                return null;
+            }
+        },
+        
+        async loginWithApple() {
+            this.authError = '';
+            
+            try {
+                // Apple Sign In requires server-side setup
+                // For now, show a message that it needs configuration
+                this.authError = 'Apple Sign In requires server configuration. Please use username/password or Google Sign In.';
+                
+                // In production, you would:
+                // 1. Configure Apple Sign In in Apple Developer Console
+                // 2. Use Apple's JS library to get identity token
+                // 3. Send to backend for verification
+                
+            } catch (err) {
+                console.error('Apple OAuth error:', err);
+                this.authError = 'Apple Sign In not available';
+            }
+        },
+        
         async loadSocialProof() {
             try {
                 const response = await fetch('/social-proof');

@@ -13,6 +13,8 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from database import get_db
 from datetime import datetime
+import requests
+import os
 
 
 class User(UserMixin):
@@ -276,6 +278,66 @@ def get_users_online_count():
         ''').fetchone()
         
         return result['count'] if result else 0
+    finally:
+        db.disconnect()
+
+
+def get_or_create_oauth_user(email, name, provider, provider_id):
+    """
+    Get existing user or create new user from OAuth provider.
+    
+    Args:
+        email: User's email from OAuth provider
+        name: User's name from OAuth provider
+        provider: 'google' or 'apple'
+        provider_id: Unique ID from OAuth provider
+    
+    Returns:
+        User object
+    """
+    db = get_db()
+    
+    try:
+        # Check if user exists by email
+        user_data = db.cursor.execute(
+            'SELECT * FROM users WHERE email = ?', (email,)
+        ).fetchone()
+        
+        if user_data:
+            # Update last login
+            db.cursor.execute(
+                'UPDATE users SET last_login = ? WHERE user_id = ?',
+                (datetime.now(), user_data['user_id'])
+            )
+            db.conn.commit()
+            return User.get(user_data['user_id'])
+        
+        # Create new user
+        # Generate username from email (before @)
+        username = email.split('@')[0]
+        
+        # Ensure username is unique
+        base_username = username
+        counter = 1
+        while db.cursor.execute('SELECT user_id FROM users WHERE username = ?', (username,)).fetchone():
+            username = f"{base_username}{counter}"
+            counter += 1
+        
+        # Insert new user (no password for OAuth users)
+        db.cursor.execute('''
+            INSERT INTO users (username, email, full_name, password_hash, oauth_provider, oauth_id)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (username, email, name, '', provider, provider_id))
+        
+        db.conn.commit()
+        user_id = db.cursor.lastrowid
+        
+        return User.get(user_id)
+    
+    except Exception as e:
+        print(f"Error in get_or_create_oauth_user: {e}")
+        db.conn.rollback()
+        return None
     finally:
         db.disconnect()
 
