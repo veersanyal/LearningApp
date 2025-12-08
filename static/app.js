@@ -19,7 +19,8 @@ function app() {
             username: '',
             password: '',
             major: '',
-            graduation_year: null
+            graduation_year: null,
+            remember: true  // Default to true for better UX
         },
         
         // View State
