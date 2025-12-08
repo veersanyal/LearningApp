@@ -453,7 +453,6 @@ def upload():
         unique_filename = f"{uuid.uuid4()}{file_ext}"
         file_path = os.path.join(uploads_dir, unique_filename)
         
-        try:
         # Determine file type
         if filename.endswith('.pdf'):
             file_type = 'pdf'
