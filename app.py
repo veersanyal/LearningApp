@@ -51,7 +51,9 @@ except Exception as e:
     print(f"Database already initialized or error: {e}")
 
 # Configure Gemini API
-GEMINI_API_KEY = "AIzaSyClgYfJ9ipsZal-SlOEpiGfjctQsG642wY"
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+if not GEMINI_API_KEY:
+    raise ValueError("GEMINI_API_KEY environment variable is required")
 genai.configure(api_key=GEMINI_API_KEY)
 
 # Models - using gemini-2.5-flash-lite
