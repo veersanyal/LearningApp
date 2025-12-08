@@ -293,8 +293,11 @@ def auth_register():
     if not user:
         return jsonify({"error": "Username already exists"}), 409
     
-    # Auto-login after registration
-    login_user(user, remember=True)
+    # Get remember preference (default to True for better UX)
+    remember = data.get('remember', True)
+    
+    # Auto-login after registration (remember parameter controls cookie persistence)
+    login_user(user, remember=remember)
     
     return jsonify({
         "success": True,
