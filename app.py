@@ -70,17 +70,23 @@ if not GEMINI_API_KEY:
 else:
     genai.configure(api_key=GEMINI_API_KEY)
 
-# Models - using gemini-1.5-flash (reliable, widely available)
-# Try gemini-2.5-flash-lite first, fallback to gemini-1.5-flash
+# Models - using gemini-2.5-flash (only initialize if API key is set)
 if GEMINI_API_KEY:
     try:
-        text_model = genai.GenerativeModel('gemini-1.5-flash')
-        vision_model = genai.GenerativeModel('gemini-1.5-flash')
-        print("Initialized models: gemini-1.5-flash")
+        text_model = genai.GenerativeModel('gemini-2.5-flash')
+        vision_model = genai.GenerativeModel('gemini-2.5-flash')
+        print("Initialized models: gemini-2.5-flash")
     except Exception as e:
-        print(f"Error initializing models: {e}")
-        text_model = None
-        vision_model = None
+        print(f"Error initializing gemini-2.5-flash: {e}")
+        # Fallback to gemini-1.5-flash if 2.5-flash is not available
+        try:
+            text_model = genai.GenerativeModel('gemini-1.5-flash')
+            vision_model = genai.GenerativeModel('gemini-1.5-flash')
+            print("Fell back to gemini-1.5-flash")
+        except Exception as e2:
+            print(f"Error initializing fallback models: {e2}")
+            text_model = None
+            vision_model = None
 else:
     text_model = None
     vision_model = None
