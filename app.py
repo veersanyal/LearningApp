@@ -424,28 +424,29 @@ def auth_config():
 @login_required
 def upload():
     """Handle document upload and extract topics."""
-    if 'file' not in request.files:
-        return jsonify({"error": "No file provided"}), 400
-    
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({"error": "No file selected"}), 400
-    
-    original_filename = file.filename
-    filename = original_filename.lower()
-    file_bytes = file.read()
-    file_size = len(file_bytes)
-    
-    # Create uploads directory if it doesn't exist
-    uploads_dir = os.path.join(os.path.dirname(__file__), 'uploads', str(current_user.id))
-    os.makedirs(uploads_dir, exist_ok=True)
-    
-    # Generate unique filename to avoid conflicts
-    file_ext = os.path.splitext(filename)[1]
-    unique_filename = f"{uuid.uuid4()}{file_ext}"
-    file_path = os.path.join(uploads_dir, unique_filename)
-    
     try:
+        if 'file' not in request.files:
+            return jsonify({"error": "No file provided"}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"error": "No file selected"}), 400
+        
+        original_filename = file.filename
+        filename = original_filename.lower()
+        file_bytes = file.read()
+        file_size = len(file_bytes)
+        
+        # Create uploads directory if it doesn't exist
+        uploads_dir = os.path.join(os.path.dirname(__file__), 'uploads', str(current_user.id))
+        os.makedirs(uploads_dir, exist_ok=True)
+        
+        # Generate unique filename to avoid conflicts
+        file_ext = os.path.splitext(filename)[1]
+        unique_filename = f"{uuid.uuid4()}{file_ext}"
+        file_path = os.path.join(uploads_dir, unique_filename)
+        
+        try:
         # Determine file type
         if filename.endswith('.pdf'):
             file_type = 'pdf'
