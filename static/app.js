@@ -922,8 +922,9 @@ function app() {
         },
         
         closeGuideMeModal() {
-            const modal = document.getElementById('guide-me-modal');
-            modal.classList.add('hidden');
+            this.showGuideMeModal = false;
+            this.guideMeSteps = [];
+            this.currentGuideMeStep = 0;
         },
         
         setupExamPrepForm() {
