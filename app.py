@@ -66,11 +66,21 @@ vision_model = genai.GenerativeModel('gemini-2.5-flash-lite')
 
 def extract_text_from_pdf(file_bytes):
     """Extract text from a PDF file."""
-    reader = PdfReader(io.BytesIO(file_bytes))
-    text = ""
-    for page in reader.pages:
-        text += page.extract_text() or ""
-    return text
+    try:
+        reader = PdfReader(io.BytesIO(file_bytes))
+        text = ""
+        for page in reader.pages:
+            page_text = page.extract_text() or ""
+            text += page_text
+        if not text or len(text.strip()) < 50:
+            print("Warning: PDF extraction returned very little or no text")
+        print(f"Extracted {len(text)} characters from PDF ({len(reader.pages)} pages)")
+        return text
+    except Exception as e:
+        print(f"Error extracting text from PDF: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
 
 
 def extract_topics_from_content(content, is_image=False, image_bytes=None):
@@ -94,17 +104,39 @@ IMPORTANT: Include a helpful "explanation" field for each topic that explains th
 Only return the JSON, no other text."""
 
     try:
+        # Validate input
+        if not is_image and (not content or len(content.strip()) < 50):
+            print(f"Error: Content too short or empty ({len(content) if content else 0} chars)")
+            return {"topics": [], "error": "Content too short or empty. Please upload a document with more text."}
+        
+        if is_image and not image_bytes:
+            print("Error: Image bytes not provided")
+            return {"topics": [], "error": "Image data not provided."}
+        
+        # Truncate content if too long (Gemini has token limits)
+        max_chars = 50000  # Conservative limit
+        if not is_image and len(content) > max_chars:
+            print(f"Warning: Content too long ({len(content)} chars), truncating to {max_chars}")
+            content = content[:max_chars] + "\n\n[Content truncated...]"
+        
         if is_image and image_bytes:
             # Use vision model for images
             image = Image.open(io.BytesIO(image_bytes))
+            print("Calling Gemini vision model for image...")
             response = vision_model.generate_content([prompt, image])
         else:
             # Use text model
-            response = text_model.generate_content(f"{prompt}\n\nContent:\n{content}")
+            full_prompt = f"{prompt}\n\nContent:\n{content}"
+            print(f"Calling Gemini text model (content length: {len(content)} chars)...")
+            response = text_model.generate_content(full_prompt)
         
         # Parse the response
+        if not response or not response.text:
+            print("Error: Empty response from Gemini")
+            return {"topics": [], "error": "Empty response from AI. Please try again."}
+        
         response_text = response.text.strip()
-        print(f"Gemini raw response: {response_text[:500]}...")  # Debug log
+        print(f"Gemini raw response (first 500 chars): {response_text[:500]}...")  # Debug log
         
         # Remove markdown code blocks if present
         if response_text.startswith("```"):
@@ -115,15 +147,44 @@ Only return the JSON, no other text."""
                     response_text = response_text[4:]
         response_text = response_text.strip()
         
-        print(f"Parsed JSON text: {response_text[:500]}...")  # Debug log
-        result = json.loads(response_text)
-        print(f"Extracted {len(result.get('topics', []))} topics")  # Debug log
+        print(f"Parsed JSON text (first 500 chars): {response_text[:500]}...")  # Debug log
+        
+        # Try to parse JSON
+        try:
+            result = json.loads(response_text)
+        except json.JSONDecodeError as json_err:
+            print(f"JSON parsing error: {json_err}")
+            print(f"Full response text: {response_text}")
+            # Try to extract JSON from the response if it's embedded in text
+            import re
+            json_match = re.search(r'\{[^{}]*"topics"[^{}]*\[.*?\]\s*\}', response_text, re.DOTALL)
+            if json_match:
+                try:
+                    result = json.loads(json_match.group(0))
+                    print("Successfully extracted JSON from embedded text")
+                except:
+                    return {"topics": [], "error": f"Failed to parse AI response as JSON. Response: {response_text[:200]}..."}
+            else:
+                return {"topics": [], "error": f"AI response was not valid JSON. Please try again or upload a different file."}
+        
+        topics_list = result.get('topics', [])
+        print(f"Extracted {len(topics_list)} topics")  # Debug log
+        
+        if not topics_list:
+            return {"topics": [], "error": "AI could not identify any topics in the document. Try uploading a document with clearer educational content."}
+        
         return result
     except Exception as e:
         print(f"Error extracting topics: {e}")
         import traceback
         traceback.print_exc()
-        return {"topics": []}
+        error_msg = str(e)
+        if "API key" in error_msg.lower():
+            return {"topics": [], "error": "API key error. Please check your Gemini API key configuration."}
+        elif "quota" in error_msg.lower() or "rate limit" in error_msg.lower():
+            return {"topics": [], "error": "API rate limit exceeded. Please try again in a moment."}
+        else:
+            return {"topics": [], "error": f"Error processing document: {error_msg}"}
 
 
 def generate_question_for_topic(topic, difficulty):
@@ -379,7 +440,9 @@ def upload():
         
         # Check if any topics were extracted
         if not topic_data.get("topics"):
-            return jsonify({"error": "No topics could be extracted from the document. Try a different file."}), 400
+            error_msg = topic_data.get("error", "No topics could be extracted from the document. Try a different file.")
+            print(f"Topic extraction failed: {error_msg}")
+            return jsonify({"error": error_msg}), 400
         
         # Save file to disk
         with open(file_path, 'wb') as f:
