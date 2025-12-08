@@ -1216,8 +1216,6 @@ function app() {
         }
     };
 }
-    };
-}
 
 // Global functions for Guide Me
 window.checkGuideMeAnswer = function(idx) {
