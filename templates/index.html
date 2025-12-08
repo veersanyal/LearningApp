@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyBoiler - Advanced Learning Platform</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- MathJax for rendering mathematical equations -->
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+    
+    <!-- Custom Tailwind Config -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'purdue-gold': '#CFB991',
+                        'purdue-black': '#000000',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body class="bg-slate-900 text-slate-100 font-sans antialiased" x-data="app()" x-init="init()">
+    
+    <!-- Login/Register Modal -->
+    <div x-show="!isAuthenticated" x-cloak 
+         class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
+        <div class="bg-slate-800 rounded-xl p-8 max-w-md w-full mx-4">
+            <h2 class="text-3xl font-bold mb-6 text-center">StudyBoiler</h2>
+            
+            <!-- Toggle between Login and Register -->
+            <div class="flex mb-6 bg-slate-700 rounded-lg p-1">
+                <button @click="authMode = 'login'" 
+                        :class="authMode === 'login' ? 'bg-blue-600' : 'bg-transparent'"
+                        class="flex-1 py-2 rounded-lg transition">
+                    Login
+                </button>
+                <button @click="authMode = 'register'"
+                        :class="authMode === 'register' ? 'bg-blue-600' : 'bg-transparent'"
+                        class="flex-1 py-2 rounded-lg transition">
+                    Register
+                </button>
+            </div>
+            
+            <!-- Login Form -->
+            <form x-show="authMode === 'login'" @submit.prevent="login()" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Username</label>
+                    <input x-model="loginForm.username" type="text" required
+                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Password</label>
+                    <input x-model="loginForm.password" type="password" required
+                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500">
+                </div>
+                <div x-show="authError" class="text-red-400 text-sm" x-text="authError"></div>
+                <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition">
+                    Login
+                </button>
+            </form>
+            
+            <!-- Register Form -->
+            <form x-show="authMode === 'register'" @submit.prevent="register()" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Username</label>
+                    <input x-model="registerForm.username" type="text" required minlength="3"
+                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Password</label>
+                    <input x-model="registerForm.password" type="password" required minlength="6"
+                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Major (optional)</label>
+                    <input x-model="registerForm.major" type="text"
+                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Graduation Year (optional)</label>
+                    <input x-model="registerForm.graduation_year" type="number" min="2024" max="2030"
+                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500">
+                </div>
+                <div x-show="authError" class="text-red-400 text-sm" x-text="authError"></div>
+                <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition">
+                    Register
+                </button>
+            </form>
+            
+            <p class="mt-4 text-center text-sm text-slate-400">
+                <span x-show="!usersOnline">Join Purdue students</span>
+                <span x-show="usersOnline" x-text="`Join ${usersOnline} Purdue students online now`"></span>
+            </p>
+            </div>
+            </div>
+    
+    <!-- Main Layout: Sidebar + Content + Right Panel -->
+    <div x-show="isAuthenticated" class="flex h-screen overflow-hidden">
+        
+        <!-- Left Sidebar Navigation -->
+        <aside class="w-64 bg-slate-800 border-r border-slate-700 flex flex-col">
+            <!-- Logo & Brand -->
+            <div class="h-16 flex items-center px-6 border-b border-slate-700">
+                <h1 class="text-xl font-bold text-white">StudyBoiler</h1>
+            </div>
+            
+            <!-- Navigation Links -->
+            <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+                <button @click="currentView = 'home'" 
+                        :class="currentView === 'home' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700'"
+                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                    <span class="text-xl">🏠</span>
+                    <span class="font-medium">Home</span>
+                </button>
+                
+                <button @click="currentView = 'study'" 
+                        :class="currentView === 'study' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700'"
+                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                    <span class="text-xl">🎯</span>
+                    <span class="font-medium">Study</span>
+                </button>
+                
+                <button @click="currentView = 'analytics'" 
+                        :class="currentView === 'analytics' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700'"
+                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                    <span class="text-xl">📊</span>
+                    <span class="font-medium">Analytics</span>
+                </button>
+                
+                <button @click="currentView = 'exam-prep'" 
+                        :class="currentView === 'exam-prep' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700'"
+                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                    <span class="text-xl">📚</span>
+                    <span class="font-medium">Exam Prep</span>
+                </button>
+                
+                <button @click="currentView = 'leaderboards'" 
+                        :class="currentView === 'leaderboards' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700'"
+                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                    <span class="text-xl">🏆</span>
+                    <span class="font-medium">Leaderboards</span>
+                </button>
+                
+                <button @click="currentView === 'achievements'" 
+                        :class="currentView === 'achievements' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700'"
+                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                    <span class="text-xl">🎖️</span>
+                    <span class="font-medium">Achievements</span>
+                </button>
+                
+                <button @click="currentView = 'settings'" 
+                        :class="currentView === 'settings' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700'"
+                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                    <span class="text-xl">⚙️</span>
+                    <span class="font-medium">Settings</span>
+                </button>
+            </nav>
+            
+            <!-- User Profile (Bottom) -->
+            <div class="p-4 border-t border-slate-700">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-lg font-bold"
+                         x-text="currentUser.username ? currentUser.username.substring(0, 1).toUpperCase() : 'U'">
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-medium text-sm" x-text="currentUser.username || 'Student'"></p>
+                        <p class="text-xs text-slate-400">Level <span x-text="xpProgress.current_level || 1"></span></p>
+                    </div>
+                </div>
+                <button @click="logout()" class="mt-2 w-full text-xs text-slate-400 hover:text-white transition">
+                    Logout
+                </button>
+            </div>
+        </aside>
+        
+        <!-- Main Content Area -->
+        <main class="flex-1 overflow-y-auto">
+            <div class="max-w-6xl mx-auto p-8">
+                
+                <!-- HOME VIEW -->
+                <div x-show="currentView === 'home'" x-transition>
+                    <h2 class="text-3xl font-bold mb-6">Welcome Back!</h2>
+                    
+                    <!-- Upload Section -->
+                    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+                        <h3 class="text-xl font-semibold mb-4">Upload Study Material</h3>
+                        <p class="text-slate-400 mb-4">Upload a PDF, image, or text file to extract topics</p>
+                        <form id="upload-form" class="flex gap-4">
+                            <input type="file" id="file-input" accept=".pdf,.txt,.png,.jpg,.jpeg,.gif,.webp"
+                                   class="flex-1 px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-500">
+                            <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition">
+                                Upload & Extract Topics
+                            </button>
+                        </form>
+                        <div id="upload-status" class="mt-3 text-sm text-slate-400"></div>
+                    </div>
+                    
+                    <!-- Topics Section -->
+                    <div id="topics-section" style="display: none;" class="bg-slate-800 rounded-xl p-6 mb-6">
+                        <h3 class="text-xl font-semibold mb-4">Extracted Topics</h3>
+                        <ul id="topics-list" class="space-y-2 mb-4"></ul>
+                        <button id="start-quiz-btn" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-lg font-medium transition">
+                            Start Adaptive Quiz
+                        </button>
+                    </div>
+                    
+                    <!-- Quick Stats -->
+                    <div class="grid grid-cols-3 gap-4 mb-6">
+                        <div class="bg-slate-800 rounded-xl p-6">
+                            <div class="text-3xl mb-2">📊</div>
+                            <div class="text-2xl font-bold" x-text="totalQuestions"></div>
+                            <div class="text-sm text-slate-400">Total Questions</div>
+                        </div>
+                        <div class="bg-slate-800 rounded-xl p-6">
+                            <div class="text-3xl mb-2">🎯</div>
+                            <div class="text-2xl font-bold" x-text="accuracy + '%'"></div>
+                            <div class="text-sm text-slate-400">Accuracy</div>
+                        </div>
+                        <div class="bg-slate-800 rounded-xl p-6">
+                            <div class="text-3xl mb-2">📈</div>
+                            <div class="text-2xl font-bold" x-text="topicsStudied"></div>
+                            <div class="text-sm text-slate-400">Topics Studied</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- STUDY VIEW -->
+                <div x-show="currentView === 'study'" x-transition>
+                    <h2 class="text-3xl font-bold mb-6">Study Session</h2>
+                    
+                    <!-- Quiz Section -->
+                    <div id="quiz-section" style="display: none;" class="bg-slate-800 rounded-xl p-6">
+                        <!-- Question Header -->
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <span id="topic-name" class="text-lg font-semibold text-blue-400"></span>
+                            </div>
+                            <span id="difficulty-badge" class="px-4 py-1 rounded-full text-sm font-medium"></span>
+                        </div>
+                        
+                        <!-- Question -->
+                        <div id="question-container" class="mb-6">
+                            <p id="question-text" class="text-xl mb-6 leading-relaxed"></p>
+                            <div id="options-container" class="space-y-3"></div>
+                        </div>
+                        
+                        <!-- Guide Me Button -->
+                        <div id="guide-me-container" class="mb-6">
+                            <button id="guide-me-btn" 
+                                    class="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-lg font-medium transition flex items-center space-x-2">
+                                <span>💡</span>
+                                <span>Guide Me Through This</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Feedback -->
+                        <div id="feedback" style="display: none;" class="bg-slate-700 rounded-lg p-6 mb-6">
+                            <p id="feedback-text" class="text-lg font-semibold mb-3"></p>
+                            <p id="explanation" class="text-slate-300"></p>
+                        </div>
+                        
+                        <button id="next-btn" style="display: none;" 
+                                class="w-full px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition">
+                            Next Question
+                        </button>
+                    </div>
+                    
+                    <!-- No Quiz Active Message -->
+                    <div id="no-quiz-message" class="bg-slate-800 rounded-xl p-12 text-center">
+                        <div class="text-6xl mb-4">📚</div>
+                        <h3 class="text-2xl font-bold mb-2">No Active Study Session</h3>
+                        <p class="text-slate-400 mb-6">Upload study materials or select a topic to begin</p>
+                        <button @click="currentView = 'home'" 
+                                class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition">
+                            Go to Home
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- ANALYTICS VIEW -->
+                <div x-show="currentView === 'analytics'" x-transition>
+                    <h2 class="text-3xl font-bold mb-6">Learning Analytics</h2>
+                    
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-4 gap-4 mb-6">
+                        <div class="bg-slate-800 rounded-xl p-6">
+                            <div class="text-3xl mb-2">🔥</div>
+                            <div class="text-3xl font-bold" x-text="studyStreak"></div>
+                            <div class="text-sm text-slate-400">Day Streak</div>
+                        </div>
+                        <div class="bg-slate-800 rounded-xl p-6">
+                            <div class="text-3xl mb-2">📊</div>
+                            <div class="text-3xl font-bold" x-text="weeklyQuestions"></div>
+                            <div class="text-sm text-slate-400">Questions This Week</div>
+                        </div>
+                        <div class="bg-slate-800 rounded-xl p-6">
+                            <div class="text-3xl mb-2">🎯</div>
+                            <div class="text-3xl font-bold" x-text="accuracy + '%'"></div>
+                            <div class="text-sm text-slate-400">Overall Accuracy</div>
+                        </div>
+                        <div class="bg-slate-800 rounded-xl p-6">
+                            <div class="text-3xl mb-2">⭐</div>
+                            <div class="text-3xl font-bold" x-text="masteredTopics"></div>
+                            <div class="text-sm text-slate-400">Topics Mastered</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Charts Grid -->
+                    <div class="grid grid-cols-2 gap-6">
+                        <!-- Forgetting Curve Chart -->
+                        <div class="bg-slate-800 rounded-xl p-6">
+                            <h3 class="text-lg font-semibold mb-4">Forgetting Curve Analysis</h3>
+                            <canvas id="forgettingCurveChart"></canvas>
+                            <p class="text-xs text-slate-400 mt-3">
+                                📌 Shows predicted retention over time for each topic
+                            </p>
+                        </div>
+                        
+                        <!-- Mastery Progress Chart -->
+                        <div class="bg-slate-800 rounded-xl p-6">
+                            <h3 class="text-lg font-semibold mb-4">Mastery Progress Over Time</h3>
+                            <canvas id="masteryProgressChart"></canvas>
+                            <p class="text-xs text-slate-400 mt-3">
+                                📈 Track how your understanding improves with practice
+                            </p>
+                        </div>
+                        
+                        <!-- Study Heatmap -->
+                        <div class="bg-slate-800 rounded-xl p-6">
+                            <h3 class="text-lg font-semibold mb-4">Study Activity Heatmap</h3>
+                            <div id="studyHeatmap" class="flex flex-col space-y-1">
+                                <!-- Generated dynamically -->
+                            </div>
+                            <p class="text-xs text-slate-400 mt-3">
+                                📅 Your study consistency over the past weeks
+                            </p>
+                        </div>
+                        
+                        <!-- Time of Day Performance -->
+                        <div class="bg-slate-800 rounded-xl p-6">
+                            <h3 class="text-lg font-semibold mb-4">Performance by Time of Day</h3>
+                            <canvas id="timeOfDayChart"></canvas>
+                            <p class="text-xs text-slate-400 mt-3">
+                                ⏰ Discover when you study most effectively
+                            </p>
+                        </div>
+                        
+                        <!-- Topic Distribution -->
+                        <div class="bg-slate-800 rounded-xl p-6 col-span-2">
+                            <h3 class="text-lg font-semibold mb-4">Topic Distribution</h3>
+                            <canvas id="topicDistributionChart"></canvas>
+                            <p class="text-xs text-slate-400 mt-3">
+                                📚 Time spent practicing each topic
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Performance Insights -->
+                    <div class="mt-6 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl p-6">
+                        <h3 class="text-xl font-semibold mb-4">🌟 Performance Insights</h3>
+                        <div id="performance-insights" class="space-y-2 text-sm">
+                            <!-- Generated dynamically -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- EXAM PREP VIEW -->
+                <div x-show="currentView === 'exam-prep'" x-transition>
+                    <h2 class="text-3xl font-bold mb-6">Exam Preparation</h2>
+                    
+                    <!-- Create New Exam Plan -->
+                    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+                        <h3 class="text-xl font-semibold mb-4">Create Exam Prep Plan</h3>
+                        <form id="exam-prep-form" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Exam Name</label>
+                                <input type="text" id="exam-name" placeholder="e.g., CS 180 Midterm"
+                                       class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-300 focus:outline-none focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Exam Date</label>
+                                <input type="date" id="exam-date"
+                                       class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-300 focus:outline-none focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Select Topics</label>
+                                <div id="exam-topics-selector" class="space-y-2 max-h-48 overflow-y-auto p-2 bg-slate-700 rounded-lg">
+                                    <!-- Topics will be populated here -->
+                                </div>
+                            </div>
+                            <button type="submit" 
+                                    class="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-lg font-medium transition">
+                                Generate Study Plan
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <!-- Exam Readiness Dashboard -->
+                    <div id="exam-readiness-dashboard" style="display: none;">
+                        <div class="grid grid-cols-3 gap-4 mb-6">
+                            <div class="bg-slate-800 rounded-xl p-6">
+                                <div class="text-3xl mb-2">📊</div>
+                                <div class="text-3xl font-bold" id="overall-readiness">0%</div>
+                                <div class="text-sm text-slate-400">Overall Readiness</div>
+                            </div>
+                            <div class="bg-slate-800 rounded-xl p-6">
+                                <div class="text-3xl mb-2">📅</div>
+                                <div class="text-3xl font-bold" id="days-until-exam">0</div>
+                                <div class="text-sm text-slate-400">Days Until Exam</div>
+                            </div>
+                            <div class="bg-slate-800 rounded-xl p-6">
+                                <div class="text-3xl mb-2">🎯</div>
+                                <div class="text-3xl font-bold" id="predicted-score">0%</div>
+                                <div class="text-sm text-slate-400">Predicted Score</div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-slate-800 rounded-xl p-6 mb-6">
+                            <h3 class="text-xl font-semibold mb-4">Topic Readiness</h3>
+                            <div id="topic-readiness-list" class="space-y-4">
+                                <!-- Topic readiness bars will be generated here -->
+                            </div>
+                        </div>
+                        
+                        <div class="bg-slate-800 rounded-xl p-6">
+                            <h3 class="text-xl font-semibold mb-4">Daily Study Goals</h3>
+                            <div id="daily-goals-list" class="space-y-3">
+                                <!-- Daily goals will be generated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- LEADERBOARDS VIEW -->
+                <div x-show="currentView === 'leaderboards'" x-transition>
+                    <h2 class="text-3xl font-bold mb-6">Leaderboards</h2>
+                    
+                    <!-- Leaderboard Filters -->
+                    <div class="bg-slate-800 rounded-xl p-4 mb-6 flex items-center justify-between">
+                        <div class="flex gap-4">
+                            <select x-model="leaderboardType" @change="loadLeaderboard()"
+                                    class="px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-300">
+                                <option value="global">Global</option>
+                                <option value="course">By Course</option>
+                                <option value="major">By Major</option>
+                            </select>
+                            
+                            <select x-model="leaderboardPeriod" @change="loadLeaderboard()"
+                                    class="px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-300">
+                                <option value="alltime">All Time</option>
+                                <option value="week">This Week</option>
+                                <option value="month">This Month</option>
+                            </select>
+                        </div>
+                        
+                        <button @click="loadLeaderboard()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg">
+                            🔄 Refresh
+                        </button>
+                    </div>
+                    
+                    <!-- My Rank Card -->
+                    <div id="my-rank-card" class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 mb-6">
+                        <h3 class="text-xl font-semibold mb-4">Your Rank</h3>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <div class="text-4xl font-bold" x-text="'#' + (myRank || '-')"></div>
+                                <div class="text-sm opacity-90">out of <span x-text="totalUsers"></span> users</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold" x-text="currentUser.total_xp || 0"></div>
+                                <div class="text-sm opacity-90">Total XP</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Leaderboard Table -->
+                    <div class="bg-slate-800 rounded-xl overflow-hidden">
+                        <div id="leaderboard-list" class="divide-y divide-slate-700">
+                            <!-- Leaderboard entries will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ACHIEVEMENTS VIEW -->
+                <div x-show="currentView === 'achievements'" x-transition>
+                    <h2 class="text-3xl font-bold mb-6">Achievements</h2>
+                    
+                    <div class="grid grid-cols-3 gap-4">
+                        <!-- Achievement cards will be inserted here -->
+                        <template x-for="achievement in allAchievements" :key="achievement.achievement_id">
+                            <div class="bg-slate-800 rounded-xl p-6 text-center"
+                                 :class="achievement.unlocked ? 'ring-2 ring-blue-500' : 'opacity-50'">
+                                <div class="text-5xl mb-3" x-text="achievement.badge_icon"></div>
+                                <h4 class="font-semibold mb-2" x-text="achievement.achievement_name"></h4>
+                                <p class="text-sm text-slate-400 mb-3" x-text="achievement.description"></p>
+                                <div class="text-xs text-blue-400">
+                                    <span x-show="achievement.unlocked">✅ Unlocked!</span>
+                                    <span x-show="!achievement.unlocked" x-text="'+' + achievement.xp_reward + ' XP'"></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                
+                <!-- SETTINGS VIEW -->
+                <div x-show="currentView === 'settings'" x-transition>
+                    <h2 class="text-3xl font-bold mb-6">Settings</h2>
+                    
+                    <div class="bg-slate-800 rounded-xl p-6 space-y-6">
+                        <div>
+                            <h3 class="text-lg font-semibold mb-4">Account Information</h3>
+                            <div class="space-y-3 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-slate-400">Username:</span>
+                                    <span x-text="currentUser.username"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-400">Major:</span>
+                                    <span x-text="currentUser.major || 'Not set'"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-400">Total XP:</span>
+                                    <span x-text="currentUser.total_xp || 0"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-400">Current Level:</span>
+                                    <span x-text="xpProgress.current_level || 1"></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-lg font-semibold mb-4">Database Actions</h3>
+                            <button @click="clearUserData()" 
+                                    class="px-6 py-3 bg-red-600 hover:bg-red-500 rounded-lg font-medium transition">
+                                ⚠️ Clear All Progress
+                            </button>
+                            <p class="mt-2 text-xs text-slate-400">This will delete all your progress data.</p>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </main>
+        
+        <!-- Right Panel: Quick Stats & Upcoming Reviews -->
+        <aside class="w-80 bg-slate-800 border-l border-slate-700 overflow-y-auto">
+            <div class="p-6">
+                <!-- Streak Tracker -->
+                <div class="bg-gradient-to-br from-orange-500 to-red-600 rounded-xl p-6 mb-6 text-center">
+                    <div class="text-5xl mb-2">🔥</div>
+                    <div class="text-4xl font-bold" x-text="studyStreak"></div>
+                    <div class="text-sm opacity-90">Day Streak</div>
+                    <div class="mt-3 text-xs opacity-75">Keep it going! Study daily to maintain your streak.</div>
+                </div>
+                
+                <!-- Today's Progress -->
+                <div class="bg-slate-700 rounded-xl p-4 mb-6">
+                    <h3 class="font-semibold mb-3">Today's Progress</h3>
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-sm">
+                            <span>Daily Goal</span>
+                            <span x-text="dailyProgress + '/10'"></span>
+                        </div>
+                        <div class="w-full bg-slate-600 rounded-full h-2">
+                            <div class="bg-blue-500 h-2 rounded-full transition-all" 
+                                 :style="'width: ' + (dailyProgress * 10) + '%'"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Upcoming Reviews -->
+                <div class="bg-slate-700 rounded-xl p-4 mb-6">
+                    <h3 class="font-semibold mb-3">Upcoming Reviews</h3>
+                    <div id="upcoming-reviews-list" class="space-y-2 text-sm">
+                        <p class="text-slate-400 text-xs">Topics due for review will appear here</p>
+                    </div>
+                </div>
+                
+                <!-- Activity Feed -->
+                <div class="bg-slate-700 rounded-xl p-4 mb-6">
+                    <h3 class="font-semibold mb-3">Recent Activity</h3>
+                    <div id="activity-feed" class="space-y-3 max-h-64 overflow-y-auto">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+                
+                <!-- Weak Topics Alert -->
+                <div class="bg-slate-700 rounded-xl p-4">
+                    <h3 class="font-semibold mb-3 flex items-center">
+                        <span class="text-yellow-500 mr-2">⚠️</span>
+                        <span>Needs Practice</span>
+                    </h3>
+                    <div id="weak-topics-list" class="space-y-2 text-sm">
+                        <p class="text-slate-400 text-xs">Topics needing attention will appear here</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        
+    </div>
+    
+    <!-- Guide Me Modal -->
+    <div id="guide-me-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-slate-800 rounded-xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold">💡 Guided Learning</h3>
+                <button id="close-guide-me" class="text-slate-400 hover:text-white text-2xl">&times;</button>
+            </div>
+            
+            <div id="guide-me-content">
+                <!-- Guide Me steps will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
