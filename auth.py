@@ -323,11 +323,11 @@ def get_or_create_oauth_user(email, name, provider, provider_id):
             username = f"{base_username}{counter}"
             counter += 1
         
-        # Insert new user (no password for OAuth users)
+        # Insert new user (no password for OAuth users - use NULL)
         db.cursor.execute('''
             INSERT INTO users (username, email, full_name, password_hash, oauth_provider, oauth_id)
             VALUES (?, ?, ?, ?, ?, ?)
-        ''', (username, email, name, '', provider, provider_id))
+        ''', (username, email, name, None, provider, provider_id))
         
         db.conn.commit()
         user_id = db.cursor.lastrowid
