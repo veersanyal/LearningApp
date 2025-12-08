@@ -665,7 +665,7 @@ function app() {
         setupEventListeners() {
             this.setupUploadForm();
             this.setupQuizButtons();
-            this.setupGuideMeButton();
+            // Guide Me now uses Alpine.js, no setup needed
             this.setupExamPrepForm();
             this.setupSettingsButtons();
         },

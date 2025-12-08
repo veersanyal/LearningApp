@@ -437,6 +437,7 @@ def auth_config():
 @login_required
 def upload():
     """Handle document upload and extract topics."""
+    file_path = None
     try:
         if 'file' not in request.files:
             return jsonify({"error": "No file provided"}), 400
@@ -450,6 +451,10 @@ def upload():
         file_bytes = file.read()
         file_size = len(file_bytes)
         
+        # Check if models are initialized
+        if not text_model or not vision_model:
+            return jsonify({"error": "AI service not configured. Please check GEMINI_API_KEY environment variable."}), 500
+        
         # Create uploads directory if it doesn't exist
         uploads_dir = os.path.join(os.path.dirname(__file__), 'uploads', str(current_user.id))
         os.makedirs(uploads_dir, exist_ok=True)
@@ -459,21 +464,40 @@ def upload():
         unique_filename = f"{uuid.uuid4()}{file_ext}"
         file_path = os.path.join(uploads_dir, unique_filename)
         
-        # Determine file type
+        # Determine file type and extract topics
+        topic_data = None
         if filename.endswith('.pdf'):
             file_type = 'pdf'
             # Extract text from PDF
-            content = extract_text_from_pdf(file_bytes)
-            topic_data = extract_topics_from_content(content)
+            try:
+                content = extract_text_from_pdf(file_bytes)
+                topic_data = extract_topics_from_content(content)
+            except Exception as e:
+                print(f"Error processing PDF: {e}")
+                import traceback
+                traceback.print_exc()
+                return jsonify({"error": f"Error processing PDF: {str(e)}"}), 500
         elif filename.endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
             file_type = 'image'
             # Use vision model for images
-            topic_data = extract_topics_from_content(None, is_image=True, image_bytes=file_bytes)
+            try:
+                topic_data = extract_topics_from_content(None, is_image=True, image_bytes=file_bytes)
+            except Exception as e:
+                print(f"Error processing image: {e}")
+                import traceback
+                traceback.print_exc()
+                return jsonify({"error": f"Error processing image: {str(e)}"}), 500
         elif filename.endswith('.txt'):
             file_type = 'text'
             # Plain text file
-            content = file_bytes.decode('utf-8')
-            topic_data = extract_topics_from_content(content)
+            try:
+                content = file_bytes.decode('utf-8')
+                topic_data = extract_topics_from_content(content)
+            except Exception as e:
+                print(f"Error processing text file: {e}")
+                import traceback
+                traceback.print_exc()
+                return jsonify({"error": f"Error processing text file: {str(e)}"}), 500
         else:
             return jsonify({"error": "Unsupported file type"}), 400
         
