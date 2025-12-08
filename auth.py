@@ -289,7 +289,7 @@ def get_or_create_oauth_user(email, name, provider, provider_id):
     Args:
         email: User's email from OAuth provider
         name: User's name from OAuth provider
-        provider: 'google' or 'apple'
+        provider: 'google'
         provider_id: Unique ID from OAuth provider
     
     Returns:
