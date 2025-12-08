@@ -795,7 +795,7 @@ function app() {
             }
             
             try {
-                await fetch('/submit-answer', {
+                const response = await fetch('/submit-answer', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -803,9 +803,30 @@ function app() {
                         is_correct: isCorrect
                     })
                 });
-                this.loadStats();
+                
+                const data = await response.json();
+                
+                if (data.success && data.user_state) {
+                    // Update stats directly from response
+                    this.updateStatsFromData({ user_state: data.user_state });
+                    
+                    // Update XP if provided
+                    if (data.xp_progress) {
+                        this.xpProgress = data.xp_progress;
+                    }
+                    
+                    // Show achievements if any
+                    if (data.new_achievements && data.new_achievements.length > 0) {
+                        alert(`🎉 Achievement Unlocked: ${data.new_achievements.join(', ')}!`);
+                    }
+                } else {
+                    // Fallback to loading stats
+                    this.loadStats();
+                }
             } catch (err) {
                 console.error('Error submitting answer:', err);
+                // Still try to load stats on error
+                this.loadStats();
             }
         },
         async openGuideMeModal() {
