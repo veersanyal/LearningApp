@@ -61,12 +61,12 @@ def calculate_study_streak(user_id):
     return streak
 
 
-def identify_weak_topics(threshold=0.4):
+def identify_weak_topics(user_id, threshold=0.4):
     """
     Identify topics where user is struggling (mastery below threshold).
     Returns list of (topic_id, mastery, attempts) tuples.
     """
-    user_state = get_user_state()
+    user_state = get_user_state(user_id)
     weak_topics = []
     
     # FOR loop with IF filtering
@@ -83,11 +83,11 @@ def identify_weak_topics(threshold=0.4):
     return weak_topics
 
 
-def identify_strong_topics(threshold=0.8):
+def identify_strong_topics(user_id, threshold=0.8):
     """
     Identify topics where user has strong mastery.
     """
-    user_state = get_user_state()
+    user_state = get_user_state(user_id)
     strong_topics = []
     
     for topic_id, stats in user_state.items():
@@ -103,12 +103,12 @@ def identify_strong_topics(threshold=0.8):
     return strong_topics
 
 
-def calculate_time_distribution():
+def calculate_time_distribution(user_id):
     """
     Analyze time spent on each topic based on attempt history.
     Uses nested loops to process multi-dimensional data.
     """
-    user_state = get_user_state()
+    user_state = get_user_state(user_id)
     time_data = {}
     
     # NESTED FOR loops (FOR within FOR)
@@ -127,15 +127,15 @@ def calculate_time_distribution():
     return time_data
 
 
-def predict_mastery_trajectory(topic_id, future_correct_count):
+def predict_mastery_trajectory(user_id, topic_id, future_correct_count):
     """
     Predict future mastery if user gets next N questions correct.
     Mathematical projection for goal-setting.
     """
-    if topic_id not in get_user_state():
+    if topic_id not in get_user_state(user_id):
         return 0.0
     
-    stats = get_user_state()[topic_id]
+    stats = get_user_state(user_id)[topic_id]
     current_correct = stats["correct"]
     current_attempts = stats["attempts"]
     
@@ -149,12 +149,12 @@ def predict_mastery_trajectory(topic_id, future_correct_count):
     return projected_mastery
 
 
-def export_analytics_report(filepath="learning_analytics.txt"):
+def export_analytics_report(user_id, filepath="learning_analytics.txt"):
     """
     Export comprehensive analytics report to text file.
     OUTPUT requirement: Write formatted report to file.
     """
-    user_state = get_user_state()
+    user_state = get_user_state(user_id)
     
     if not user_state:
         return False
@@ -184,7 +184,7 @@ def export_analytics_report(filepath="learning_analytics.txt"):
             # Strong topics
             f.write("TOP PERFORMING TOPICS\n")
             f.write("-" * 70 + "\n")
-            strong = identify_strong_topics()[:5]
+            strong = identify_strong_topics(user_id)[:5]
             
             if strong:
                 for topic_id, mastery, attempts in strong:
@@ -197,7 +197,7 @@ def export_analytics_report(filepath="learning_analytics.txt"):
             # Weak topics
             f.write("TOPICS NEEDING PRACTICE\n")
             f.write("-" * 70 + "\n")
-            weak = identify_weak_topics()[:5]
+            weak = identify_weak_topics(user_id)[:5]
             
             if weak:
                 for topic_id, mastery, attempts in weak:
@@ -213,12 +213,12 @@ def export_analytics_report(filepath="learning_analytics.txt"):
         return False
 
 
-def calculate_time_of_day_performance():
+def calculate_time_of_day_performance(user_id):
     """
     Analyze performance by time of day.
     Returns accuracy percentages for different time blocks.
     """
-    user_state = get_user_state()
+    user_state = get_user_state(user_id)
     
     # Time blocks: Early Morning (6-9), Morning (9-12), Afternoon (12-15), 
     # Late Afternoon (15-18), Evening (18-21), Night (21+)
@@ -272,12 +272,12 @@ def calculate_time_of_day_performance():
     }
 
 
-def calculate_topic_mastery_over_time():
+def calculate_topic_mastery_over_time(user_id):
     """
     Track mastery progression over time.
     Returns historical mastery data for visualization.
     """
-    user_state = get_user_state()
+    user_state = get_user_state(user_id)
     
     # Collect all timestamps
     all_timestamps = []
@@ -342,12 +342,12 @@ def calculate_topic_mastery_over_time():
     }
 
 
-def get_topic_time_distribution():
+def get_topic_time_distribution(user_id):
     """
     Calculate time distribution across topics.
     Returns data for pie chart visualization.
     """
-    user_state = get_user_state()
+    user_state = get_user_state(user_id)
     
     topic_times = {}
     
@@ -369,11 +369,11 @@ def get_topic_time_distribution():
     }
 
 
-def get_comparative_stats():
+def get_comparative_stats(user_id):
     """
     Generate comparative statistics (vs personal averages).
     """
-    user_state = get_user_state()
+    user_state = get_user_state(user_id)
     
     if not user_state:
         return {
@@ -416,7 +416,7 @@ def predict_exam_readiness(exam_topics, exam_date, target_mastery=0.80):
     """
     from user_state import get_user_state, get_learning_velocity
     
-    user_state = get_user_state()
+    user_state = get_user_state(user_id)
     current_time = datetime.now()
     days_until_exam = (exam_date - current_time).days
     
