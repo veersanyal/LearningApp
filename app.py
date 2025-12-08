@@ -65,13 +65,15 @@ except Exception as e:
 # Configure Gemini API
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 if not GEMINI_API_KEY:
-    raise ValueError("GEMINI_API_KEY environment variable is required")
-genai.configure(api_key=GEMINI_API_KEY)
+    print("WARNING: GEMINI_API_KEY environment variable is not set. Some features may not work.")
+    # Don't crash on startup - allow app to start but features will fail gracefully
+else:
+    genai.configure(api_key=GEMINI_API_KEY)
 
 # Models - using gemini-2.5-flash-lite (only initialize if API key is set)
 if GEMINI_API_KEY:
-text_model = genai.GenerativeModel('gemini-2.5-flash-lite')
-vision_model = genai.GenerativeModel('gemini-2.5-flash-lite')
+    text_model = genai.GenerativeModel('gemini-2.5-flash-lite')
+    vision_model = genai.GenerativeModel('gemini-2.5-flash-lite')
 else:
     text_model = None
     vision_model = None
