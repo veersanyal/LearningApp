@@ -132,43 +132,51 @@ IMPORTANT: Include a helpful "explanation" field for each topic that explains th
 Only return the JSON, no other text."""
 
     try:
+        print("[EXTRACT_TOPICS] Starting topic extraction")
         # Check if models are initialized
         if not text_model or not vision_model:
+            print("[EXTRACT_TOPICS] Error: Models not initialized")
             return {"topics": [], "error": "AI service not configured. Please check GEMINI_API_KEY environment variable."}
+        
+        print("[EXTRACT_TOPICS] Models are initialized")
         
         # Validate input
         if not is_image and (not content or len(content.strip()) < 50):
-            print(f"Error: Content too short or empty ({len(content) if content else 0} chars)")
+            print(f"[EXTRACT_TOPICS] Error: Content too short or empty ({len(content) if content else 0} chars)")
             return {"topics": [], "error": "Content too short or empty. Please upload a document with more text."}
         
         if is_image and not image_bytes:
-            print("Error: Image bytes not provided")
+            print("[EXTRACT_TOPICS] Error: Image bytes not provided")
             return {"topics": [], "error": "Image data not provided."}
         
         # Truncate content if too long (Gemini has token limits)
         max_chars = 50000  # Conservative limit
         if not is_image and len(content) > max_chars:
-            print(f"Warning: Content too long ({len(content)} chars), truncating to {max_chars}")
+            print(f"[EXTRACT_TOPICS] Warning: Content too long ({len(content)} chars), truncating to {max_chars}")
             content = content[:max_chars] + "\n\n[Content truncated...]"
         
+        print("[EXTRACT_TOPICS] Calling Gemini API...")
         if is_image and image_bytes:
             # Use vision model for images
             image = Image.open(io.BytesIO(image_bytes))
-            print("Calling Gemini vision model for image...")
+            print("[EXTRACT_TOPICS] Using vision model for image")
             response = vision_model.generate_content([prompt, image])
+            print("[EXTRACT_TOPICS] Vision model response received")
         else:
             # Use text model
             full_prompt = f"{prompt}\n\nContent:\n{content}"
-            print(f"Calling Gemini text model (content length: {len(content)} chars)...")
+            print(f"[EXTRACT_TOPICS] Using text model (content length: {len(content)} chars)")
             response = text_model.generate_content(full_prompt)
+            print("[EXTRACT_TOPICS] Text model response received")
         
         # Parse the response
+        print("[EXTRACT_TOPICS] Parsing Gemini response...")
         if not response or not response.text:
-            print("Error: Empty response from Gemini")
+            print("[EXTRACT_TOPICS] Error: Empty response from Gemini")
             return {"topics": [], "error": "Empty response from AI. Please try again."}
         
         response_text = response.text.strip()
-        print(f"Gemini raw response (first 500 chars): {response_text[:500]}...")  # Debug log
+        print(f"[EXTRACT_TOPICS] Gemini raw response (first 500 chars): {response_text[:500]}...")
         
         # Remove markdown code blocks if present
         if response_text.startswith("```"):
