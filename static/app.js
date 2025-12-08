@@ -264,24 +264,6 @@ function app() {
             }
         },
         
-        async loginWithApple() {
-            this.authError = '';
-            
-            try {
-                // Apple Sign In requires server-side setup
-                // For now, show a message that it needs configuration
-                this.authError = 'Apple Sign In requires server configuration. Please use username/password or Google Sign In.';
-                
-                // In production, you would:
-                // 1. Configure Apple Sign In in Apple Developer Console
-                // 2. Use Apple's JS library to get identity token
-                // 3. Send to backend for verification
-                
-            } catch (err) {
-                console.error('Apple OAuth error:', err);
-                this.authError = 'Apple Sign In not available';
-            }
-        },
         
         async loadSocialProof() {
             try {

@@ -2,7 +2,7 @@
 
 ## ✅ Implementation Complete!
 
-OAuth login with Google and Apple has been added to your app. Here's how to set it up:
+OAuth login with Google has been added to your app. Here's how to set it up:
 
 ---
 
@@ -46,46 +46,7 @@ OAuth login with Google and Apple has been added to your app. Here's how to set 
 
 ---
 
-## 🍎 Apple Sign In Setup
-
-### Step 1: Apple Developer Account Required
-
-Apple Sign In requires:
-- **Apple Developer Account** ($99/year)
-- App ID configuration
-- Service ID setup
-
-### Step 2: Configure in Apple Developer Console
-
-1. Go to **Apple Developer Portal**: https://developer.apple.com/
-2. Create a **Service ID**:
-   - Identifiers → Services IDs → Register
-   - Description: "StudyBoiler"
-   - Enable "Sign in with Apple"
-   - Configure domains and redirect URLs
-3. Create **Key** for Sign in with Apple
-4. Download the key file
-
-### Step 3: Add to Railway
-
-1. Add environment variables:
-   - `APPLE_CLIENT_ID` - Your Service ID
-   - `APPLE_TEAM_ID` - Your Team ID
-   - `APPLE_KEY_ID` - Your Key ID
-   - `APPLE_PRIVATE_KEY` - Contents of your .p8 key file
-
-### Step 4: Update Backend
-
-The current implementation is a placeholder. For production, you'll need to:
-- Verify identity tokens with Apple's servers
-- Handle private email relay
-- Implement proper token validation
-
----
-
-## 🚀 Quick Start (Google Only)
-
-For now, you can use **Google Sign In** which is easier to set up:
+## 🚀 Quick Start
 
 1. **Get Google Client ID** (follow Step 1 above)
 2. **Add to Railway**: `GOOGLE_CLIENT_ID=your-client-id-here`
@@ -100,7 +61,6 @@ For now, you can use **Google Sign In** which is easier to set up:
 ✅ **Database schema** - Updated for OAuth  
 ✅ **Frontend buttons** - Added to login modal  
 ✅ **Google OAuth** - Ready (needs Client ID)  
-⚠️ **Apple OAuth** - Placeholder (needs Apple Developer setup)  
 
 ---
 
@@ -115,24 +75,14 @@ For now, you can use **Google Sign In** which is easier to set up:
 6. Backend verifies token and extracts user info
 7. User is created/logged in automatically
 
-### Apple OAuth Flow:
-1. User clicks "Continue with Apple"
-2. Apple Sign In modal appears
-3. User authenticates with Face ID/Touch ID
-4. Apple returns identity token
-5. Frontend sends token to `/auth/apple`
-6. Backend verifies token (in production)
-7. User is created/logged in
-
 ---
 
 ## ⚠️ Important Notes
 
 1. **Google Client ID is required** for Google Sign In to work
-2. **Apple Sign In** requires Apple Developer account ($99/year)
-3. **OAuth users** don't have passwords - they can only log in via OAuth
-4. **Email addresses** from OAuth are used as unique identifiers
-5. **Username** is auto-generated from email if not provided
+2. **OAuth users** don't have passwords - they can only log in via OAuth
+3. **Email addresses** from OAuth are used as unique identifiers
+4. **Username** is auto-generated from email if not provided
 
 ---
 
@@ -148,20 +98,13 @@ For now, you can use **Google Sign In** which is easier to set up:
 - Verify authorized redirect URIs are correct
 - Make sure Google+ API is enabled
 
-### Apple Sign In not working
-- Requires Apple Developer account
-- Needs proper Service ID configuration
-- Backend token verification not yet implemented
-
 ---
 
 ## 📚 Resources
 
 - **Google OAuth Docs**: https://developers.google.com/identity/gsi/web
-- **Apple Sign In Docs**: https://developer.apple.com/sign-in-with-apple/
 - **Railway Environment Variables**: https://docs.railway.app/develop/variables
 
 ---
 
 **Once you add the `GOOGLE_CLIENT_ID` to Railway, Google Sign In will work immediately!** 🚀
-
