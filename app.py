@@ -78,11 +78,11 @@ if GEMINI_API_KEY:
         print("Initialized models: gemini-2.5-flash")
     except Exception as e:
         print(f"Error initializing gemini-2.5-flash: {e}")
-        # Fallback to gemini-1.5-flash if 2.5-flash is not available
+        # Fallback to gemini-2.0-flash-lite if 2.5-flash is not available
         try:
-            text_model = genai.GenerativeModel('gemini-1.5-flash')
-            vision_model = genai.GenerativeModel('gemini-1.5-flash')
-            print("Fell back to gemini-1.5-flash")
+            text_model = genai.GenerativeModel('gemini-2.0-flash-lite')
+            vision_model = genai.GenerativeModel('gemini-2.0-flash-lite')
+            print("Fell back to gemini-2.0-flash-lite")
         except Exception as e2:
             print(f"Error initializing fallback models: {e2}")
             text_model = None
