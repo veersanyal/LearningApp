@@ -12,12 +12,12 @@ from datetime import datetime, timedelta
 from user_state import get_user_state
 
 
-def calculate_study_streak():
+def calculate_study_streak(user_id):
     """
     Calculate the current study streak (consecutive days of study).
     Uses WHILE LOOP to count consecutive days.
     """
-    user_state = get_user_state()
+    user_state = get_user_state(user_id)
     
     if not user_state:
         return 0
@@ -492,7 +492,7 @@ def predict_exam_readiness(exam_topics, exam_date, target_mastery=0.80):
     }
 
 
-def estimate_questions_to_mastery(topic_id, current_mastery, target_mastery):
+def estimate_questions_to_mastery(user_id, topic_id, current_mastery, target_mastery):
     """
     Estimate questions needed to reach target mastery.
     Uses learning velocity to make prediction.

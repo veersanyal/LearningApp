@@ -31,7 +31,7 @@ def pick_next_topic(user_id):
         return random.choice(overdue_topics)
     else:
         # Use priority scoring algorithm
-        priority_list = calculate_review_priority()
+        priority_list = calculate_review_priority(user_id)
         
         # Get top 3 highest priority topics
         top_priorities = priority_list[:min(3, len(priority_list))]
@@ -46,10 +46,10 @@ def pick_next_topic(user_id):
             return random.choice(all_topic_ids)
 
 
-def get_recommended_study_order():
+def get_recommended_study_order(user_id):
     """
     Get recommended order for studying all topics.
     Returns list of topic_ids sorted by learning priority.
     """
-    priority_list = calculate_review_priority()
+    priority_list = calculate_review_priority(user_id)
     return [topic_id for topic_id, score in priority_list]
