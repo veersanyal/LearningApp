@@ -179,7 +179,7 @@ def export_analytics_report(user_id, filepath="learning_analytics.txt"):
             f.write(f"Total Correct Answers: {total_correct}\n")
             f.write(f"Overall Accuracy: {(total_correct/max(1,total_attempts)*100):.1f}%\n")
             f.write(f"Average Mastery Score: {(avg_mastery*100):.1f}%\n")
-            f.write(f"Study Streak: {calculate_study_streak()} days\n\n")
+            f.write(f"Study Streak: {calculate_study_streak(user_id)} days\n\n")
             
             # Strong topics
             f.write("TOP PERFORMING TOPICS\n")

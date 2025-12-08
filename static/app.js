@@ -39,6 +39,7 @@ function app() {
         allTopics: [],
         guideMeSteps: [],
         currentGuideMeStep: 0,
+        showGuideMeModal: false,
         
         // Leaderboards
         leaderboardType: 'global',
@@ -807,19 +808,6 @@ function app() {
                 console.error('Error submitting answer:', err);
             }
         },
-        
-        setupGuideMeButton() {
-            const btn = document.getElementById('guide-me-btn');
-            if (btn) {
-                btn.addEventListener('click', () => this.openGuideMeModal());
-            }
-            
-            const closeBtn = document.getElementById('close-guide-me');
-            if (closeBtn) {
-                closeBtn.addEventListener('click', () => this.closeGuideMeModal());
-            }
-        },
-        
         async openGuideMeModal() {
             if (!this.currentQuestion) return;
             
