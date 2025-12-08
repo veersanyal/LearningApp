@@ -92,17 +92,22 @@ else:
     vision_model = None
 
 
-def extract_text_from_pdf(file_bytes):
-    """Extract text from a PDF file."""
+def extract_text_from_pdf(file_bytes, max_pages=20):
+    """Extract text from a PDF file with an optional page limit to avoid timeouts."""
     try:
         reader = PdfReader(io.BytesIO(file_bytes))
         text = ""
-        for page in reader.pages:
+        total_pages = len(reader.pages)
+        pages_to_read = min(total_pages, max_pages)
+        for idx in range(pages_to_read):
+            page = reader.pages[idx]
             page_text = page.extract_text() or ""
             text += page_text
         if not text or len(text.strip()) < 50:
             print("Warning: PDF extraction returned very little or no text")
-        print(f"Extracted {len(text)} characters from PDF ({len(reader.pages)} pages)")
+        if total_pages > max_pages:
+            print(f"Truncated PDF read from {total_pages} to {pages_to_read} pages to keep processing fast")
+        print(f"Extracted {len(text)} characters from PDF ({pages_to_read}/{total_pages} pages)")
         return text
     except Exception as e:
         print(f"Error extracting text from PDF: {e}")
@@ -156,17 +161,24 @@ Only return the JSON, no other text."""
             content = content[:max_chars] + "\n\n[Content truncated...]"
         
         print("[EXTRACT_TOPICS] Calling Gemini API...")
+        request_timeout = 30  # seconds to avoid worker timeouts
         if is_image and image_bytes:
             # Use vision model for images
             image = Image.open(io.BytesIO(image_bytes))
             print("[EXTRACT_TOPICS] Using vision model for image")
-            response = vision_model.generate_content([prompt, image])
+            response = vision_model.generate_content(
+                [prompt, image],
+                request_options={"timeout": request_timeout}
+            )
             print("[EXTRACT_TOPICS] Vision model response received")
         else:
             # Use text model
             full_prompt = f"{prompt}\n\nContent:\n{content}"
             print(f"[EXTRACT_TOPICS] Using text model (content length: {len(content)} chars)")
-            response = text_model.generate_content(full_prompt)
+            response = text_model.generate_content(
+                full_prompt,
+                request_options={"timeout": request_timeout}
+            )
             print("[EXTRACT_TOPICS] Text model response received")
         
         # Parse the response
@@ -466,6 +478,12 @@ def upload():
         file_bytes = file.read()
         file_size = len(file_bytes)
         print(f"[UPLOAD] File size: {file_size} bytes")
+
+        # Enforce a hard file size limit to prevent timeouts (8 MB)
+        max_file_size = 8 * 1024 * 1024
+        if file_size > max_file_size:
+            print(f"[UPLOAD] ERROR: File too large ({file_size} bytes). Limit is {max_file_size} bytes.")
+            return jsonify({"error": "File too large. Please upload a file under 8 MB."}), 413
         
         # Check if models are initialized
         print(f"[UPLOAD] Checking models - text_model: {text_model is not None}, vision_model: {vision_model is not None}")
@@ -493,7 +511,7 @@ def upload():
             file_type = 'pdf'
             try:
                 print("[UPLOAD] Step 1: Extracting text from PDF...")
-                content = extract_text_from_pdf(file_bytes)
+                content = extract_text_from_pdf(file_bytes, max_pages=20)
                 print(f"[UPLOAD] Step 1 complete: Extracted {len(content)} characters")
                 print("[UPLOAD] Step 2: Extracting topics from content...")
                 topic_data = extract_topics_from_content(content)
