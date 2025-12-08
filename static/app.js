@@ -811,11 +811,12 @@ function app() {
         async openGuideMeModal() {
             if (!this.currentQuestion) return;
             
-            const modal = document.getElementById('guide-me-modal');
+            this.showGuideMeModal = true;
             const content = document.getElementById('guide-me-content');
             
-            modal.classList.remove('hidden');
-            content.innerHTML = '<div class="spinner mx-auto"></div>';
+            if (content) {
+                content.innerHTML = '<div class="spinner mx-auto"></div>';
+            }
             
             try {
                 const response = await fetch('/guide-me', {
@@ -830,7 +831,7 @@ function app() {
                 const data = await response.json();
                 
                 if (data.error) {
-                    content.innerHTML = `<p class="text-red-400">Error: ${data.error}</p>`;
+                    if (content) content.innerHTML = `<p class="text-red-400">Error: ${data.error}</p>`;
                     return;
                 }
                 
@@ -838,7 +839,7 @@ function app() {
                 this.currentGuideMeStep = 0;
                 this.renderGuideMeStep();
             } catch (err) {
-                content.innerHTML = `<p class="text-red-400">Error: ${err.message}</p>`;
+                if (content) content.innerHTML = `<p class="text-red-400">Error: ${err.message}</p>`;
             }
         },
         
