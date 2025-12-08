@@ -70,10 +70,10 @@ if not GEMINI_API_KEY:
 else:
     genai.configure(api_key=GEMINI_API_KEY)
 
-# Models - using gemini-2.5-flash-lite (only initialize if API key is set)
+# Models - using gemini-2.5-flash-live (only initialize if API key is set)
 if GEMINI_API_KEY:
-    text_model = genai.GenerativeModel('gemini-2.5-flash-lite')
-    vision_model = genai.GenerativeModel('gemini-2.5-flash-lite')
+    text_model = genai.GenerativeModel('gemini-2.5-flash-live')
+    vision_model = genai.GenerativeModel('gemini-2.5-flash-live')
 else:
     text_model = None
     vision_model = None
