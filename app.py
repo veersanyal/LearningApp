@@ -82,15 +82,15 @@ else:
 def extract_text_from_pdf(file_bytes):
     """Extract text from a PDF file."""
     try:
-    reader = PdfReader(io.BytesIO(file_bytes))
-    text = ""
-    for page in reader.pages:
+        reader = PdfReader(io.BytesIO(file_bytes))
+        text = ""
+        for page in reader.pages:
             page_text = page.extract_text() or ""
             text += page_text
         if not text or len(text.strip()) < 50:
             print("Warning: PDF extraction returned very little or no text")
         print(f"Extracted {len(text)} characters from PDF ({len(reader.pages)} pages)")
-    return text
+        return text
     except Exception as e:
         print(f"Error extracting text from PDF: {e}")
         import traceback
