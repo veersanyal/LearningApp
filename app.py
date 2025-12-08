@@ -38,7 +38,9 @@ app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-producti
 
 # Configure session to use permanent cookies
 app.config['PERMANENT_SESSION_LIFETIME'] = 31 * 24 * 60 * 60  # 31 days in seconds
-app.config['SESSION_COOKIE_SECURE'] = os.getenv('FLASK_ENV') == 'production'  # HTTPS only in production
+# Detect production environment (Railway sets RAILWAY_ENVIRONMENT or PORT)
+is_production = os.getenv('RAILWAY_ENVIRONMENT') == 'production' or os.getenv('PORT') is not None
+app.config['SESSION_COOKIE_SECURE'] = is_production  # HTTPS only in production
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent JavaScript access
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF protection
 
@@ -66,9 +68,13 @@ if not GEMINI_API_KEY:
     raise ValueError("GEMINI_API_KEY environment variable is required")
 genai.configure(api_key=GEMINI_API_KEY)
 
-# Models - using gemini-2.5-flash-lite
+# Models - using gemini-2.5-flash-lite (only initialize if API key is set)
+if GEMINI_API_KEY:
 text_model = genai.GenerativeModel('gemini-2.5-flash-lite')
 vision_model = genai.GenerativeModel('gemini-2.5-flash-lite')
+else:
+    text_model = None
+    vision_model = None
 
 
 def extract_text_from_pdf(file_bytes):
@@ -111,6 +117,10 @@ IMPORTANT: Include a helpful "explanation" field for each topic that explains th
 Only return the JSON, no other text."""
 
     try:
+        # Check if models are initialized
+        if not text_model or not vision_model:
+            return {"topics": [], "error": "AI service not configured. Please check GEMINI_API_KEY environment variable."}
+        
         # Validate input
         if not is_image and (not content or len(content.strip()) < 50):
             print(f"Error: Content too short or empty ({len(content) if content else 0} chars)")
