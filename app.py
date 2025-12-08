@@ -439,9 +439,9 @@ def get_stats():
 def get_analytics():
     """Get advanced learning analytics."""
     try:
-        streak = calculate_study_streak()
-        weak = identify_weak_topics()[:5]
-        strong = identify_strong_topics()[:5]
+        streak = calculate_study_streak(current_user.id)
+        weak = identify_weak_topics(current_user.id)[:5]
+        strong = identify_strong_topics(current_user.id)[:5]
         
         return jsonify({
             "study_streak": streak,
@@ -476,9 +476,9 @@ def get_performance_dashboard():
             get_comparative_stats
         )
         
-        mastery_data = calculate_topic_mastery_over_time()
-        topic_dist = get_topic_time_distribution()
-        comparative = get_comparative_stats()
+        mastery_data = calculate_topic_mastery_over_time(current_user.id)
+        topic_dist = get_topic_time_distribution(current_user.id)
+        comparative = get_comparative_stats(current_user.id)
         
         return jsonify({
             "mastery_over_time": mastery_data,
@@ -495,7 +495,7 @@ def get_time_of_day_stats():
     """Get performance statistics by time of day."""
     try:
         from learning_analytics import calculate_time_of_day_performance
-        stats = calculate_time_of_day_performance()
+        stats = calculate_time_of_day_performance(current_user.id)
         return jsonify(stats)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -573,7 +573,7 @@ def create_exam_prep():
         from datetime import datetime
         
         exam_date_obj = datetime.fromisoformat(exam_date.replace('Z', '+00:00'))
-        readiness_data = predict_exam_readiness(topics, exam_date_obj)
+        readiness_data = predict_exam_readiness(current_user.id, topics, exam_date_obj)
         
         return jsonify(readiness_data)
     except Exception as e:
