@@ -447,66 +447,91 @@ def upload():
     """Handle document upload and extract topics."""
     file_path = None
     try:
+        print("[UPLOAD] ========== STARTING UPLOAD ==========")
+        print(f"[UPLOAD] User ID: {current_user.id}")
+        
         if 'file' not in request.files:
+            print("[UPLOAD] ERROR: No file in request.files")
             return jsonify({"error": "No file provided"}), 400
         
         file = request.files['file']
         if file.filename == '':
+            print("[UPLOAD] ERROR: Empty filename")
             return jsonify({"error": "No file selected"}), 400
         
         original_filename = file.filename
         filename = original_filename.lower()
+        print(f"[UPLOAD] Processing file: {original_filename} (lowercase: {filename})")
+        
         file_bytes = file.read()
         file_size = len(file_bytes)
+        print(f"[UPLOAD] File size: {file_size} bytes")
         
         # Check if models are initialized
+        print(f"[UPLOAD] Checking models - text_model: {text_model is not None}, vision_model: {vision_model is not None}")
         if not text_model or not vision_model:
+            print("[UPLOAD] ERROR: Models not initialized!")
             return jsonify({"error": "AI service not configured. Please check GEMINI_API_KEY environment variable."}), 500
         
         # Create uploads directory if it doesn't exist
         uploads_dir = os.path.join(os.path.dirname(__file__), 'uploads', str(current_user.id))
+        print(f"[UPLOAD] Creating uploads directory: {uploads_dir}")
         os.makedirs(uploads_dir, exist_ok=True)
         
         # Generate unique filename to avoid conflicts
         file_ext = os.path.splitext(filename)[1]
         unique_filename = f"{uuid.uuid4()}{file_ext}"
         file_path = os.path.join(uploads_dir, unique_filename)
+        print(f"[UPLOAD] Generated file path: {file_path}")
         
         # Determine file type and extract topics
         topic_data = None
+        print(f"[UPLOAD] File extension: {file_ext}")
+        
         if filename.endswith('.pdf'):
+            print("[UPLOAD] Processing as PDF")
             file_type = 'pdf'
-            # Extract text from PDF
             try:
+                print("[UPLOAD] Step 1: Extracting text from PDF...")
                 content = extract_text_from_pdf(file_bytes)
+                print(f"[UPLOAD] Step 1 complete: Extracted {len(content)} characters")
+                print("[UPLOAD] Step 2: Extracting topics from content...")
                 topic_data = extract_topics_from_content(content)
+                print(f"[UPLOAD] Step 2 complete: Got topic_data: {topic_data}")
             except Exception as e:
-                print(f"Error processing PDF: {e}")
+                print(f"[UPLOAD] EXCEPTION processing PDF: {e}")
                 import traceback
                 traceback.print_exc()
                 return jsonify({"error": f"Error processing PDF: {str(e)}"}), 500
         elif filename.endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
+            print("[UPLOAD] Processing as image")
             file_type = 'image'
-            # Use vision model for images
             try:
+                print("[UPLOAD] Extracting topics from image...")
                 topic_data = extract_topics_from_content(None, is_image=True, image_bytes=file_bytes)
+                print(f"[UPLOAD] Got topic_data: {topic_data}")
             except Exception as e:
-                print(f"Error processing image: {e}")
+                print(f"[UPLOAD] EXCEPTION processing image: {e}")
                 import traceback
                 traceback.print_exc()
                 return jsonify({"error": f"Error processing image: {str(e)}"}), 500
         elif filename.endswith('.txt'):
+            print("[UPLOAD] Processing as text file")
             file_type = 'text'
-            # Plain text file
             try:
+                print("[UPLOAD] Decoding text file...")
                 content = file_bytes.decode('utf-8')
+                print(f"[UPLOAD] Decoded {len(content)} characters")
+                print("[UPLOAD] Extracting topics from content...")
                 topic_data = extract_topics_from_content(content)
+                print(f"[UPLOAD] Got topic_data: {topic_data}")
             except Exception as e:
-                print(f"Error processing text file: {e}")
+                print(f"[UPLOAD] EXCEPTION processing text file: {e}")
                 import traceback
                 traceback.print_exc()
                 return jsonify({"error": f"Error processing text file: {str(e)}"}), 500
         else:
+            print(f"[UPLOAD] ERROR: Unsupported file type: {file_ext}")
             return jsonify({"error": "Unsupported file type"}), 400
         
         # Check if any topics were extracted
