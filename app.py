@@ -493,11 +493,16 @@ def upload():
         load_topics_from_json(topic_data)
         init_user_state(current_user.id)
         
-        print(f"Loaded {len(get_all_topics())} topics into memory")  # Debug log
+        all_topics = get_all_topics()
+        print(f"Loaded {len(all_topics)} topics into memory")  # Debug log
+        
+        # Ensure we return a list, not None
+        if not all_topics:
+            all_topics = []
         
         return jsonify({
             "success": True,
-            "topics": get_all_topics(),
+            "topics": all_topics,
             "document_id": document_id
         })
     except Exception as e:

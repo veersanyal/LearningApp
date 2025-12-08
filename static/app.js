@@ -701,6 +701,12 @@ function app() {
                         return;
                     }
                     
+                    if (!data.topics || !Array.isArray(data.topics)) {
+                        statusDiv.textContent = 'Error: Invalid response from server. Topics not found.';
+                        console.error('Invalid topics data:', data);
+                        return;
+                    }
+                    
                     statusDiv.textContent = 'Topics extracted successfully!';
                     this.allTopics = data.topics;
                     this.displayTopics(data.topics);
@@ -718,6 +724,13 @@ function app() {
             const section = document.getElementById('topics-section');
             
             if (!topicsList || !section) return;
+            
+            // Safety check
+            if (!topics || !Array.isArray(topics) || topics.length === 0) {
+                topicsList.innerHTML = '<li class="text-slate-400">No topics found</li>';
+                section.style.display = 'block';
+                return;
+            }
             
             topicsList.innerHTML = '';
             
