@@ -93,22 +93,19 @@ else:
     vision_model = None
 
 
-def extract_text_from_pdf(file_bytes, max_pages=5):
-    """Extract text from a PDF file with an optional page limit to avoid timeouts."""
+def extract_text_from_pdf(file_bytes):
+    """Extract text from a PDF file (all pages)."""
     try:
         reader = PdfReader(io.BytesIO(file_bytes))
         text = ""
         total_pages = len(reader.pages)
-        pages_to_read = min(total_pages, max_pages)
-        for idx in range(pages_to_read):
+        for idx in range(total_pages):
             page = reader.pages[idx]
             page_text = page.extract_text() or ""
             text += page_text
         if not text or len(text.strip()) < 50:
             print("Warning: PDF extraction returned very little or no text")
-        if total_pages > max_pages:
-            print(f"Truncated PDF read from {total_pages} to {pages_to_read} pages to keep processing fast")
-        print(f"Extracted {len(text)} characters from PDF ({pages_to_read}/{total_pages} pages)")
+        print(f"Extracted {len(text)} characters from PDF ({total_pages} pages)")
         return text
     except Exception as e:
         print(f"Error extracting text from PDF: {e}")
@@ -155,11 +152,8 @@ Only return the JSON, no other text."""
             print("[EXTRACT_TOPICS] Error: Image bytes not provided")
             return {"topics": [], "error": "Image data not provided."}
         
-        # Truncate content if too long (Gemini has token limits)
-        primary_max_chars = 6000  # tighter to avoid timeouts
-        if not is_image and len(content) > primary_max_chars:
-            print(f"[EXTRACT_TOPICS] Warning: Content too long ({len(content)} chars), truncating to {primary_max_chars}")
-            content = content[:primary_max_chars] + "\n\n[Content truncated...]"
+        # No truncation: use full content
+        primary_max_chars = None
 
         def call_model(active_content):
             request_timeout = 12  # seconds to avoid worker timeouts
@@ -537,7 +531,7 @@ def upload():
             file_type = 'pdf'
             try:
                 print("[UPLOAD] Step 1: Extracting text from PDF...")
-                content = extract_text_from_pdf(file_bytes, max_pages=20)
+                content = extract_text_from_pdf(file_bytes)
                 print(f"[UPLOAD] Step 1 complete: Extracted {len(content)} characters")
                 print("[UPLOAD] Step 2: Extracting topics from content...")
                 topic_data = extract_topics_from_content(content)
