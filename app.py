@@ -92,7 +92,7 @@ else:
     vision_model = None
 
 
-def extract_text_from_pdf(file_bytes, max_pages=10):
+def extract_text_from_pdf(file_bytes, max_pages=5):
     """Extract text from a PDF file with an optional page limit to avoid timeouts."""
     try:
         reader = PdfReader(io.BytesIO(file_bytes))
@@ -155,13 +155,13 @@ Only return the JSON, no other text."""
             return {"topics": [], "error": "Image data not provided."}
         
         # Truncate content if too long (Gemini has token limits)
-        primary_max_chars = 12000  # tighter to avoid timeouts
+        primary_max_chars = 6000  # tighter to avoid timeouts
         if not is_image and len(content) > primary_max_chars:
             print(f"[EXTRACT_TOPICS] Warning: Content too long ({len(content)} chars), truncating to {primary_max_chars}")
             content = content[:primary_max_chars] + "\n\n[Content truncated...]"
 
         def call_model(active_content):
-            request_timeout = 20  # seconds to avoid worker timeouts
+            request_timeout = 12  # seconds to avoid worker timeouts
             if is_image and image_bytes:
                 image = Image.open(io.BytesIO(image_bytes))
                 print(f"[EXTRACT_TOPICS] Using vision model with timeout {request_timeout}s")
@@ -184,7 +184,7 @@ Only return the JSON, no other text."""
             print(f"[EXTRACT_TOPICS] First attempt failed: {e}")
             # Retry once with aggressive truncation for text timeouts
             if (("timeout" in err_msg or "deadline" in err_msg or "504" in err_msg) and not is_image):
-                fallback_chars = 4000
+                fallback_chars = 2000
                 short_content = content[:fallback_chars] + "\n\n[Content truncated further for retry...]"
                 print(f"[EXTRACT_TOPICS] Retrying with shorter content ({len(short_content)} chars)")
                 try:
