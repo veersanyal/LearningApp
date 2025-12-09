@@ -79,8 +79,8 @@ else:
 # Models - using gemini-2.5-flash-lite (only initialize if API key is set)
 if GEMINI_API_KEY:
     try:
-text_model = genai.GenerativeModel('gemini-2.5-flash-lite')
-vision_model = genai.GenerativeModel('gemini-2.5-flash-lite')
+        text_model = genai.GenerativeModel('gemini-2.5-flash-lite')
+        vision_model = genai.GenerativeModel('gemini-2.5-flash-lite')
         print("Initialized models: gemini-2.5-flash-lite")
     except Exception as e:
         print(f"Error initializing gemini-2.5-flash-lite: {e}")
