@@ -81,9 +81,22 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
         if file_type == 'pdf':
             # Convert PDF to images
             print("[GEMINI_EXTRACT] Converting PDF to images...")
-            pdf_images = convert_from_bytes(file_bytes)
-            total_pages = len(pdf_images)
-            print(f"[GEMINI_EXTRACT] Converted {total_pages} pages to images")
+            try:
+                pdf_images = convert_from_bytes(file_bytes, dpi=150)  # Lower DPI for faster processing
+                total_pages = len(pdf_images)
+                print(f"[GEMINI_EXTRACT] Converted {total_pages} pages to images")
+            except Exception as e:
+                print(f"[GEMINI_EXTRACT] Error converting PDF to images: {e}")
+                import traceback
+                traceback.print_exc()
+                return {"error": f"Failed to convert PDF to images: {str(e)}"}
+            
+            # Limit pages to prevent timeout (process max 20 pages)
+            max_pages_to_process = 20
+            if total_pages > max_pages_to_process:
+                print(f"[GEMINI_EXTRACT] Warning: PDF has {total_pages} pages, processing first {max_pages_to_process} pages only")
+                pdf_images = pdf_images[:max_pages_to_process]
+                total_pages = max_pages_to_process
             
             # Process each page with Gemini
             for page_idx, page_image in enumerate(pdf_images):
@@ -91,10 +104,11 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
                 print(f"[GEMINI_EXTRACT] Processing page {page_num}/{total_pages} with Gemini...")
                 
                 try:
-                    # Send page to Gemini
+                    # Send page to Gemini with shorter timeout to prevent 502s
+                    page_prompt = prompt + f"\n\nThis is page {page_num} of {total_pages}. Extract questions from this page only."
                     response = vision_model.generate_content(
-                        [prompt + f"\n\nThis is page {page_num} of {total_pages}. Extract questions from this page only.", page_image],
-                        request_options={"timeout": 30}
+                        [page_prompt, page_image],
+                        request_options={"timeout": 20}  # Reduced from 30 to 20 seconds
                     )
                     
                     response_text = response.text.strip()

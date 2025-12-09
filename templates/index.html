@@ -351,9 +351,9 @@
                                     <div class="flex-1">
                                         <div class="flex items-center space-x-3 mb-2">
                                             <span class="text-2xl">
-                                                <template x-if="doc.file_type === 'pdf'">📄</template>
-                                                <template x-if="doc.file_type === 'image'">🖼️</template>
-                                                <template x-if="doc.file_type === 'text'">📝</template>
+                                                <template x-if="doc && doc.file_type === 'pdf'">📄</template>
+                                                <template x-if="doc && doc.file_type === 'image'">🖼️</template>
+                                                <template x-if="doc && doc.file_type === 'text'">📝</template>
                                             </span>
                                             <div>
                                                 <h3 class="text-lg font-semibold" x-text="doc.filename"></h3>

@@ -999,7 +999,13 @@ def upload_exam():
         
         # Extract questions using Gemini Vision
         print("[EXAM_UPLOAD] Extracting questions with Gemini Vision...")
-        extraction_result = extract_exam_questions_with_gemini(file_bytes, file_type, vision_model)
+        try:
+            extraction_result = extract_exam_questions_with_gemini(file_bytes, file_type, vision_model)
+        except Exception as extract_error:
+            print(f"[EXAM_UPLOAD] Exception during extraction: {extract_error}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({"error": f"Failed to extract questions: {str(extract_error)}"}), 500
         
         if 'error' in extraction_result:
             return jsonify({"error": extraction_result['error']}), 500
