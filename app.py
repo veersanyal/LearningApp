@@ -540,7 +540,7 @@ def upload():
         filename = original_filename.lower()
         print(f"[UPLOAD] Processing file: {original_filename} (lowercase: {filename})")
         
-    file_bytes = file.read()
+        file_bytes = file.read()
         file_size = len(file_bytes)
         print(f"[UPLOAD] File size: {file_size} bytes")
 
