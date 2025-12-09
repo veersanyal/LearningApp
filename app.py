@@ -34,6 +34,8 @@ from challenges import (create_direct_challenge, get_challenge_by_link, get_rece
                        get_community_questions, vote_community_question)
 from exam_ocr import process_exam_file
 from exam_gemini import extract_exam_questions_with_gemini, save_exam_questions_to_db
+from exam_gemini_incremental import process_exam_incremental
+import threading
 from exam_gemini import extract_exam_questions_with_gemini, save_exam_questions_to_db
 
 # Load environment variables

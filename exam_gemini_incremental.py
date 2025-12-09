@@ -105,92 +105,73 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
                     
                     print(f"[INCREMENTAL] Processing pages {chunk_pages[0]}-{chunk_pages[-1]} of {total_pages}...")
                     
-                    # Process each page in this chunk
+                    # Process 2 pages together for better context
                     chunk_questions = []
-                    for page_idx in range(chunk_start, chunk_end):
-                        page_num = page_idx + 1
-                        page_image = pdf_images[page_idx]
+                    page_num1 = chunk_start + 1
+                    page_image1 = pdf_images[chunk_start]
+                    
+                    try:
+                        if chunk_end - chunk_start == 2:
+                            # Process 2 pages together
+                            page_num2 = chunk_start + 2
+                            page_image2 = pdf_images[chunk_start + 1]
+                            page_prompt = prompt + f"\n\nThis is pages {page_num1}-{page_num2} of {total_pages}. Extract questions from BOTH pages. Make sure to include the page_number for each question."
+                            
+                            print(f"[INCREMENTAL] Sending pages {page_num1}-{page_num2} to Gemini...")
+                            response = vision_model.generate_content(
+                                [page_prompt, page_image1, page_image2],
+                                request_options={"timeout": 25}
+                            )
+                        else:
+                            # Only one page left
+                            page_prompt = prompt + f"\n\nThis is page {page_num1} of {total_pages}. Extract questions from this page only."
+                            print(f"[INCREMENTAL] Sending page {page_num1} to Gemini...")
+                            response = vision_model.generate_content(
+                                [page_prompt, page_image1],
+                                request_options={"timeout": 20}
+                            )
+                            
+                        response_text = response.text.strip()
+                        # Remove markdown code blocks
+                        if response_text.startswith("```"):
+                            parts = response_text.split("```")
+                            if len(parts) >= 2:
+                                response_text = parts[1]
+                                if response_text.startswith("json"):
+                                    response_text = response_text[4:]
+                        response_text = response_text.strip()
                         
-                        try:
-                            # Send 2 pages together to Gemini for context
-                            if chunk_start == page_idx:
-                                # First page of chunk - include both pages if available
-                                if chunk_end - chunk_start > 1:
-                                    next_page_image = pdf_images[page_idx + 1]
-                                    page_prompt = prompt + f"\n\nThis is pages {page_num}-{page_num+1} of {total_pages}. Extract questions from BOTH pages."
-                                    response = vision_model.generate_content(
-                                        [page_prompt, page_image, next_page_image],
-                                        request_options={"timeout": 25}
-                                    )
-                                    # Process both pages from this response
-                                    response_text = response.text.strip()
-                                    # Remove markdown code blocks
-                                    if response_text.startswith("```"):
-                                        parts = response_text.split("```")
-                                        if len(parts) >= 2:
-                                            response_text = parts[1]
-                                            if response_text.startswith("json"):
-                                                response_text = response_text[4:]
-                                    response_text = response_text.strip()
-                                    
-                                    page_data = json.loads(response_text)
-                                    
-                                    # Add questions from both pages
-                                    if page_data.get("questions"):
-                                        for q in page_data["questions"]:
-                                            q_page = q.get("page_number", page_num)
-                                            if q_page in [page_num, page_num + 1]:
-                                                q["page_number"] = q_page
-                                                chunk_questions.append(q)
-                                    
-                                    # Skip next page since we processed it
-                                    continue
-                                else:
-                                    # Only one page in chunk
-                                    page_prompt = prompt + f"\n\nThis is page {page_num} of {total_pages}. Extract questions from this page only."
-                                    response = vision_model.generate_content(
-                                        [page_prompt, page_image],
-                                        request_options={"timeout": 20}
-                                    )
-                            else:
-                                # This page was already processed with previous page
-                                continue
-                            
-                            response_text = response.text.strip()
-                            # Remove markdown code blocks
-                            if response_text.startswith("```"):
-                                parts = response_text.split("```")
-                                if len(parts) >= 2:
-                                    response_text = parts[1]
-                                    if response_text.startswith("json"):
-                                        response_text = response_text[4:]
-                            response_text = response_text.strip()
-                            
-                            # Parse JSON response
-                            page_data = json.loads(response_text)
-                            
-                            # Check if this page was skipped (instruction page)
-                            if page_data.get("instruction_pages_skipped"):
-                                if page_num in page_data["instruction_pages_skipped"]:
-                                    print(f"[INCREMENTAL] Page {page_num} detected as instructions - skipping")
-                                    continue
-                            
-                            # Add questions from this page
-                            if page_data.get("questions"):
-                                for q in page_data["questions"]:
-                                    q["page_number"] = page_num
-                                    chunk_questions.append(q)
+                        # Parse JSON response
+                        page_data = json.loads(response_text)
                         
-                        except json.JSONDecodeError as e:
-                            error_msg = f"Failed to parse JSON from page {page_num}: {str(e)}"
-                            print(f"[INCREMENTAL] {error_msg}")
-                            errors.append(error_msg)
-                            continue
-                        except Exception as e:
-                            error_msg = f"Error processing page {page_num}: {str(e)}"
-                            print(f"[INCREMENTAL] {error_msg}")
-                            errors.append(error_msg)
-                            continue
+                        # Check for skipped instruction pages
+                        skipped_pages = page_data.get("instruction_pages_skipped", [])
+                        
+                        # Add questions from this chunk
+                        if page_data.get("questions"):
+                            for q in page_data["questions"]:
+                                # Ensure page_number is set
+                                if not q.get("page_number"):
+                                    # Default to first page of chunk if not specified
+                                    q["page_number"] = page_num1
+                                # Skip if this question's page was marked as instructions
+                                if q["page_number"] in skipped_pages:
+                                    continue
+                                chunk_questions.append(q)
+                    
+                    except json.JSONDecodeError as e:
+                        error_msg = f"Failed to parse JSON from pages {chunk_pages[0]}-{chunk_pages[-1]}: {str(e)}"
+                        print(f"[INCREMENTAL] {error_msg}")
+                        print(f"[INCREMENTAL] Response preview: {response_text[:200]}...")
+                        errors.append(error_msg)
+                        continue
+                    except Exception as e:
+                        error_msg = f"Error processing pages {chunk_pages[0]}-{chunk_pages[-1]}: {str(e)}"
+                        print(f"[INCREMENTAL] {error_msg}")
+                        import traceback
+                        traceback.print_exc()
+                        errors.append(error_msg)
+                        continue
                     
                     # Save this chunk's questions to database immediately
                     if chunk_questions:
