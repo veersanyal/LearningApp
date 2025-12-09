@@ -1441,11 +1441,24 @@ function app() {
                 }
                 
                 if (response.ok && data.success) {
-                    statusDiv.textContent = `Success! Extracted ${data.total_questions} questions from ${data.total_pages} pages.`;
-                    statusDiv.className = 'text-sm mt-2 text-center text-green-400';
-                    this.examUploadForm.examName = '';
-                    fileInput.value = '';
-                    this.loadExams();
+                    if (data.status === 'processing') {
+                        // Incremental processing started
+                        statusDiv.textContent = 'Upload started! Processing pages in background. Questions will appear as they are extracted...';
+                        statusDiv.className = 'text-sm mt-2 text-center text-blue-400';
+                        this.examUploadForm.examName = '';
+                        fileInput.value = '';
+                        this.loadExams();
+                        
+                        // Poll for progress
+                        this.pollExamProgress(data.exam_id);
+                    } else {
+                        // Completed immediately (single image)
+                        statusDiv.textContent = `Success! Extracted ${data.total_questions || 0} questions from ${data.total_pages || 0} pages.`;
+                        statusDiv.className = 'text-sm mt-2 text-center text-green-400';
+                        this.examUploadForm.examName = '';
+                        fileInput.value = '';
+                        this.loadExams();
+                    }
                 } else {
                     const errorMsg = data.error || 'Upload failed';
                     statusDiv.textContent = 'Error: ' + errorMsg;
