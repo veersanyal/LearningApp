@@ -111,6 +111,7 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
                     page_num1 = chunk_start + 1
                     page_image1 = pdf_images[chunk_start]
                     
+                    response_text = None
                     try:
                         if chunk_end - chunk_start == 2:
                             # Process 2 pages together
@@ -123,6 +124,7 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
                                 [page_prompt, page_image1, page_image2],
                                 request_options={"timeout": 25}
                             )
+                            print(f"[INCREMENTAL] Received response from Gemini for pages {page_num1}-{page_num2}")
                         else:
                             # Only one page left
                             page_prompt = prompt + f"\n\nThis is page {page_num1} of {total_pages}. Extract questions from this page only."
@@ -131,8 +133,15 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
                                 [page_prompt, page_image1],
                                 request_options={"timeout": 20}
                             )
+                            print(f"[INCREMENTAL] Received response from Gemini for page {page_num1}")
+                            
+                        if not response or not hasattr(response, 'text'):
+                            print(f"[INCREMENTAL] ERROR: Invalid response from Gemini")
+                            errors.append(f"Invalid response from Gemini for pages {chunk_pages[0]}-{chunk_pages[-1]}")
+                            continue
                             
                         response_text = response.text.strip()
+                        print(f"[INCREMENTAL] Response length: {len(response_text)} characters")
                         # Remove markdown code blocks
                         if response_text.startswith("```"):
                             parts = response_text.split("```")
