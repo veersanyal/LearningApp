@@ -33,6 +33,7 @@ from challenges import (create_direct_challenge, get_challenge_by_link, get_rece
                        accept_challenge, complete_challenge, submit_community_question,
                        get_community_questions, vote_community_question)
 from exam_ocr import process_exam_file
+from exam_gemini import extract_exam_questions_with_gemini, save_exam_questions_to_db
 
 # Load environment variables
 load_dotenv()
@@ -72,13 +73,13 @@ if not GEMINI_API_KEY:
     print("WARNING: GEMINI_API_KEY environment variable is not set. Some features may not work.")
     # Don't crash on startup - allow app to start but features will fail gracefully
 else:
-    genai.configure(api_key=GEMINI_API_KEY)
+genai.configure(api_key=GEMINI_API_KEY)
 
 # Models - using gemini-2.5-flash-lite (only initialize if API key is set)
 if GEMINI_API_KEY:
     try:
-        text_model = genai.GenerativeModel('gemini-2.5-flash-lite')
-        vision_model = genai.GenerativeModel('gemini-2.5-flash-lite')
+text_model = genai.GenerativeModel('gemini-2.5-flash-lite')
+vision_model = genai.GenerativeModel('gemini-2.5-flash-lite')
         print("Initialized models: gemini-2.5-flash-lite")
     except Exception as e:
         print(f"Error initializing gemini-2.5-flash-lite: {e}")
@@ -99,8 +100,8 @@ else:
 def extract_text_from_pdf(file_bytes, skip_instruction_pages=True):
     """Extract text from a PDF file, optionally skipping instruction pages."""
     try:
-        reader = PdfReader(io.BytesIO(file_bytes))
-        text = ""
+    reader = PdfReader(io.BytesIO(file_bytes))
+    text = ""
         total_pages = len(reader.pages)
         skipped_pages = 0
         
@@ -120,7 +121,7 @@ def extract_text_from_pdf(file_bytes, skip_instruction_pages=True):
         if not text or len(text.strip()) < 50:
             print("Warning: PDF extraction returned very little or no text")
         print(f"Extracted {len(text)} characters from PDF ({total_pages} pages, {skipped_pages} instruction pages skipped)")
-        return text
+    return text
     except Exception as e:
         print(f"Error extracting text from PDF: {e}")
         import traceback
@@ -202,14 +203,14 @@ Only return the JSON, no other text."""
             request_timeout = 12  # seconds to avoid worker timeouts
 
             def _do_call():
-                if is_image and image_bytes:
-                    image = Image.open(io.BytesIO(image_bytes))
+        if is_image and image_bytes:
+            image = Image.open(io.BytesIO(image_bytes))
                     print(f"[EXTRACT_TOPICS] Using vision model with timeout {request_timeout}s")
                     return vision_model.generate_content(
                         [prompt, image],
                         request_options={"timeout": request_timeout}
                     )
-                else:
+        else:
                     full_prompt = f"{prompt}\n\nContent:\n{active_content}"
                     print(f"[EXTRACT_TOPICS] Using text model (content length: {len(active_content)} chars) with timeout {request_timeout}s")
                     return text_model.generate_content(
@@ -266,7 +267,7 @@ Only return the JSON, no other text."""
         
         # Try to parse JSON
         try:
-            result = json.loads(response_text)
+        result = json.loads(response_text)
         except json.JSONDecodeError as json_err:
             print(f"JSON parsing error: {json_err}")
             print(f"Full response text: {response_text}")
@@ -525,20 +526,20 @@ def upload():
         print("[UPLOAD] ========== STARTING UPLOAD ==========")
         print(f"[UPLOAD] User ID: {current_user.id}")
         
-        if 'file' not in request.files:
+    if 'file' not in request.files:
             print("[UPLOAD] ERROR: No file in request.files")
-            return jsonify({"error": "No file provided"}), 400
-        
-        file = request.files['file']
-        if file.filename == '':
+        return jsonify({"error": "No file provided"}), 400
+    
+    file = request.files['file']
+    if file.filename == '':
             print("[UPLOAD] ERROR: Empty filename")
-            return jsonify({"error": "No file selected"}), 400
-        
+        return jsonify({"error": "No file selected"}), 400
+    
         original_filename = file.filename
         filename = original_filename.lower()
         print(f"[UPLOAD] Processing file: {original_filename} (lowercase: {filename})")
         
-        file_bytes = file.read()
+    file_bytes = file.read()
         file_size = len(file_bytes)
         print(f"[UPLOAD] File size: {file_size} bytes")
 
@@ -574,10 +575,10 @@ def upload():
             file_type = 'pdf'
             try:
                 print("[UPLOAD] Step 1: Extracting text from PDF...")
-                content = extract_text_from_pdf(file_bytes)
+            content = extract_text_from_pdf(file_bytes)
                 print(f"[UPLOAD] Step 1 complete: Extracted {len(content)} characters")
                 print("[UPLOAD] Step 2: Extracting topics from content...")
-                topic_data = extract_topics_from_content(content)
+            topic_data = extract_topics_from_content(content)
                 print(f"[UPLOAD] Step 2 complete: Got topic_data: {topic_data}")
             except Exception as e:
                 print(f"[UPLOAD] EXCEPTION processing PDF: {e}")
@@ -589,7 +590,7 @@ def upload():
             file_type = 'image'
             try:
                 print("[UPLOAD] Extracting topics from image...")
-                topic_data = extract_topics_from_content(None, is_image=True, image_bytes=file_bytes)
+            topic_data = extract_topics_from_content(None, is_image=True, image_bytes=file_bytes)
                 print(f"[UPLOAD] Got topic_data: {topic_data}")
             except Exception as e:
                 print(f"[UPLOAD] EXCEPTION processing image: {e}")
@@ -601,10 +602,10 @@ def upload():
             file_type = 'text'
             try:
                 print("[UPLOAD] Decoding text file...")
-                content = file_bytes.decode('utf-8')
+            content = file_bytes.decode('utf-8')
                 print(f"[UPLOAD] Decoded {len(content)} characters")
                 print("[UPLOAD] Extracting topics from content...")
-                topic_data = extract_topics_from_content(content)
+            topic_data = extract_topics_from_content(content)
                 print(f"[UPLOAD] Got topic_data: {topic_data}")
             except Exception as e:
                 print(f"[UPLOAD] EXCEPTION processing text file: {e}")
@@ -958,8 +959,11 @@ def get_exam_prep(exam_id):
 @app.route('/exam/upload', methods=['POST'])
 @login_required
 def upload_exam():
-    """Upload and OCR an exam file (PDF or image)."""
+    """Upload exam file and extract questions using Gemini Vision."""
     try:
+        print("[EXAM_UPLOAD] ========== STARTING EXAM UPLOAD ==========")
+        print(f"[EXAM_UPLOAD] User ID: {current_user.id}")
+        
         if 'file' not in request.files:
             return jsonify({"error": "No file provided"}), 400
         
@@ -971,6 +975,12 @@ def upload_exam():
         
         filename = file.filename.lower()
         file_bytes = file.read()
+        file_size = len(file_bytes)
+        
+        # Enforce file size limit (8 MB)
+        max_file_size = 8 * 1024 * 1024
+        if file_size > max_file_size:
+            return jsonify({"error": f"File too large. Max size is {max_file_size / (1024 * 1024):.0f} MB."}), 413
         
         # Determine file type
         if filename.endswith('.pdf'):
@@ -980,17 +990,45 @@ def upload_exam():
         else:
             return jsonify({"error": "Unsupported file type. Please upload PDF or image."}), 400
         
-        print(f"[EXAM_UPLOAD] Processing {file_type} file: {exam_name}")
+        print(f"[EXAM_UPLOAD] Processing {file_type} file: {exam_name} ({file_size} bytes)")
         
-        # Process exam file with OCR
-        result = process_exam_file(file_bytes, file_type, current_user.id, exam_name)
+        # Check if vision model is available
+        if not vision_model:
+            return jsonify({"error": "AI service not configured. Please check GEMINI_API_KEY environment variable."}), 500
+        
+        # Extract questions using Gemini Vision
+        print("[EXAM_UPLOAD] Extracting questions with Gemini Vision...")
+        extraction_result = extract_exam_questions_with_gemini(file_bytes, file_type, vision_model)
+        
+        if 'error' in extraction_result:
+            return jsonify({"error": extraction_result['error']}), 500
+        
+        questions = extraction_result.get('questions', [])
+        total_pages = extraction_result.get('total_pages', 0)
+        
+        if not questions:
+            return jsonify({
+                "error": "No questions found in the exam. Make sure the file contains actual exam questions, not just instructions."
+            }), 400
+        
+        print(f"[EXAM_UPLOAD] Extracted {len(questions)} questions from {total_pages} pages")
+        
+        # Save to database
+        print("[EXAM_UPLOAD] Saving questions to database...")
+        save_result = save_exam_questions_to_db(
+            current_user.id,
+            exam_name,
+            file_type,
+            questions,
+            total_pages
+        )
         
         return jsonify({
             "success": True,
-            "exam_id": result['exam_id'],
-            "total_questions": result['total_questions'],
-            "total_pages": result['total_pages'],
-            "message": f"Successfully extracted {result['total_questions']} questions from {result['total_pages']} pages"
+            "exam_id": save_result['exam_id'],
+            "total_questions": save_result['total_questions'],
+            "total_pages": total_pages,
+            "message": f"Successfully extracted {save_result['total_questions']} questions from {total_pages} pages"
         })
     
     except Exception as e:
@@ -1244,7 +1282,7 @@ def get_exam_questions(exam_id):
                     # Extract just the filename from the path
                     if 'exams/' in q['image_path']:
                         question_data['image_path'] = q['image_path'].split('exams/')[1]
-                    else:
+        else:
                         question_data['image_path'] = q['image_path']
                 
                 result.append(question_data)
@@ -1430,8 +1468,8 @@ def load_document(document_id):
             clear_user_state(current_user.id)
             load_topics_from_json(topic_data)
             init_user_state(current_user.id)
-            
-            return jsonify({
+        
+        return jsonify({
                 "success": True,
                 "topics": get_all_topics()
             })

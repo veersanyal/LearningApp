@@ -483,10 +483,46 @@
                                          class="max-w-full rounded-lg border border-slate-700">
                                 </div>
                                 
-                                <!-- Question Text -->
+                                <!-- Question Text (with LaTeX support) -->
                                 <div class="mb-4 p-4 bg-slate-900 rounded-lg">
-                                    <div class="whitespace-pre-wrap text-slate-300" x-html="formatQuestionText(q.text)"></div>
+                                    <div class="prose prose-invert max-w-none text-slate-300" x-html="renderMath(q.text || q.question_text || '')"></div>
                                 </div>
+                                
+                                <!-- Options (if multiple choice) -->
+                                <template x-if="q.options && q.options.length > 0">
+                                    <div class="mb-4 p-4 bg-slate-700 rounded-lg">
+                                        <h5 class="font-semibold mb-2">Options:</h5>
+                                        <ol class="list-decimal list-inside space-y-2">
+                                            <template x-for="(option, optIdx) in q.options" :key="optIdx">
+                                                <li class="text-slate-300" x-html="renderMath(option)"></li>
+                                            </template>
+                                        </ol>
+                                    </div>
+                                </template>
+                                
+                                <!-- Correct Answer (if provided) -->
+                                <template x-if="q.correct_answer">
+                                    <div class="mb-4 p-4 bg-green-900 bg-opacity-30 rounded-lg border border-green-700">
+                                        <h5 class="font-semibold mb-2 text-green-400">Correct Answer:</h5>
+                                        <div class="prose prose-invert max-w-none text-green-300" x-html="renderMath(q.correct_answer)"></div>
+                                    </div>
+                                </template>
+                                
+                                <!-- Subparts (if any) -->
+                                <template x-if="q.subparts && q.subparts.length > 0">
+                                    <div class="mb-4 p-4 bg-slate-700 rounded-lg">
+                                        <h5 class="font-semibold mb-2">Subparts:</h5>
+                                        <template x-for="(subpart, subIdx) in q.subparts" :key="subIdx">
+                                            <div class="mb-3 p-3 bg-slate-800 rounded">
+                                                <h6 class="font-medium mb-1" x-text="subpart.subpart_number"></h6>
+                                                <div class="prose prose-invert max-w-none text-slate-300 text-sm" x-html="renderMath(subpart.subpart_text)"></div>
+                                                <template x-if="subpart.correct_answer">
+                                                    <div class="mt-2 text-green-400 text-sm" x-html="renderMath(subpart.correct_answer)"></div>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
                                 
                                 <!-- Solution (if analyzed) -->
                                 <div x-show="q.solution" class="mb-4 p-4 bg-green-900 bg-opacity-20 rounded-lg border border-green-700">

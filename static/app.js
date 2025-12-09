@@ -1520,12 +1520,33 @@ function app() {
                 .replace(/>/g, '&gt;')
                 .replace(/\n/g, '<br>');
             
-            // Try to detect and format LaTeX-like math (basic patterns)
-            // This is a simple formatter - for full LaTeX support, MathJax will handle it
-            formatted = formatted.replace(/\$\$([^$]+)\$\$/g, '<span class="math-display">$$$1$$</span>');
-            formatted = formatted.replace(/\$([^$]+)\$/g, '<span class="math-inline">$$1$</span>');
-            
+            // MathJax will handle LaTeX rendering automatically
             return formatted;
+        },
+        
+        renderMath(text) {
+            if (!text) return '';
+            
+            // Escape HTML but preserve LaTeX delimiters
+            let processed = text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+            
+            // Convert newlines to <br>
+            processed = processed.replace(/\n/g, '<br>');
+            
+            // MathJax will automatically detect and render $...$ and $$...$$ blocks
+            // Trigger MathJax rendering after DOM update
+            this.$nextTick(() => {
+                if (window.MathJax && window.MathJax.typesetPromise) {
+                    MathJax.typesetPromise().catch((err) => {
+                        console.log('MathJax rendering error:', err);
+                    });
+                }
+            });
+            
+            return processed;
         },
         
         async loadAchievements() {
