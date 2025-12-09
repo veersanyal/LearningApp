@@ -182,45 +182,45 @@ def record_answer(user_id, topic_id, correct: bool):
         
         # Convert to dict for easier manipulation
         stats_dict = dict(stats)
-    
-    # Update basic counters
+        
+        # Update basic counters
         attempts = stats_dict["attempts"] + 1
-    
-    # NESTED STRUCTURE requirement: IF inside FOR loop
-    if correct:
+        
+        # NESTED STRUCTURE requirement: IF inside FOR loop
+        if correct:
             correct_count = stats_dict["correct"] + 1
             streak_correct = stats_dict["streak_correct"] + 1
             streak_wrong = 0
-        quality = 4  # Good recall for SM-2 algorithm
-    else:
+            quality = 4  # Good recall for SM-2 algorithm
+        else:
             correct_count = stats_dict["correct"]
             streak_wrong = stats_dict["streak_wrong"] + 1
             streak_correct = 0
-        quality = 1  # Failed recall for SM-2 algorithm
-    
-    # Calculate current retention using forgetting curve
+            quality = 1  # Failed recall for SM-2 algorithm
+        
+        # Calculate current retention using forgetting curve
         last_reviewed = stats_dict["last_reviewed"]
         if last_reviewed:
             if isinstance(last_reviewed, str):
                 last_reviewed = datetime.fromisoformat(last_reviewed)
             retention = calculate_forgetting_factor(last_reviewed, stats_dict["mastery"])
-    else:
-        retention = 1.0
-    
-    # Update mastery with time-weighted calculation
+        else:
+            retention = 1.0
+        
+        # Update mastery with time-weighted calculation
         raw_accuracy = correct_count / max(1, attempts)
         mastery = (raw_accuracy * 0.7) + (retention * 0.3)
-    
-    # Update easiness factor using SM-2 algorithm
+        
+        # Update easiness factor using SM-2 algorithm
         easiness_factor = update_easiness_factor(stats_dict["easiness_factor"], quality)
-    
-    # Calculate next review interval using SM-2
-    interval, new_review_count = calculate_sm2_interval(
+        
+        # Calculate next review interval using SM-2
+        interval, new_review_count = calculate_sm2_interval(
             easiness_factor,
             stats_dict["review_count"],
-        quality
-    )
-    
+            quality
+        )
+        
         # Update database
         next_review = current_time + timedelta(days=interval)
         
