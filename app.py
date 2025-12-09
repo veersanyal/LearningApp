@@ -101,8 +101,8 @@ else:
 def extract_text_from_pdf(file_bytes, skip_instruction_pages=True):
     """Extract text from a PDF file, optionally skipping instruction pages."""
     try:
-    reader = PdfReader(io.BytesIO(file_bytes))
-    text = ""
+        reader = PdfReader(io.BytesIO(file_bytes))
+        text = ""
         total_pages = len(reader.pages)
         skipped_pages = 0
         
