@@ -193,32 +193,32 @@ def segment_questions(text: str, page_num: int = 0) -> List[Dict[str, any]]:
             for pattern in question_patterns:
                 line = re.sub(pattern, '', line).strip()
             current_text = [line] if line else []
+        else:
+            # Continuation of current question
+            if current_question:
+                current_text.append(line)
             else:
-                # Continuation of current question
-                if current_question:
-                    current_text.append(line)
-                else:
-                    # No question number found yet, might be preamble
-                    # Only treat as question if it has strong question indicators
-                    question_indicators = ['compute', 'find', 'solve', 'calculate', 'determine', 
-                                         'evaluate', 'prove', 'show', 'what is', 'which of', 
-                                         'how many', 'integral', 'derivative', 'limit', 'matrix',
-                                         'vector', 'function', 'equation', 'graph']
-                    
-                    # Check if line contains math/question content
-                    has_math_symbols = bool(re.search(r'[∫∑∏√∞αβγδεθλμπσφωΔ∇∂∮⟨⟩·×÷±≤≥≠≈∝∈∉⊂⊃∪∩∅∀∃∴∵]', line))
-                    has_question_keywords = any(keyword in line.lower() for keyword in question_indicators)
-                    has_math_notation = bool(re.search(r'[\(\)\[\]\{\}]', line)) and len(line) > 20
-                    
-                    if has_question_keywords or has_math_symbols or has_math_notation:
-                        # Likely a question without explicit numbering
-                        if not current_question:
-                            current_question = 'unnumbered'
-                            current_text = [line]
-                        else:
-                            current_text.append(line)
-                    elif current_question == 'unnumbered':
+                # No question number found yet, might be preamble
+                # Only treat as question if it has strong question indicators
+                question_indicators = ['compute', 'find', 'solve', 'calculate', 'determine', 
+                                     'evaluate', 'prove', 'show', 'what is', 'which of', 
+                                     'how many', 'integral', 'derivative', 'limit', 'matrix',
+                                     'vector', 'function', 'equation', 'graph']
+                
+                # Check if line contains math/question content
+                has_math_symbols = bool(re.search(r'[∫∑∏√∞αβγδεθλμπσφωΔ∇∂∮⟨⟩·×÷±≤≥≠≈∝∈∉⊂⊃∪∩∅∀∃∴∵]', line))
+                has_question_keywords = any(keyword in line.lower() for keyword in question_indicators)
+                has_math_notation = bool(re.search(r'[\(\)\[\]\{\}]', line)) and len(line) > 20
+                
+                if has_question_keywords or has_math_symbols or has_math_notation:
+                    # Likely a question without explicit numbering
+                    if not current_question:
+                        current_question = 'unnumbered'
+                        current_text = [line]
+                    else:
                         current_text.append(line)
+                elif current_question == 'unnumbered':
+                    current_text.append(line)
     
     # Save last question
     if current_question and current_text:
