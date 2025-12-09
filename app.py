@@ -997,52 +997,67 @@ def upload_exam():
         if not vision_model:
             return jsonify({"error": "AI service not configured. Please check GEMINI_API_KEY environment variable."}), 500
         
-        # Extract questions using Gemini Vision
-        print("[EXAM_UPLOAD] Extracting questions with Gemini Vision...")
+        # Create exam record immediately (before processing)
+        db = get_db()
         try:
-            extraction_result = extract_exam_questions_with_gemini(file_bytes, file_type, vision_model)
-        except Exception as extract_error:
-            print(f"[EXAM_UPLOAD] Exception during extraction: {extract_error}")
-            import traceback
-            traceback.print_exc()
-            return jsonify({"error": f"Failed to extract questions: {str(extract_error)}"}), 500
-        
-        if 'error' in extraction_result:
-            return jsonify({"error": extraction_result['error']}), 500
-        
-        questions = extraction_result.get('questions', [])
-        total_pages = extraction_result.get('total_pages', 0)
-        
-        if not questions:
-            return jsonify({
-                "error": "No questions found in the exam. Make sure the file contains actual exam questions, not just instructions."
-            }), 400
-        
-        print(f"[EXAM_UPLOAD] Extracted {len(questions)} questions from {total_pages} pages")
-        
-        # Save to database
-        print("[EXAM_UPLOAD] Saving questions to database...")
-        try:
-            save_result = save_exam_questions_to_db(
-                current_user.id,
-                exam_name,
-                file_type,
-                questions,
-                total_pages
-            )
+            exam_dir = os.path.join(os.path.dirname(__file__), 'uploads', 'exams', str(current_user.id))
+            os.makedirs(exam_dir, exist_ok=True)
             
-            return jsonify({
-                "success": True,
-                "exam_id": save_result['exam_id'],
-                "total_questions": save_result['total_questions'],
-                "total_pages": total_pages,
-                "message": f"Successfully extracted {save_result['total_questions']} questions from {total_pages} pages"
-            })
-        except Exception as db_error:
-            print(f"[EXAM_UPLOAD] Database error: {db_error}")
-            import traceback
-            traceback.print_exc()
-            return jsonify({"error": f"Failed to save exam to database: {str(db_error)}"}), 500
+            # Estimate total pages for PDF
+            total_pages_estimate = 0
+            if file_type == 'pdf':
+                try:
+                    from pdf2image import convert_from_bytes
+                    pdf_images = convert_from_bytes(file_bytes, dpi=150, first_page=1, last_page=1)
+                    # Get actual page count
+                    from PyPDF2 import PdfReader
+                    reader = PdfReader(io.BytesIO(file_bytes))
+                    total_pages_estimate = len(reader.pages)
+                except:
+                    total_pages_estimate = 0
+            
+            db.cursor.execute('''
+                INSERT INTO exams (user_id, exam_name, file_type, total_pages, total_questions)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (current_user.id, exam_name, file_type, total_pages_estimate, 0))
+            db.conn.commit()
+            exam_id = db.cursor.lastrowid
+        finally:
+            db.disconnect()
+        
+        print(f"[EXAM_UPLOAD] Created exam record {exam_id}, starting incremental processing...")
+        
+        # Process incrementally in background thread
+        def process_in_background():
+            try:
+                result = process_exam_incremental(
+                    file_bytes, 
+                    file_type, 
+                    exam_id, 
+                    vision_model,
+                    callback=None  # Could add progress callback here
+                )
+                if 'error' in result:
+                    print(f"[EXAM_UPLOAD_BG] Error: {result['error']}")
+                else:
+                    print(f"[EXAM_UPLOAD_BG] Completed: {result['total_questions']} questions from {result['total_pages']} pages")
+            except Exception as e:
+                print(f"[EXAM_UPLOAD_BG] Exception: {e}")
+                import traceback
+                traceback.print_exc()
+        
+        # Start background processing
+        thread = threading.Thread(target=process_in_background)
+        thread.daemon = True
+        thread.start()
+        
+        # Return immediately with exam_id
+        return jsonify({
+            "success": True,
+            "exam_id": exam_id,
+            "status": "processing",
+            "message": "Exam upload started. Questions are being extracted in the background. Refresh to see progress."
+        })
     
     except Exception as e:
         print(f"[EXAM_UPLOAD] Error: {e}")
