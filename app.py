@@ -1469,8 +1469,8 @@ def load_document(document_id):
             clear_user_state(current_user.id)
             load_topics_from_json(topic_data)
             init_user_state(current_user.id)
-        
-        return jsonify({
+            
+            return jsonify({
                 "success": True,
                 "topics": get_all_topics()
             })
