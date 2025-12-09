@@ -128,9 +128,19 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
                 except json.JSONDecodeError as e:
                     print(f"[GEMINI_EXTRACT] Error parsing JSON from page {page_num}: {e}")
                     print(f"[GEMINI_EXTRACT] Response text: {response_text[:500]}")
+                    import traceback
+                    traceback.print_exc()
+                    # Don't continue silently - return error for first page failure
+                    if page_num == 1:
+                        return {"error": f"Failed to parse Gemini response from page {page_num}. The AI may have returned invalid JSON. Try uploading again."}
                     continue
                 except Exception as e:
                     print(f"[GEMINI_EXTRACT] Error processing page {page_num}: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    # Return error for first page failure
+                    if page_num == 1:
+                        return {"error": f"Failed to process page {page_num}: {str(e)}"}
                     continue
         
         elif file_type in ['png', 'jpg', 'jpeg', 'gif', 'webp']:
@@ -169,9 +179,13 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
             except json.JSONDecodeError as e:
                 print(f"[GEMINI_EXTRACT] Error parsing JSON from image: {e}")
                 print(f"[GEMINI_EXTRACT] Response text: {response_text[:500]}")
-                return {"error": f"Failed to parse Gemini response: {str(e)}"}
+                import traceback
+                traceback.print_exc()
+                return {"error": f"Failed to parse Gemini response. The AI may have returned invalid JSON. Response preview: {response_text[:200]}..."}
             except Exception as e:
                 print(f"[GEMINI_EXTRACT] Error processing image: {e}")
+                import traceback
+                traceback.print_exc()
                 return {"error": f"Failed to process image: {str(e)}"}
         
         else:
@@ -189,7 +203,16 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
         print(f"[GEMINI_EXTRACT] Top-level error: {e}")
         import traceback
         traceback.print_exc()
-        return {"error": f"Failed to extract questions: {str(e)}"}
+        error_msg = str(e)
+        # Provide more helpful error messages
+        if "timeout" in error_msg.lower() or "deadline" in error_msg.lower():
+            return {"error": "Request timed out. The exam file may be too large. Try splitting it into smaller parts or use a smaller file."}
+        elif "quota" in error_msg.lower() or "rate limit" in error_msg.lower():
+            return {"error": "API rate limit exceeded. Please try again in a few moments."}
+        elif "api key" in error_msg.lower() or "unauthorized" in error_msg.lower():
+            return {"error": "API key error. Please check your Gemini API key configuration."}
+        else:
+            return {"error": f"Failed to extract questions: {error_msg}"}
 
 
 def save_exam_questions_to_db(user_id: int, exam_name: str, file_type: str, questions_data: List[Dict], total_pages: int) -> Dict:

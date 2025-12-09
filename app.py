@@ -1016,27 +1016,40 @@ def upload_exam():
         
         # Save to database
         print("[EXAM_UPLOAD] Saving questions to database...")
-        save_result = save_exam_questions_to_db(
-            current_user.id,
-            exam_name,
-            file_type,
-            questions,
-            total_pages
-        )
-        
-        return jsonify({
-            "success": True,
-            "exam_id": save_result['exam_id'],
-            "total_questions": save_result['total_questions'],
-            "total_pages": total_pages,
-            "message": f"Successfully extracted {save_result['total_questions']} questions from {total_pages} pages"
-        })
+        try:
+            save_result = save_exam_questions_to_db(
+                current_user.id,
+                exam_name,
+                file_type,
+                questions,
+                total_pages
+            )
+            
+            return jsonify({
+                "success": True,
+                "exam_id": save_result['exam_id'],
+                "total_questions": save_result['total_questions'],
+                "total_pages": total_pages,
+                "message": f"Successfully extracted {save_result['total_questions']} questions from {total_pages} pages"
+            })
+        except Exception as db_error:
+            print(f"[EXAM_UPLOAD] Database error: {db_error}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({"error": f"Failed to save exam to database: {str(db_error)}"}), 500
     
     except Exception as e:
         print(f"[EXAM_UPLOAD] Error: {e}")
         import traceback
         traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
+        error_msg = str(e)
+        # Provide more helpful error messages
+        if "timeout" in error_msg.lower() or "deadline" in error_msg.lower():
+            return jsonify({"error": "Upload timed out. The exam file may be too large or complex. Try a smaller file or split it into parts."}), 500
+        elif "api" in error_msg.lower() or "key" in error_msg.lower():
+            return jsonify({"error": "AI service error. Please check your API key configuration."}), 500
+        else:
+            return jsonify({"error": f"Upload failed: {error_msg}"}), 500
 
 
 def analyze_question_with_gemini(question_text: str, question_image_path: Optional[str] = None) -> Dict:

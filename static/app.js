@@ -1422,22 +1422,39 @@ function app() {
             statusDiv.textContent = 'Uploading and extracting questions...';
             
             try {
+                statusDiv.textContent = 'Uploading and extracting questions...';
+                statusDiv.className = 'text-sm mt-2 text-center text-slate-400';
+                
                 const response = await fetch('/exam/upload', {
                     method: 'POST',
                     body: formData
                 });
-                const data = await response.json();
+                
+                let data;
+                try {
+                    data = await response.json();
+                } catch (jsonErr) {
+                    console.error('Failed to parse response:', jsonErr);
+                    statusDiv.textContent = 'Error: Invalid response from server';
+                    statusDiv.className = 'text-sm mt-2 text-center text-red-400';
+                    return;
+                }
                 
                 if (response.ok && data.success) {
                     statusDiv.textContent = `Success! Extracted ${data.total_questions} questions from ${data.total_pages} pages.`;
+                    statusDiv.className = 'text-sm mt-2 text-center text-green-400';
                     this.examUploadForm.examName = '';
                     fileInput.value = '';
                     this.loadExams();
                 } else {
-                    statusDiv.textContent = 'Error: ' + (data.error || 'Upload failed');
+                    const errorMsg = data.error || 'Upload failed';
+                    statusDiv.textContent = 'Error: ' + errorMsg;
+                    statusDiv.className = 'text-sm mt-2 text-center text-red-400';
+                    console.error('Upload error:', data);
                 }
             } catch (err) {
-                statusDiv.textContent = 'Error: ' + err.message;
+                statusDiv.textContent = 'Error: ' + (err.message || 'Network error. Please check your connection.');
+                statusDiv.className = 'text-sm mt-2 text-center text-red-400';
                 console.error('Upload error:', err);
             }
         },
