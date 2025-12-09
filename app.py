@@ -1478,19 +1478,32 @@ def list_exams():
                     WHERE exam_id = ? AND solved_json IS NOT NULL
                 ''', (exam['exam_id'],)).fetchone()[0]
                 
+                # Count actual questions in database (for debugging)
+                actual_count = db.cursor.execute('''
+                    SELECT COUNT(*) FROM exam_questions WHERE exam_id = ?
+                ''', (exam['exam_id'],)).fetchone()[0]
+                
                 # Check if still processing (has pages but no questions yet, or questions < expected)
                 is_processing = False
                 if exam['total_pages'] and exam['total_pages'] > 0:
                     # If we have pages but very few questions relative to pages, likely still processing
                     # Or if total_questions is 0 but we have pages
-                    if exam['total_questions'] == 0:
-                        is_processing = True
-                    elif exam['total_questions'] < exam['total_pages'] * 0.3:  # Less than 30% of pages have questions
-                        # Check if recent (within last 5 minutes) - if old, probably failed
+                    if exam['total_questions'] == 0 and actual_count == 0:
+                        # Check if recent (within last 10 minutes) - if old, probably failed
                         from datetime import datetime, timedelta
                         try:
                             created = datetime.fromisoformat(exam['created_at'].replace('Z', '+00:00'))
-                            if datetime.now(created.tzinfo) - created < timedelta(minutes=5):
+                            if datetime.now(created.tzinfo) - created < timedelta(minutes=10):
+                                is_processing = True
+                        except:
+                            # If date parsing fails, assume not processing if it's been a while
+                            pass
+                    elif exam['total_questions'] < exam['total_pages'] * 0.3:  # Less than 30% of pages have questions
+                        # Check if recent (within last 10 minutes) - if old, probably failed
+                        from datetime import datetime, timedelta
+                        try:
+                            created = datetime.fromisoformat(exam['created_at'].replace('Z', '+00:00'))
+                            if datetime.now(created.tzinfo) - created < timedelta(minutes=10):
                                 is_processing = True
                         except:
                             # If date parsing fails, assume processing if questions < pages
@@ -1503,6 +1516,7 @@ def list_exams():
                     'file_type': exam['file_type'],
                     'total_pages': exam['total_pages'],
                     'total_questions': exam['total_questions'],
+                    'actual_questions_in_db': actual_count,  # Debug field
                     'analyzed_questions': analyzed,
                     'uploaded_at': exam['created_at'],
                     'is_processing': is_processing
