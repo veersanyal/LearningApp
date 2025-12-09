@@ -58,7 +58,7 @@ function app() {
         
         // Exam Questions
         exams: [],
-        selectedExamQuestions: [],
+        selectedExamQuestions: null, // null = not loaded, [] = loaded but empty
         examUploadForm: {
             examName: ''
         },
@@ -1472,6 +1472,10 @@ function app() {
         async viewExamQuestions(examId) {
             try {
                 console.log('[VIEW_QUESTIONS] Loading questions for exam:', examId);
+                
+                // Set to empty array first to show loading state
+                this.selectedExamQuestions = [];
+                
                 const response = await fetch(`/exam/${examId}/questions`);
                 const data = await response.json();
                 
@@ -1481,24 +1485,28 @@ function app() {
                     this.selectedExamQuestions = data.questions || [];
                     console.log('[VIEW_QUESTIONS] Loaded', this.selectedExamQuestions.length, 'questions');
                     
-                    if (this.selectedExamQuestions.length === 0) {
-                        alert('No questions found for this exam. The exam may not have had any questions extracted, or all pages were detected as instructions. Try uploading the exam again or check if the exam file contains actual questions.');
-                        return;
-                    }
-                    
-                    // Scroll to questions section
+                    // Scroll to questions section (whether empty or not)
                     setTimeout(() => {
+                        // Try to find the questions section or empty state
                         const questionsSection = document.querySelector('[x-show*="selectedExamQuestions"]');
                         if (questionsSection) {
                             questionsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        } else {
+                            // Fallback: scroll to exam questions view
+                            const examView = document.querySelector('[x-show="currentView === \'exam-questions\'"]');
+                            if (examView) {
+                                examView.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
                         }
                     }, 100);
                 } else {
                     console.error('[VIEW_QUESTIONS] Error response:', data);
+                    this.selectedExamQuestions = null; // Reset to null on error
                     alert('Error: ' + (data.error || 'Failed to load questions'));
                 }
             } catch (err) {
                 console.error('[VIEW_QUESTIONS] Exception:', err);
+                this.selectedExamQuestions = null; // Reset to null on error
                 alert('Error loading questions: ' + err.message);
             }
         },

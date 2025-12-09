@@ -457,7 +457,7 @@
                     </div>
                     
                     <!-- Questions List (shown when viewing an exam) -->
-                    <div x-show="selectedExamQuestions.length > 0" class="mt-8">
+                    <div x-show="selectedExamQuestions !== null && selectedExamQuestions.length > 0" class="mt-8">
                         <h3 class="text-xl font-semibold mb-4">Questions</h3>
                         <template x-for="(q, idx) in selectedExamQuestions" :key="q.question_id">
                             <div class="bg-slate-800 rounded-xl p-6 mb-4">
@@ -518,6 +518,25 @@
                                 </div>
                             </div>
                         </template>
+                    </div>
+                    
+                    <!-- Empty state for questions -->
+                    <div x-show="selectedExamQuestions !== null && selectedExamQuestions.length === 0" class="mt-8">
+                        <div class="bg-slate-800 rounded-xl p-8 text-center">
+                            <div class="text-4xl mb-4">📝</div>
+                            <h3 class="text-xl font-semibold mb-2">No Questions Found</h3>
+                            <p class="text-slate-400 mb-4">
+                                This exam doesn't have any questions extracted yet. This might happen if:
+                            </p>
+                            <ul class="text-slate-400 text-left max-w-md mx-auto mb-4 space-y-2">
+                                <li>• All pages were detected as instructions/logistics</li>
+                                <li>• The OCR couldn't identify question patterns</li>
+                                <li>• The exam file needs to be re-uploaded</li>
+                            </ul>
+                            <p class="text-slate-400 text-sm">
+                                Try uploading the exam again, or make sure your exam file contains actual questions (not just instructions).
+                            </p>
+                        </div>
                     </div>
                 </div>
                 
