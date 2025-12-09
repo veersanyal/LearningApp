@@ -192,12 +192,14 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
                     
                     except json.JSONDecodeError as e:
                         error_msg = f"Failed to parse JSON from pages {chunk_pages[0]}-{chunk_pages[-1]}: {str(e)}"
-                        print(f"[INCREMENTAL] {error_msg}")
+                        print(f"[INCREMENTAL] ERROR: {error_msg}", flush=True)
                         try:
-                            print(f"[INCREMENTAL] Response preview: {response_text[:200]}...")
-                        except:
-                            print(f"[INCREMENTAL] Could not get response text")
+                            print(f"[INCREMENTAL] Response preview (first 500 chars): {response_text[:500]}...", flush=True)
+                            print(f"[INCREMENTAL] Full response length: {len(response_text)}", flush=True)
+                        except Exception as print_err:
+                            print(f"[INCREMENTAL] Could not get response text: {print_err}", flush=True)
                         errors.append(error_msg)
+                        sys.stdout.flush()
                         # Still try to save any questions we might have extracted before the error
                         if chunk_questions:
                             try:
@@ -212,10 +214,12 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
                         continue
                     except Exception as e:
                         error_msg = f"Error processing pages {chunk_pages[0]}-{chunk_pages[-1]}: {str(e)}"
-                        print(f"[INCREMENTAL] {error_msg}")
+                        print(f"[INCREMENTAL] EXCEPTION: {error_msg}", flush=True)
                         import traceback
                         traceback.print_exc()
+                        print(f"[INCREMENTAL] Exception type: {type(e).__name__}", flush=True)
                         errors.append(error_msg)
+                        sys.stdout.flush()
                         # Still try to save any questions we might have extracted before the error
                         if chunk_questions:
                             try:
