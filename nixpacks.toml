@@ -1,17 +1,3 @@
 [phases.setup]
-nixPkgs = ["tesseract", "poppler_utils", "python3", "python3Packages.pip"]
-
-[phases.install]
-cmds = [
-  "python3 -m pip install --upgrade pip",
-  "python3 -m pip install -r Info/requirements.txt"
-]
-
-[phases.build]
-cmds = [
-  "echo 'Build complete'"
-]
-
-[phases.start]
-cmd = "gunicorn app:app --bind 0.0.0.0:$PORT"
+nixPkgs = ["tesseract", "poppler_utils"]
 
