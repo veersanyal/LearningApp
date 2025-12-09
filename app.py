@@ -1203,8 +1203,15 @@ def get_exam_questions(exam_id):
                        image_path, solved_json, difficulty, topics_json
                 FROM exam_questions
                 WHERE exam_id = ?
-                ORDER BY page_number, CAST(question_number AS INTEGER)
+                ORDER BY page_number, 
+                         CASE 
+                             WHEN question_number GLOB '[0-9]*' THEN CAST(question_number AS INTEGER)
+                             ELSE 999999
+                         END,
+                         question_number
             ''', (exam_id,)).fetchall()
+            
+            print(f"[GET_EXAM_QUESTIONS] Found {len(questions)} questions for exam {exam_id}")
             
             result = []
             for q in questions:

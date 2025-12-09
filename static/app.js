@@ -1471,11 +1471,21 @@ function app() {
         
         async viewExamQuestions(examId) {
             try {
+                console.log('[VIEW_QUESTIONS] Loading questions for exam:', examId);
                 const response = await fetch(`/exam/${examId}/questions`);
                 const data = await response.json();
                 
+                console.log('[VIEW_QUESTIONS] Response:', data);
+                
                 if (response.ok) {
                     this.selectedExamQuestions = data.questions || [];
+                    console.log('[VIEW_QUESTIONS] Loaded', this.selectedExamQuestions.length, 'questions');
+                    
+                    if (this.selectedExamQuestions.length === 0) {
+                        alert('No questions found for this exam. The exam may not have had any questions extracted, or all pages were detected as instructions. Try uploading the exam again or check if the exam file contains actual questions.');
+                        return;
+                    }
+                    
                     // Scroll to questions section
                     setTimeout(() => {
                         const questionsSection = document.querySelector('[x-show*="selectedExamQuestions"]');
@@ -1484,11 +1494,12 @@ function app() {
                         }
                     }, 100);
                 } else {
+                    console.error('[VIEW_QUESTIONS] Error response:', data);
                     alert('Error: ' + (data.error || 'Failed to load questions'));
                 }
             } catch (err) {
-                console.error('Error loading questions:', err);
-                alert('Error loading questions');
+                console.error('[VIEW_QUESTIONS] Exception:', err);
+                alert('Error loading questions: ' + err.message);
             }
         },
         
