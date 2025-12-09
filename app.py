@@ -74,7 +74,7 @@ if not GEMINI_API_KEY:
     print("WARNING: GEMINI_API_KEY environment variable is not set. Some features may not work.")
     # Don't crash on startup - allow app to start but features will fail gracefully
 else:
-genai.configure(api_key=GEMINI_API_KEY)
+    genai.configure(api_key=GEMINI_API_KEY)
 
 # Models - using gemini-2.5-flash-lite (only initialize if API key is set)
 if GEMINI_API_KEY:
