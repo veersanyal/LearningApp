@@ -9,6 +9,7 @@ import google.generativeai as genai
 from PyPDF2 import PdfReader
 from PIL import Image
 import io
+import concurrent.futures
 from dotenv import load_dotenv
 
 from topic_map import load_topics_from_json, get_all_topics, topics
@@ -162,20 +163,31 @@ Only return the JSON, no other text."""
 
         def call_model(active_content):
             request_timeout = 12  # seconds to avoid worker timeouts
-            if is_image and image_bytes:
-                image = Image.open(io.BytesIO(image_bytes))
-                print(f"[EXTRACT_TOPICS] Using vision model with timeout {request_timeout}s")
-                return vision_model.generate_content(
-                    [prompt, image],
-                    request_options={"timeout": request_timeout}
-                )
-            else:
-                full_prompt = f"{prompt}\n\nContent:\n{active_content}"
-                print(f"[EXTRACT_TOPICS] Using text model (content length: {len(active_content)} chars) with timeout {request_timeout}s")
-                return text_model.generate_content(
-                    full_prompt,
-                    request_options={"timeout": request_timeout}
-                )
+
+            def _do_call():
+                if is_image and image_bytes:
+                    image = Image.open(io.BytesIO(image_bytes))
+                    print(f"[EXTRACT_TOPICS] Using vision model with timeout {request_timeout}s")
+                    return vision_model.generate_content(
+                        [prompt, image],
+                        request_options={"timeout": request_timeout}
+                    )
+                else:
+                    full_prompt = f"{prompt}\n\nContent:\n{active_content}"
+                    print(f"[EXTRACT_TOPICS] Using text model (content length: {len(active_content)} chars) with timeout {request_timeout}s")
+                    return text_model.generate_content(
+                        full_prompt,
+                        request_options={"timeout": request_timeout}
+                    )
+
+            # Enforce our own timeout to avoid hanging requests
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(_do_call)
+                try:
+                    return future.result(timeout=request_timeout + 3)  # small buffer
+                except concurrent.futures.TimeoutError:
+                    print("[EXTRACT_TOPICS] ERROR: Model call timed out")
+                    return {"topics": [], "error": "AI request timed out. Please try again with a smaller document."}
 
         try:
             response = call_model(content)
