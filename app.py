@@ -1340,7 +1340,7 @@ def get_exam_questions(exam_id):
             # Get questions
             questions = db.cursor.execute('''
                 SELECT question_id, page_number, question_number, raw_text, ocr_confidence,
-                       image_path, solved_json, difficulty, topics_json
+                       image_path, solved_json, difficulty, topics_json, diagram_note
                 FROM exam_questions
                 WHERE exam_id = ?
                 ORDER BY page_number, 

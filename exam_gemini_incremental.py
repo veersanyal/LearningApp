@@ -99,13 +99,14 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
         try:
             if file_type == 'pdf':
                 # Convert PDF to images
-                print("[INCREMENTAL] Converting PDF to images...")
+                print("[INCREMENTAL] Converting PDF to images...", flush=True)
                 try:
                     pdf_images = convert_from_bytes(file_bytes, dpi=150)
                     total_pages = len(pdf_images)
-                    print(f"[INCREMENTAL] Converted {total_pages} pages to images")
+                    print(f"[INCREMENTAL] Converted {total_pages} pages to images", flush=True)
+                    print(f"[INCREMENTAL] Will process ALL {total_pages} pages in chunks of 2", flush=True)
                 except Exception as e:
-                    print(f"[INCREMENTAL] Error converting PDF: {e}")
+                    print(f"[INCREMENTAL] Error converting PDF: {e}", flush=True)
                     return {"error": f"Failed to convert PDF: {str(e)}"}
                 
                 # Update exam with total pages
@@ -113,25 +114,28 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
                     UPDATE exams SET total_pages = ? WHERE exam_id = ?
                 ''', (total_pages, exam_id))
                 db.conn.commit()
+                print(f"[INCREMENTAL] Updated exam {exam_id} with total_pages = {total_pages}", flush=True)
                 
                 # Process 2 pages at a time
                 chunk_size = 2
+                pages_processed = 0
                 for chunk_start in range(0, total_pages, chunk_size):
                     chunk_end = min(chunk_start + chunk_size, total_pages)
                     chunk_pages = list(range(chunk_start + 1, chunk_end + 1))
+                    pages_processed += len(chunk_pages)
                     
-                    print(f"[INCREMENTAL] Processing pages {chunk_pages[0]}-{chunk_pages[-1]} of {total_pages}...")
+                    print(f"[INCREMENTAL] Processing pages {chunk_pages[0]}-{chunk_pages[-1]} of {total_pages} (chunk {chunk_start // chunk_size + 1}, pages processed so far: {pages_processed}/{total_pages})...", flush=True)
                     
                     # Process 2 pages together for better context
                     chunk_questions = []
                     page_num1 = chunk_start + 1
+                    page_num2 = chunk_start + 2 if chunk_end - chunk_start == 2 else None
                     page_image1 = pdf_images[chunk_start]
                     
                     response_text = None
                     try:
                         if chunk_end - chunk_start == 2:
                             # Process 2 pages together
-                            page_num2 = chunk_start + 2
                             page_image2 = pdf_images[chunk_start + 1]
                             page_prompt = prompt + f"\n\nThis is pages {page_num1}-{page_num2} of {total_pages}. Extract questions from BOTH pages. Make sure to include the page_number for each question."
                             
@@ -185,9 +189,20 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
                             for q in questions_found:
                                 # Ensure page_number is set
                                 if not q.get("page_number"):
-                                    # Default to first page of chunk if not specified
+                                    # When processing 2 pages together, try to intelligently assign page number
+                                    # If this is a 2-page chunk, check if question might be from page 2
+                                    if chunk_end - chunk_start == 2 and page_num2:
+                                        # Default to first page, but log a warning
+                                        q["page_number"] = page_num1
+                                        print(f"[INCREMENTAL] WARNING: Question {q.get('question_number', '?')} missing page_number in 2-page chunk, defaulting to {page_num1} (might be from page {page_num2})", flush=True)
+                                    else:
+                                        q["page_number"] = page_num1
+                                        print(f"[INCREMENTAL] Question {q.get('question_number', '?')} missing page_number, defaulting to {page_num1}", flush=True)
+                                
+                                # Validate page_number is within the chunk being processed
+                                if q["page_number"] < page_num1 or q["page_number"] > chunk_pages[-1]:
+                                    print(f"[INCREMENTAL] WARNING: Question {q.get('question_number', '?')} has page_number {q['page_number']} outside chunk range {page_num1}-{chunk_pages[-1]}, adjusting to {page_num1}", flush=True)
                                     q["page_number"] = page_num1
-                                    print(f"[INCREMENTAL] Question {q.get('question_number', '?')} missing page_number, defaulting to {page_num1}")
                                 
                                 # Only skip if this question's page was marked as instructions AND we have questions from other pages
                                 # This allows questions on pages that also have instructions (like page 1)
@@ -195,10 +210,10 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
                                     # Check if this is the only question - if so, don't skip it (page might have both instructions and questions)
                                     other_questions = [q2 for q2 in questions_found if q2.get("page_number") != q["page_number"]]
                                     if other_questions:
-                                        print(f"[INCREMENTAL] Skipping question {q.get('question_number', '?')} from instruction-only page {q['page_number']}")
+                                        print(f"[INCREMENTAL] Skipping question {q.get('question_number', '?')} from instruction-only page {q['page_number']}", flush=True)
                                         continue
                                 
-                                print(f"[INCREMENTAL] Adding question {q.get('question_number', '?')} from page {q.get('page_number', '?')}")
+                                print(f"[INCREMENTAL] Adding question {q.get('question_number', '?')} from page {q.get('page_number', '?')}", flush=True)
                                 chunk_questions.append(q)
                         else:
                             print(f"[INCREMENTAL] WARNING: No questions found in response from pages {chunk_pages[0]}-{chunk_pages[-1]} - this might indicate an issue")
@@ -304,6 +319,15 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
                         UPDATE exams SET total_pages = ?, total_questions = ? WHERE exam_id = ?
                     ''', (1, total_questions, exam_id))
                     db.conn.commit()
+            
+            # Final summary
+            print(f"[INCREMENTAL] ========== PROCESSING COMPLETE ==========", flush=True)
+            print(f"[INCREMENTAL] Total pages processed: {total_pages}", flush=True)
+            print(f"[INCREMENTAL] Total questions extracted: {total_questions}", flush=True)
+            if errors:
+                print(f"[INCREMENTAL] Errors encountered: {len(errors)}", flush=True)
+                for error in errors:
+                    print(f"[INCREMENTAL]   - {error}", flush=True)
             
             return {
                 "total_questions": total_questions,
