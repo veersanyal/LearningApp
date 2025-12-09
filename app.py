@@ -268,7 +268,7 @@ Only return the JSON, no other text."""
         
         # Try to parse JSON
         try:
-        result = json.loads(response_text)
+            result = json.loads(response_text)
         except json.JSONDecodeError as json_err:
             print(f"JSON parsing error: {json_err}")
             print(f"Full response text: {response_text}")
