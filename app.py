@@ -1391,10 +1391,11 @@ def get_exam_analytics_route(exam_id):
         return jsonify({"error": str(e)}), 500
 
 
+@app.route('/exam/list', methods=['GET'])
 @app.route('/exams', methods=['GET'])
 @login_required
-def get_exams():
-    """Get all exams for the current user."""
+def list_exams():
+    """Get list of all exams for the current user."""
     try:
         db = get_db()
         try:
@@ -1413,6 +1414,25 @@ def get_exams():
                     WHERE exam_id = ? AND solved_json IS NOT NULL
                 ''', (exam['exam_id'],)).fetchone()[0]
                 
+                # Check if still processing (has pages but no questions yet, or questions < expected)
+                is_processing = False
+                if exam['total_pages'] and exam['total_pages'] > 0:
+                    # If we have pages but very few questions relative to pages, likely still processing
+                    # Or if total_questions is 0 but we have pages
+                    if exam['total_questions'] == 0:
+                        is_processing = True
+                    elif exam['total_questions'] < exam['total_pages'] * 0.3:  # Less than 30% of pages have questions
+                        # Check if recent (within last 5 minutes) - if old, probably failed
+                        from datetime import datetime, timedelta
+                        try:
+                            created = datetime.fromisoformat(exam['created_at'].replace('Z', '+00:00'))
+                            if datetime.now(created.tzinfo) - created < timedelta(minutes=5):
+                                is_processing = True
+                        except:
+                            # If date parsing fails, assume processing if questions < pages
+                            if exam['total_questions'] < exam['total_pages']:
+                                is_processing = True
+                
                 result.append({
                     'exam_id': exam['exam_id'],
                     'exam_name': exam['exam_name'],
@@ -1420,7 +1440,8 @@ def get_exams():
                     'total_pages': exam['total_pages'],
                     'total_questions': exam['total_questions'],
                     'analyzed_questions': analyzed,
-                    'created_at': exam['created_at']
+                    'uploaded_at': exam['created_at'],
+                    'is_processing': is_processing
                 })
             
             return jsonify({"exams": result})
@@ -1429,7 +1450,9 @@ def get_exams():
             db.disconnect()
     
     except Exception as e:
-        print(f"[GET_EXAMS] Error: {e}")
+        print(f"[LIST_EXAMS] Error: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 
