@@ -286,6 +286,53 @@ class Database:
             )
         ''')
         
+        # Exams table (for storing exam metadata)
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS exams (
+                exam_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                exam_name TEXT NOT NULL,
+                exam_type TEXT,
+                file_path TEXT,
+                file_type TEXT,
+                total_pages INTEGER,
+                total_questions INTEGER,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+            )
+        ''')
+        
+        # Exam questions table (for storing OCR'd questions)
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS exam_questions (
+                question_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                exam_id INTEGER NOT NULL,
+                page_number INTEGER,
+                question_number TEXT,
+                raw_text TEXT NOT NULL,
+                ocr_confidence REAL,
+                image_path TEXT,
+                diagram_note TEXT,
+                solved_json TEXT,
+                difficulty REAL,
+                topics_json TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (exam_id) REFERENCES exams(exam_id) ON DELETE CASCADE
+            )
+        ''')
+        
+        # Exam question skills table (for normalized skills mapping)
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS exam_question_skills (
+                skill_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                question_id INTEGER NOT NULL,
+                skill_name TEXT NOT NULL,
+                skill_type TEXT,
+                is_prerequisite BOOLEAN DEFAULT 0,
+                FOREIGN KEY (question_id) REFERENCES exam_questions(question_id) ON DELETE CASCADE
+            )
+        ''')
+        
         self.conn.commit()
     
     def create_indexes(self):
@@ -304,7 +351,10 @@ class Database:
             'CREATE INDEX IF NOT EXISTS idx_leaderboards_course ON leaderboards(course_code)',
             'CREATE INDEX IF NOT EXISTS idx_leaderboards_period ON leaderboards(time_period)',
             'CREATE INDEX IF NOT EXISTS idx_study_sessions_user ON study_sessions(user_id)',
-            'CREATE INDEX IF NOT EXISTS idx_study_sessions_location ON study_sessions(location_id)'
+            'CREATE INDEX IF NOT EXISTS idx_study_sessions_location ON study_sessions(location_id)',
+            'CREATE INDEX IF NOT EXISTS idx_exams_user ON exams(user_id)',
+            'CREATE INDEX IF NOT EXISTS idx_exam_questions_exam ON exam_questions(exam_id)',
+            'CREATE INDEX IF NOT EXISTS idx_exam_question_skills_question ON exam_question_skills(question_id)'
         ]
         
         for index_sql in indexes:

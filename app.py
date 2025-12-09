@@ -1,5 +1,6 @@
 import os
 import json
+import re
 import base64
 import uuid
 from datetime import datetime
@@ -30,6 +31,7 @@ from activity_feed import (get_recent_activity, get_user_activity_feed, get_mile
 from challenges import (create_direct_challenge, get_challenge_by_link, get_received_challenges,
                        accept_challenge, complete_challenge, submit_community_question,
                        get_community_questions, vote_community_question)
+from exam_ocr import process_exam_file
 
 # Load environment variables
 load_dotenv()
@@ -844,7 +846,33 @@ Each sub-question should be easier than the original and build toward the soluti
                     response_text = response_text[4:]
         response_text = response_text.strip()
         
-        result = json.loads(response_text)
+        def parse_guide_json(raw_text: str):
+            """Parse JSON from model output while tolerating stray backslashes/markdown."""
+            cleaned = raw_text.strip()
+            
+            # First attempt: direct JSON parse
+            try:
+                return json.loads(cleaned)
+            except json.JSONDecodeError:
+                pass
+            
+            # Second attempt: escape invalid backslashes (e.g., LaTeX \alpha)
+            sanitized = re.sub(r'\\(?!["\\/bfnrtu])', r'\\\\', cleaned)
+            sanitized = sanitized.replace('\n', '\\n')
+            try:
+                return json.loads(sanitized)
+            except json.JSONDecodeError:
+                pass
+            
+            # Final attempt: extract any JSON-looking object
+            json_match = re.search(r'\{.*\}', sanitized, re.DOTALL)
+            if json_match:
+                return json.loads(json_match.group(0))
+            
+            # If all attempts fail, raise a clear error
+            raise ValueError("AI response was not valid JSON")
+        
+        result = parse_guide_json(response_text)
         return jsonify(result)
     except Exception as e:
         print(f"Error in guide-me: {e}")
@@ -884,6 +912,403 @@ def get_exam_prep(exam_id):
     # This would retrieve saved exam prep data
     # For now, return placeholder
     return jsonify({"message": "Exam prep retrieval not yet implemented"}), 501
+
+
+@app.route('/exam/upload', methods=['POST'])
+@login_required
+def upload_exam():
+    """Upload and OCR an exam file (PDF or image)."""
+    try:
+        if 'file' not in request.files:
+            return jsonify({"error": "No file provided"}), 400
+        
+        file = request.files['file']
+        exam_name = request.form.get('exam_name', file.filename or 'Untitled Exam')
+        
+        if file.filename == '':
+            return jsonify({"error": "No file selected"}), 400
+        
+        filename = file.filename.lower()
+        file_bytes = file.read()
+        
+        # Determine file type
+        if filename.endswith('.pdf'):
+            file_type = 'pdf'
+        elif filename.endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
+            file_type = filename.split('.')[-1]
+        else:
+            return jsonify({"error": "Unsupported file type. Please upload PDF or image."}), 400
+        
+        print(f"[EXAM_UPLOAD] Processing {file_type} file: {exam_name}")
+        
+        # Process exam file with OCR
+        result = process_exam_file(file_bytes, file_type, current_user.id, exam_name)
+        
+        return jsonify({
+            "success": True,
+            "exam_id": result['exam_id'],
+            "total_questions": result['total_questions'],
+            "total_pages": result['total_pages'],
+            "message": f"Successfully extracted {result['total_questions']} questions from {result['total_pages']} pages"
+        })
+    
+    except Exception as e:
+        print(f"[EXAM_UPLOAD] Error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+def analyze_question_with_gemini(question_text: str, question_image_path: Optional[str] = None) -> Dict:
+    """
+    Use Gemini to solve a question and extract skills/difficulty.
+    
+    Args:
+        question_text: OCR'd question text
+        question_image_path: Optional path to question image
+    
+    Returns:
+        Dictionary with solution, skills, difficulty, etc.
+    """
+    if not text_model:
+        return {"error": "AI model not initialized"}
+    
+    prompt = """You are an expert tutor analyzing an exam question. Your task is to:
+1. Solve the question completely
+2. Identify ALL required skills and subskills (e.g., "u-substitution", "vector projections", "line integrals")
+3. Identify prerequisite skills needed
+4. Rate difficulty from 1-5 (1=very easy, 5=very hard)
+5. Classify the question type
+
+Return ONLY a JSON object with this exact structure:
+{
+  "solution": "Complete step-by-step solution",
+  "answer": "Final answer",
+  "required_skills": ["skill1", "skill2", ...],
+  "prerequisite_skills": ["prereq1", "prereq2", ...],
+  "difficulty": 3,
+  "difficulty_reasoning": "Brief explanation of difficulty rating",
+  "question_type": "classification (e.g., calculus/integration, linear_algebra/vectors)",
+  "subskills": ["detailed subskill 1", "detailed subskill 2", ...]
+}
+
+Question text:
+""" + question_text
+    
+    try:
+        # Use vision model if image available
+        if question_image_path:
+            # Handle both absolute and relative paths
+            if not os.path.isabs(question_image_path):
+                # Relative path - construct full path
+                question_image_path = os.path.join(os.path.dirname(__file__), 'uploads', question_image_path)
+            
+            if os.path.exists(question_image_path):
+                image = Image.open(question_image_path)
+                response = vision_model.generate_content([prompt, image])
+            else:
+                # Image path doesn't exist, use text only
+                response = text_model.generate_content(prompt)
+        else:
+            response = text_model.generate_content(prompt)
+        
+        response_text = response.text.strip()
+        
+        # Remove markdown code blocks if present
+        if response_text.startswith("```"):
+            parts = response_text.split("```")
+            if len(parts) >= 2:
+                response_text = parts[1]
+                if response_text.startswith("json"):
+                    response_text = response_text[4:]
+        response_text = response_text.strip()
+        
+        result = json.loads(response_text)
+        return result
+    
+    except Exception as e:
+        print(f"[GEMINI_ANALYSIS] Error: {e}")
+        return {"error": str(e)}
+
+
+@app.route('/exam/<int:exam_id>/analyze', methods=['POST'])
+@login_required
+def analyze_exam(exam_id):
+    """Analyze all questions in an exam using Gemini."""
+    try:
+        db = get_db()
+        try:
+            # Verify exam belongs to user
+            exam = db.cursor.execute(
+                'SELECT exam_id, exam_name FROM exams WHERE exam_id = ? AND user_id = ?',
+                (exam_id, current_user.id)
+            ).fetchone()
+            
+            if not exam:
+                return jsonify({"error": "Exam not found"}), 404
+            
+            # Get all questions for this exam
+            questions = db.cursor.execute('''
+                SELECT question_id, raw_text, image_path, solved_json
+                FROM exam_questions
+                WHERE exam_id = ?
+                ORDER BY page_number, question_number
+            ''', (exam_id,)).fetchall()
+            
+            if not questions:
+                return jsonify({"error": "No questions found for this exam"}), 404
+            
+            print(f"[EXAM_ANALYZE] Analyzing {len(questions)} questions for exam {exam_id}")
+            
+            analyzed_count = 0
+            errors = []
+            
+            # Analyze each question
+            for question in questions:
+                question_id = question['question_id']
+                question_text = question['raw_text']
+                image_path = question['image_path']
+                
+                # Skip if already analyzed
+                if question['solved_json']:
+                    continue
+                
+                try:
+                    print(f"[EXAM_ANALYZE] Analyzing question {question_id}...")
+                    analysis = analyze_question_with_gemini(question_text, image_path)
+                    
+                    if 'error' in analysis:
+                        errors.append(f"Question {question_id}: {analysis['error']}")
+                        continue
+                    
+                    # Extract skills and store
+                    required_skills = analysis.get('required_skills', [])
+                    prerequisite_skills = analysis.get('prerequisite_skills', [])
+                    subskills = analysis.get('subskills', [])
+                    all_skills = list(set(required_skills + prerequisite_skills + subskills))
+                    
+                    difficulty = analysis.get('difficulty', 3)
+                    topics_json = json.dumps({
+                        'required_skills': required_skills,
+                        'prerequisite_skills': prerequisite_skills,
+                        'subskills': subskills,
+                        'question_type': analysis.get('question_type', '')
+                    })
+                    
+                    # Update question with analysis
+                    db.cursor.execute('''
+                        UPDATE exam_questions
+                        SET solved_json = ?, difficulty = ?, topics_json = ?
+                        WHERE question_id = ?
+                    ''', (
+                        json.dumps(analysis),
+                        difficulty,
+                        topics_json,
+                        question_id
+                    ))
+                    
+                    # Store skills in exam_question_skills table
+                    for skill_name in all_skills:
+                        is_prereq = skill_name in prerequisite_skills
+                        db.cursor.execute('''
+                            INSERT OR IGNORE INTO exam_question_skills
+                            (question_id, skill_name, is_prerequisite)
+                            VALUES (?, ?, ?)
+                        ''', (question_id, skill_name, is_prereq))
+                    
+                    db.conn.commit()
+                    analyzed_count += 1
+                    
+                except Exception as e:
+                    print(f"[EXAM_ANALYZE] Error analyzing question {question_id}: {e}")
+                    errors.append(f"Question {question_id}: {str(e)}")
+            
+            return jsonify({
+                "success": True,
+                "analyzed": analyzed_count,
+                "total": len(questions),
+                "errors": errors if errors else None
+            })
+        
+        finally:
+            db.disconnect()
+    
+    except Exception as e:
+        print(f"[EXAM_ANALYZE] Error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/exam/<int:exam_id>/questions', methods=['GET'])
+@login_required
+def get_exam_questions(exam_id):
+    """Get all questions for an exam."""
+    try:
+        db = get_db()
+        try:
+            # Verify exam belongs to user
+            exam = db.cursor.execute(
+                'SELECT exam_id, exam_name FROM exams WHERE exam_id = ? AND user_id = ?',
+                (exam_id, current_user.id)
+            ).fetchone()
+            
+            if not exam:
+                return jsonify({"error": "Exam not found"}), 404
+            
+            # Get questions
+            questions = db.cursor.execute('''
+                SELECT question_id, page_number, question_number, raw_text, ocr_confidence,
+                       image_path, solved_json, difficulty, topics_json
+                FROM exam_questions
+                WHERE exam_id = ?
+                ORDER BY page_number, CAST(question_number AS INTEGER)
+            ''', (exam_id,)).fetchall()
+            
+            result = []
+            for q in questions:
+                question_data = {
+                    'question_id': q['question_id'],
+                    'page_number': q['page_number'],
+                    'question_number': q['question_number'],
+                    'text': q['raw_text'],
+                    'ocr_confidence': q['ocr_confidence'],
+                    'image_path': q['image_path'],
+                    'difficulty': q['difficulty'],
+                    'analyzed': q['solved_json'] is not None
+                }
+                
+                if q['solved_json']:
+                    solved_data = json.loads(q['solved_json'])
+                    question_data['solution'] = solved_data.get('solution')
+                    question_data['answer'] = solved_data.get('answer')
+                    question_data['difficulty_reasoning'] = solved_data.get('difficulty_reasoning')
+                
+                if q['topics_json']:
+                    topics_data = json.loads(q['topics_json'])
+                    question_data['skills'] = topics_data.get('required_skills', [])
+                    question_data['prerequisite_skills'] = topics_data.get('prerequisite_skills', [])
+                    question_data['subskills'] = topics_data.get('subskills', [])
+                    question_data['question_type'] = topics_data.get('question_type')
+                
+                # Format image path for frontend
+                if q['image_path']:
+                    # Extract just the filename from the path
+                    if 'exams/' in q['image_path']:
+                        question_data['image_path'] = q['image_path'].split('exams/')[1]
+                    else:
+                        question_data['image_path'] = q['image_path']
+                
+                result.append(question_data)
+            
+            return jsonify({
+                "exam_id": exam_id,
+                "exam_name": exam['exam_name'],
+                "questions": result
+            })
+        
+        finally:
+            db.disconnect()
+    
+    except Exception as e:
+        print(f"[GET_EXAM_QUESTIONS] Error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/uploads/exams/<path:filename>')
+@login_required
+def serve_exam_image(filename):
+    """Serve exam question images."""
+    try:
+        # Security: ensure user can only access their own exam images
+        exam_dir = os.path.join(os.path.dirname(__file__), 'uploads', 'exams', str(current_user.id))
+        file_path = os.path.join(exam_dir, filename)
+        
+        # Verify file is within user's exam directory
+        if not file_path.startswith(os.path.abspath(exam_dir)):
+            return jsonify({"error": "Unauthorized"}), 403
+        
+        if os.path.exists(file_path):
+            return send_from_directory(exam_dir, filename)
+        else:
+            return jsonify({"error": "File not found"}), 404
+    except Exception as e:
+        print(f"[SERVE_EXAM_IMAGE] Error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/exam/<int:exam_id>/analytics', methods=['GET'])
+@login_required
+def get_exam_analytics_route(exam_id):
+    """Get aggregated analytics for an exam."""
+    try:
+        from learning_analytics import get_exam_analytics
+        
+        # Verify exam belongs to user
+        db = get_db()
+        try:
+            exam = db.cursor.execute(
+                'SELECT exam_id FROM exams WHERE exam_id = ? AND user_id = ?',
+                (exam_id, current_user.id)
+            ).fetchone()
+            
+            if not exam:
+                return jsonify({"error": "Exam not found"}), 404
+        finally:
+            db.disconnect()
+        
+        analytics = get_exam_analytics(current_user.id, exam_id)
+        
+        if analytics:
+            return jsonify(analytics)
+        else:
+            return jsonify({"error": "No analytics available"}), 404
+    
+    except Exception as e:
+        print(f"[GET_EXAM_ANALYTICS] Error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/exams', methods=['GET'])
+@login_required
+def get_exams():
+    """Get all exams for the current user."""
+    try:
+        db = get_db()
+        try:
+            exams = db.cursor.execute('''
+                SELECT exam_id, exam_name, file_type, total_pages, total_questions, created_at
+                FROM exams
+                WHERE user_id = ?
+                ORDER BY created_at DESC
+            ''', (current_user.id,)).fetchall()
+            
+            result = []
+            for exam in exams:
+                # Count analyzed questions
+                analyzed = db.cursor.execute('''
+                    SELECT COUNT(*) FROM exam_questions
+                    WHERE exam_id = ? AND solved_json IS NOT NULL
+                ''', (exam['exam_id'],)).fetchone()[0]
+                
+                result.append({
+                    'exam_id': exam['exam_id'],
+                    'exam_name': exam['exam_name'],
+                    'file_type': exam['file_type'],
+                    'total_pages': exam['total_pages'],
+                    'total_questions': exam['total_questions'],
+                    'analyzed_questions': analyzed,
+                    'created_at': exam['created_at']
+                })
+            
+            return jsonify({"exams": result})
+        
+        finally:
+            db.disconnect()
+    
+    except Exception as e:
+        print(f"[GET_EXAMS] Error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route('/documents', methods=['GET'])

@@ -402,11 +402,76 @@ def get_comparative_stats(user_id):
     }
 
 
-def predict_exam_readiness(exam_topics, exam_date, target_mastery=0.80):
+def get_exam_analytics(user_id, exam_id):
+    """
+    Aggregate exam difficulty and skills for analytics.
+    
+    Args:
+        user_id: User ID
+        exam_id: Exam ID
+    
+    Returns:
+        Dictionary with aggregated exam statistics
+    """
+    from database import get_db
+    
+    db = get_db()
+    try:
+        # Get all questions for this exam
+        questions = db.cursor.execute('''
+            SELECT difficulty, topics_json, solved_json
+            FROM exam_questions
+            WHERE exam_id = ?
+        ''', (exam_id,)).fetchall()
+        
+        if not questions:
+            return None
+        
+        # Aggregate statistics
+        difficulties = [q['difficulty'] for q in questions if q['difficulty']]
+        all_required_skills = []
+        all_prerequisite_skills = []
+        all_subskills = []
+        
+        for q in questions:
+            if q['topics_json']:
+                import json
+                topics_data = json.loads(q['topics_json'])
+                all_required_skills.extend(topics_data.get('required_skills', []))
+                all_prerequisite_skills.extend(topics_data.get('prerequisite_skills', []))
+                all_subskills.extend(topics_data.get('subskills', []))
+        
+        # Calculate statistics
+        avg_difficulty = sum(difficulties) / len(difficulties) if difficulties else 0
+        median_difficulty = sorted(difficulties)[len(difficulties) // 2] if difficulties else 0
+        
+        # Count skill frequencies
+        from collections import Counter
+        required_skill_counts = Counter(all_required_skills)
+        prerequisite_skill_counts = Counter(all_prerequisite_skills)
+        subskill_counts = Counter(all_subskills)
+        
+        return {
+            'total_questions': len(questions),
+            'analyzed_questions': len([q for q in questions if q['solved_json']]),
+            'average_difficulty': round(avg_difficulty, 2),
+            'median_difficulty': median_difficulty,
+            'target_difficulty': median_difficulty,  # Use median as target
+            'required_skills': dict(required_skill_counts),
+            'prerequisite_skills': dict(prerequisite_skill_counts),
+            'subskills': dict(subskill_counts),
+            'unique_skills_count': len(set(all_required_skills + all_prerequisite_skills + all_subskills))
+        }
+    finally:
+        db.disconnect()
+
+
+def predict_exam_readiness(user_id, exam_topics, exam_date, target_mastery=0.80):
     """
     Predict exam readiness and generate study plan.
     
     Args:
+        user_id: User ID
         exam_topics: List of topic IDs for the exam
         exam_date: datetime object for exam date
         target_mastery: Target mastery level (default 0.80)

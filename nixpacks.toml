@@ -1,0 +1,16 @@
+[phases.setup]
+nixPkgs = ["tesseract", "poppler_utils"]
+
+[phases.install]
+cmds = [
+  "pip install -r Info/requirements.txt"
+]
+
+[phases.build]
+cmds = [
+  "echo 'Build complete'"
+]
+
+[phases.start]
+cmd = "gunicorn app:app --bind 0.0.0.0:$PORT"
+

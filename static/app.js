@@ -56,6 +56,13 @@ function app() {
         // Documents
         documents: [],
         
+        // Exam Questions
+        exams: [],
+        selectedExamQuestions: [],
+        examUploadForm: {
+            examName: ''
+        },
+        
         // Charts
         forgettingCurveChart: null,
         masteryProgressChart: null,
@@ -74,6 +81,7 @@ function app() {
                 this.loadSocialProof();
                 this.loadAchievements();
                 this.loadDocuments();
+                this.loadExams();
                 
                 // Load activity feed
                 this.loadActivityFeed();
@@ -95,6 +103,8 @@ function app() {
                         this.loadAchievements();
                     } else if (newView === 'documents') {
                         this.loadDocuments();
+                    } else if (newView === 'exam-questions') {
+                        this.loadExams();
                     }
                 });
             } else {
@@ -1375,6 +1385,128 @@ function app() {
                 hour: '2-digit',
                 minute: '2-digit'
             });
+        },
+        
+        // Exam Questions Functions
+        async loadExams() {
+            try {
+                const response = await fetch('/exams');
+                const data = await response.json();
+                if (response.ok) {
+                    this.exams = data.exams || [];
+                }
+            } catch (err) {
+                console.error('Error loading exams:', err);
+            }
+        },
+        
+        async uploadExam() {
+            const form = document.getElementById('exam-upload-form');
+            const fileInput = document.getElementById('exam-file-input');
+            const statusDiv = document.getElementById('exam-upload-status');
+            
+            if (!fileInput.files.length) {
+                statusDiv.textContent = 'Please select a file';
+                return;
+            }
+            
+            if (!this.examUploadForm.examName) {
+                statusDiv.textContent = 'Please enter an exam name';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('exam_name', this.examUploadForm.examName);
+            
+            statusDiv.textContent = 'Uploading and extracting questions...';
+            
+            try {
+                const response = await fetch('/exam/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    statusDiv.textContent = `Success! Extracted ${data.total_questions} questions from ${data.total_pages} pages.`;
+                    this.examUploadForm.examName = '';
+                    fileInput.value = '';
+                    this.loadExams();
+                } else {
+                    statusDiv.textContent = 'Error: ' + (data.error || 'Upload failed');
+                }
+            } catch (err) {
+                statusDiv.textContent = 'Error: ' + err.message;
+                console.error('Upload error:', err);
+            }
+        },
+        
+        async analyzeExam(examId) {
+            if (!confirm('This will analyze all questions using AI. This may take a few minutes. Continue?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/exam/${examId}/analyze`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    alert(`Analysis complete! Analyzed ${data.analyzed} out of ${data.total} questions.`);
+                    this.loadExams();
+                    if (this.selectedExamQuestions.length > 0) {
+                        // Refresh questions if viewing
+                        this.viewExamQuestions(examId);
+                    }
+                } else {
+                    alert('Error: ' + (data.error || 'Analysis failed'));
+                }
+            } catch (err) {
+                console.error('Analysis error:', err);
+                alert('Error analyzing exam');
+            }
+        },
+        
+        async viewExamQuestions(examId) {
+            try {
+                const response = await fetch(`/exam/${examId}/questions`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    this.selectedExamQuestions = data.questions || [];
+                    // Scroll to questions section
+                    setTimeout(() => {
+                        const questionsSection = document.querySelector('[x-show*="selectedExamQuestions"]');
+                        if (questionsSection) {
+                            questionsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    }, 100);
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to load questions'));
+                }
+            } catch (err) {
+                console.error('Error loading questions:', err);
+                alert('Error loading questions');
+            }
+        },
+        
+        formatQuestionText(text) {
+            if (!text) return '';
+            // Escape HTML and preserve line breaks
+            let formatted = text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\n/g, '<br>');
+            
+            // Try to detect and format LaTeX-like math (basic patterns)
+            // This is a simple formatter - for full LaTeX support, MathJax will handle it
+            formatted = formatted.replace(/\$\$([^$]+)\$\$/g, '<span class="math-display">$$$1$$</span>');
+            formatted = formatted.replace(/\$([^$]+)\$/g, '<span class="math-inline">$$1$</span>');
+            
+            return formatted;
         },
         
         async loadAchievements() {
