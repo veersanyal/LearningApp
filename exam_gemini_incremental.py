@@ -75,6 +75,10 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
 
     try:
         print(f"[INCREMENTAL] Starting incremental processing for exam {exam_id}")
+        print(f"[INCREMENTAL] Vision model available: {vision_model is not None}")
+        if not vision_model:
+            return {"error": "Vision model not initialized"}
+        
         total_questions = 0
         total_pages = 0
         errors = []

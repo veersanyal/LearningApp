@@ -1038,49 +1038,64 @@ def upload_exam():
         
         # Process incrementally in background thread
         def process_in_background():
-            try:
-                print(f"[EXAM_UPLOAD_BG] Starting background processing for exam {exam_id}")
-                print(f"[EXAM_UPLOAD_BG] File type: {file_type}, File size: {len(file_bytes)} bytes")
-                
-                result = process_exam_incremental(
-                    file_bytes, 
-                    file_type, 
-                    exam_id, 
-                    vision_model,
-                    callback=None  # Could add progress callback here
-                )
-                
-                if 'error' in result:
-                    print(f"[EXAM_UPLOAD_BG] ERROR: {result['error']}")
-                    # Update exam with error status
-                    db = get_db()
-                    try:
-                        db.cursor.execute('''
-                            UPDATE exams SET total_questions = -1 WHERE exam_id = ?
-                        ''', (exam_id,))  # -1 indicates error
-                        db.conn.commit()
-                    finally:
-                        db.disconnect()
-                else:
-                    print(f"[EXAM_UPLOAD_BG] SUCCESS: Completed {result['total_questions']} questions from {result['total_pages']} pages")
-                    if result.get('errors'):
-                        print(f"[EXAM_UPLOAD_BG] Warnings: {len(result['errors'])} errors occurred during processing")
-            except Exception as e:
-                print(f"[EXAM_UPLOAD_BG] CRITICAL EXCEPTION: {e}")
-                import traceback
-                traceback.print_exc()
-                # Try to mark exam as failed
+            # CRITICAL: Need Flask app context for database access
+            with app.app_context():
                 try:
-                    db = get_db()
+                    print(f"[EXAM_UPLOAD_BG] Starting background processing for exam {exam_id}")
+                    print(f"[EXAM_UPLOAD_BG] File type: {file_type}, File size: {len(file_bytes)} bytes")
+                    print(f"[EXAM_UPLOAD_BG] Vision model available: {vision_model is not None}")
+                    
+                    if not vision_model:
+                        print(f"[EXAM_UPLOAD_BG] ERROR: Vision model is None!")
+                        db = get_db()
+                        try:
+                            db.cursor.execute('''
+                                UPDATE exams SET total_questions = -1 WHERE exam_id = ?
+                            ''', (exam_id,))
+                            db.conn.commit()
+                        finally:
+                            db.disconnect()
+                        return
+                    
+                    result = process_exam_incremental(
+                        file_bytes, 
+                        file_type, 
+                        exam_id, 
+                        vision_model,
+                        callback=None  # Could add progress callback here
+                    )
+                    
+                    if 'error' in result:
+                        print(f"[EXAM_UPLOAD_BG] ERROR: {result['error']}")
+                        # Update exam with error status
+                        db = get_db()
+                        try:
+                            db.cursor.execute('''
+                                UPDATE exams SET total_questions = -1 WHERE exam_id = ?
+                            ''', (exam_id,))  # -1 indicates error
+                            db.conn.commit()
+                        finally:
+                            db.disconnect()
+                    else:
+                        print(f"[EXAM_UPLOAD_BG] SUCCESS: Completed {result['total_questions']} questions from {result['total_pages']} pages")
+                        if result.get('errors'):
+                            print(f"[EXAM_UPLOAD_BG] Warnings: {len(result['errors'])} errors occurred during processing")
+                except Exception as e:
+                    print(f"[EXAM_UPLOAD_BG] CRITICAL EXCEPTION: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    # Try to mark exam as failed
                     try:
-                        db.cursor.execute('''
-                            UPDATE exams SET total_questions = -1 WHERE exam_id = ?
-                        ''', (exam_id,))
-                        db.conn.commit()
-                    finally:
-                        db.disconnect()
-                except:
-                    pass
+                        db = get_db()
+                        try:
+                            db.cursor.execute('''
+                                UPDATE exams SET total_questions = -1 WHERE exam_id = ?
+                            ''', (exam_id,))
+                            db.conn.commit()
+                        finally:
+                            db.disconnect()
+                    except Exception as db_err:
+                        print(f"[EXAM_UPLOAD_BG] Failed to update DB: {db_err}")
         
         # Start background processing
         print(f"[EXAM_UPLOAD] Starting background thread for exam {exam_id}")
