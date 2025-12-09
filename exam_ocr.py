@@ -67,9 +67,72 @@ def ocr_image(image: Image.Image, preserve_math: bool = True) -> Tuple[str, floa
         return "", 0.0
 
 
+def is_instruction_page(text: str) -> bool:
+    """
+    Detect if a page contains exam instructions rather than questions.
+    
+    Args:
+        text: OCR text from a page
+    
+    Returns:
+        True if this appears to be an instruction/logistics page
+    """
+    text_lower = text.lower()
+    
+    # Keywords that indicate instruction/logistics pages
+    instruction_keywords = [
+        'scantron', 'fill in', 'bubble', 'pencil', '#2 pencil',
+        'ta name', 'course number', 'section number', 'student id',
+        'exam instructions', 'exam rules', 'academic integrity',
+        'prohibited', 'not allowed', 'do not', 'must bring',
+        'exam format', 'total questions', 'point value', 'time limit',
+        'leave the room', 'electronic devices', 'notes', 'calculator',
+        'show your work', 'write clearly', 'good luck'
+    ]
+    
+    # Count how many instruction keywords appear
+    keyword_count = sum(1 for keyword in instruction_keywords if keyword in text_lower)
+    
+    # If 3+ instruction keywords found, likely an instruction page
+    if keyword_count >= 3:
+        return True
+    
+    # Check for instruction-like patterns
+    instruction_patterns = [
+        r'scantron\s+sheet',
+        r'fill\s+in\s+the',
+        r'use\s+a\s+#2',
+        r'course\s+number',
+        r'ta\'?s?\s+name',
+        r'section\s+number',
+        r'student\s+id',
+        r'exam\s+instructions',
+        r'not\s+allowed',
+        r'prohibited',
+        r'must\s+bring'
+    ]
+    
+    pattern_matches = sum(1 for pattern in instruction_patterns if re.search(pattern, text_lower))
+    
+    # If 2+ patterns match, likely instruction page
+    if pattern_matches >= 2:
+        return True
+    
+    # Check if page is mostly short lines (typical of instruction formatting)
+    lines = [line.strip() for line in text.split('\n') if line.strip()]
+    if len(lines) > 0:
+        avg_line_length = sum(len(line) for line in lines) / len(lines)
+        # Instruction pages often have short, bullet-point style lines
+        if avg_line_length < 40 and len(lines) > 5:
+            return True
+    
+    return False
+
+
 def segment_questions(text: str, page_num: int = 0) -> List[Dict[str, any]]:
     """
     Segment OCR text into individual questions.
+    Skips instruction/logistics pages.
     
     Args:
         text: Full OCR text from a page
@@ -78,6 +141,11 @@ def segment_questions(text: str, page_num: int = 0) -> List[Dict[str, any]]:
     Returns:
         List of question dictionaries with question_number and text
     """
+    # Skip instruction pages
+    if is_instruction_page(text):
+        print(f"[OCR] Page {page_num} appears to be instructions/logistics - skipping")
+        return []
+    
     questions = []
     
     # Patterns to identify question starts
@@ -125,22 +193,32 @@ def segment_questions(text: str, page_num: int = 0) -> List[Dict[str, any]]:
             for pattern in question_patterns:
                 line = re.sub(pattern, '', line).strip()
             current_text = [line] if line else []
-        else:
-            # Continuation of current question
-            if current_question:
-                current_text.append(line)
             else:
-                # No question number found yet, might be preamble
-                # Try to detect if it looks like a question anyway
-                if any(keyword in line.lower() for keyword in ['compute', 'find', 'solve', 'calculate', 'determine', 'evaluate', 'prove', 'show']):
-                    # Likely a question without explicit numbering
-                    if not current_question:
-                        current_question = 'unnumbered'
-                        current_text = [line]
-                    else:
-                        current_text.append(line)
-                elif current_question == 'unnumbered':
+                # Continuation of current question
+                if current_question:
                     current_text.append(line)
+                else:
+                    # No question number found yet, might be preamble
+                    # Only treat as question if it has strong question indicators
+                    question_indicators = ['compute', 'find', 'solve', 'calculate', 'determine', 
+                                         'evaluate', 'prove', 'show', 'what is', 'which of', 
+                                         'how many', 'integral', 'derivative', 'limit', 'matrix',
+                                         'vector', 'function', 'equation', 'graph']
+                    
+                    # Check if line contains math/question content
+                    has_math_symbols = bool(re.search(r'[∫∑∏√∞αβγδεθλμπσφωΔ∇∂∮⟨⟩·×÷±≤≥≠≈∝∈∉⊂⊃∪∩∅∀∃∴∵]', line))
+                    has_question_keywords = any(keyword in line.lower() for keyword in question_indicators)
+                    has_math_notation = bool(re.search(r'[\(\)\[\]\{\}]', line)) and len(line) > 20
+                    
+                    if has_question_keywords or has_math_symbols or has_math_notation:
+                        # Likely a question without explicit numbering
+                        if not current_question:
+                            current_question = 'unnumbered'
+                            current_text = [line]
+                        else:
+                            current_text.append(line)
+                    elif current_question == 'unnumbered':
+                        current_text.append(line)
     
     # Save last question
     if current_question and current_text:
@@ -150,15 +228,26 @@ def segment_questions(text: str, page_num: int = 0) -> List[Dict[str, any]]:
             'page': page_num
         })
     
-    # If no questions found, treat entire text as one question
-    if not questions and text.strip():
-        questions.append({
-            'question_number': '1',
-            'text': text.strip(),
-            'page': page_num
-        })
+    # Filter out questions that look like instructions
+    filtered_questions = []
+    for q in questions:
+        q_text = q['text'].lower()
+        # Skip if it looks like instructions
+        if is_instruction_page(q_text):
+            continue
+        # Skip if too short (likely not a real question)
+        if len(q['text'].strip()) < 30:
+            continue
+        # Skip if contains too many instruction keywords
+        instruction_keywords = ['scantron', 'fill in', 'bubble', 'pencil', 'ta name', 
+                              'course number', 'section', 'student id', 'exam instructions']
+        if sum(1 for kw in instruction_keywords if kw in q_text) >= 2:
+            continue
+        filtered_questions.append(q)
     
-    return questions
+    # If no questions found after filtering, don't create a default one
+    # (it was likely an instruction page)
+    return filtered_questions
 
 
 def process_exam_file(file_bytes: bytes, file_type: str, user_id: int, exam_name: str) -> Dict:
@@ -192,12 +281,21 @@ def process_exam_file(file_bytes: bytes, file_type: str, user_id: int, exam_name
                 text, confidence = ocr_image(image, preserve_math=True)
                 print(f"[OCR] Page {page_idx + 1}: {len(text)} chars, confidence: {confidence:.1f}%")
                 
+                # Quick check: skip if this looks like an instruction page
+                if is_instruction_page(text):
+                    print(f"[OCR] Page {page_idx + 1} detected as instructions - skipping OCR segmentation")
+                    # Still store image in case user wants to see it
+                    page_images.append((page_idx + 1, image))
+                    continue
+                
                 # Segment questions from this page
                 page_questions = segment_questions(text, page_num=page_idx + 1)
-                questions_data.extend(page_questions)
-                
-                # Store image for later reference
-                page_images.append((page_idx + 1, image))
+                if page_questions:
+                    questions_data.extend(page_questions)
+                    # Store image for questions on this page
+                    page_images.append((page_idx + 1, image))
+                else:
+                    print(f"[OCR] No questions found on page {page_idx + 1}")
         
         elif file_type in ['png', 'jpg', 'jpeg', 'gif', 'webp']:
             # Single image

@@ -117,9 +117,35 @@ def extract_text_from_pdf(file_bytes):
         raise
 
 
+def is_instruction_content(content: str) -> bool:
+    """Check if content appears to be exam instructions rather than questions."""
+    content_lower = content.lower()
+    
+    instruction_keywords = [
+        'scantron', 'fill in', 'bubble', 'pencil', '#2 pencil',
+        'ta name', 'course number', 'section number', 'student id',
+        'exam instructions', 'exam rules', 'academic integrity',
+        'prohibited', 'not allowed', 'do not', 'must bring',
+        'exam format', 'total questions', 'point value', 'time limit',
+        'leave the room', 'electronic devices', 'notes', 'calculator',
+        'show your work', 'write clearly', 'good luck', 'exam submission'
+    ]
+    
+    keyword_count = sum(1 for keyword in instruction_keywords if keyword in content_lower)
+    return keyword_count >= 3
+
+
 def extract_topics_from_content(content, is_image=False, image_bytes=None):
     """Use Gemini to extract topics from content."""
+    # Skip instruction/logistics content
+    if not is_image and content and is_instruction_content(content):
+        print("[EXTRACT_TOPICS] Content appears to be exam instructions - skipping topic extraction")
+        return {"topics": [], "error": "This appears to be exam instructions/logistics rather than actual questions. Please upload pages with actual exam questions."}
+    
     prompt = """Analyze this content and extract the main topics that could be tested.
+IMPORTANT: Focus ONLY on actual exam questions and mathematical/technical concepts. 
+IGNORE exam instructions, logistics, formatting rules, or administrative content.
+
 Return a JSON object with this exact structure:
 {
   "topics": [
@@ -134,7 +160,10 @@ Return a JSON object with this exact structure:
   ]
 }
 
-IMPORTANT: Include a helpful "explanation" field for each topic that explains the concept clearly.
+IMPORTANT: 
+- Only extract topics from actual questions, not from instructions
+- Include a helpful "explanation" field for each topic
+- If the content is only instructions/logistics, return an empty topics array
 Only return the JSON, no other text."""
 
     try:
