@@ -171,8 +171,22 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
                     except json.JSONDecodeError as e:
                         error_msg = f"Failed to parse JSON from pages {chunk_pages[0]}-{chunk_pages[-1]}: {str(e)}"
                         print(f"[INCREMENTAL] {error_msg}")
-                        print(f"[INCREMENTAL] Response preview: {response_text[:200]}...")
+                        try:
+                            print(f"[INCREMENTAL] Response preview: {response_text[:200]}...")
+                        except:
+                            print(f"[INCREMENTAL] Could not get response text")
                         errors.append(error_msg)
+                        # Still try to save any questions we might have extracted before the error
+                        if chunk_questions:
+                            try:
+                                saved_count = save_questions_chunk(db, exam_id, chunk_questions)
+                                total_questions += saved_count
+                                db.cursor.execute('''
+                                    UPDATE exams SET total_questions = ? WHERE exam_id = ?
+                                ''', (total_questions, exam_id))
+                                db.conn.commit()
+                            except:
+                                pass
                         continue
                     except Exception as e:
                         error_msg = f"Error processing pages {chunk_pages[0]}-{chunk_pages[-1]}: {str(e)}"
@@ -180,19 +194,34 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
                         import traceback
                         traceback.print_exc()
                         errors.append(error_msg)
+                        # Still try to save any questions we might have extracted before the error
+                        if chunk_questions:
+                            try:
+                                saved_count = save_questions_chunk(db, exam_id, chunk_questions)
+                                total_questions += saved_count
+                                db.cursor.execute('''
+                                    UPDATE exams SET total_questions = ? WHERE exam_id = ?
+                                ''', (total_questions, exam_id))
+                                db.conn.commit()
+                            except:
+                                pass
                         continue
                     
                     # Save this chunk's questions to database immediately
                     if chunk_questions:
+                        print(f"[INCREMENTAL] Saving {len(chunk_questions)} questions from pages {chunk_pages[0]}-{chunk_pages[-1]}...")
                         saved_count = save_questions_chunk(db, exam_id, chunk_questions)
                         total_questions += saved_count
-                        print(f"[INCREMENTAL] Saved {saved_count} questions from pages {chunk_pages[0]}-{chunk_pages[-1]}")
+                        print(f"[INCREMENTAL] ✓ Saved {saved_count} questions from pages {chunk_pages[0]}-{chunk_pages[-1]} (total: {total_questions})")
                         
                         # Update exam question count
                         db.cursor.execute('''
                             UPDATE exams SET total_questions = ? WHERE exam_id = ?
                         ''', (total_questions, exam_id))
                         db.conn.commit()
+                        print(f"[INCREMENTAL] Updated exam {exam_id} with {total_questions} total questions")
+                    else:
+                        print(f"[INCREMENTAL] ⚠ No questions to save from pages {chunk_pages[0]}-{chunk_pages[-1]}")
                     
                     # Callback for progress updates
                     if callback:
