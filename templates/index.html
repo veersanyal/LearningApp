@@ -488,6 +488,14 @@
                                     <div class="prose prose-invert max-w-none text-slate-300" x-html="renderMath(q.text || q.question_text || '')"></div>
                                 </div>
                                 
+                                <!-- Diagram Description (if provided) -->
+                                <template x-if="q.diagram_description || q.diagram_note">
+                                    <div class="mb-4 p-4 bg-blue-900 bg-opacity-30 rounded-lg border border-blue-700">
+                                        <h5 class="font-semibold mb-2 text-blue-400">📊 Diagram/Image Description:</h5>
+                                        <div class="prose prose-invert max-w-none text-blue-300 text-sm" x-html="renderMath(q.diagram_description || q.diagram_note || '')"></div>
+                                    </div>
+                                </template>
+                                
                                 <!-- Options (if multiple choice) -->
                                 <template x-if="q.options && q.options.length > 0">
                                     <div class="mb-4 p-4 bg-slate-700 rounded-lg">

@@ -1363,7 +1363,8 @@ def get_exam_questions(exam_id):
                     'ocr_confidence': q['ocr_confidence'],
                     'image_path': q['image_path'],
                     'difficulty': q['difficulty'],
-                    'analyzed': q['solved_json'] is not None
+                    'analyzed': q['solved_json'] is not None,
+                    'diagram_note': q['diagram_note']  # Diagram description from database
                 }
                 
                 if q['solved_json']:
@@ -1371,6 +1372,11 @@ def get_exam_questions(exam_id):
                     question_data['solution'] = solved_data.get('solution')
                     question_data['answer'] = solved_data.get('answer')
                     question_data['difficulty_reasoning'] = solved_data.get('difficulty_reasoning')
+                    question_data['options'] = solved_data.get('options')  # Multiple choice options
+                    question_data['question_type'] = solved_data.get('question_type')
+                    question_data['has_diagram'] = solved_data.get('has_diagram', False)
+                    question_data['diagram_description'] = solved_data.get('diagram_description')
+                    question_data['subparts'] = solved_data.get('subparts')
                 
                 if q['topics_json']:
                     topics_data = json.loads(q['topics_json'])

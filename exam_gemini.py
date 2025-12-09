@@ -31,12 +31,15 @@ def extract_exam_questions_with_gemini(file_bytes: bytes, file_type: str, vision
     prompt = """You are an expert at extracting exam questions from academic documents. 
 Analyze this exam document and extract ALL questions in a structured format.
 
+CRITICAL: Extract EVERY question on these pages. Do not skip any questions. If you see question numbers 1, 2, 3, etc., extract ALL of them.
+
 IMPORTANT INSTRUCTIONS:
-1. Skip instruction pages, cover pages, and logistics (scantron instructions, etc.)
-2. Extract ONLY actual exam questions
-3. Preserve all mathematical notation, equations, and LaTeX formatting
-4. Include diagrams, images, and visual elements in your description
+1. Skip ONLY pure instruction pages (scantron instructions, exam policies, etc.) - but if a page has BOTH instructions AND questions, extract the questions
+2. Extract ALL actual exam questions - look for numbered questions (1, 2, 3...), multiple choice options (A, B, C...), and any question text
+3. Preserve all mathematical notation, equations, and LaTeX formatting exactly as shown
+4. For diagrams/images: Provide a detailed description that would allow someone to recreate the diagram. Include all labels, axes, curves, shapes, and their relationships
 5. Number questions correctly (handle subparts like 1a, 1b, etc.)
+6. For multiple choice questions, extract ALL options (A, B, C, D, E, F, etc.) exactly as written
 
 Return a JSON object with this EXACT structure:
 {
@@ -273,8 +276,8 @@ def save_exam_questions_to_db(user_id: int, exam_name: str, file_type: str, ques
             # Insert main question
             db.cursor.execute('''
                 INSERT INTO exam_questions 
-                (exam_id, page_number, question_number, raw_text, solved_json, difficulty, topics_json)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                (exam_id, page_number, question_number, raw_text, solved_json, difficulty, topics_json, diagram_note)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 exam_id,
                 q.get("page_number", 1),
@@ -282,7 +285,8 @@ def save_exam_questions_to_db(user_id: int, exam_name: str, file_type: str, ques
                 q.get("question_text", ""),  # Store in raw_text for display
                 question_json,  # Store full structured data in solved_json
                 q.get("difficulty_estimate", 3),
-                json.dumps({"topics": q.get("topics", [])})
+                json.dumps({"topics": q.get("topics", [])}),
+                q.get("diagram_description")  # Store diagram description in diagram_note column
             ))
             
             question_id = db.cursor.lastrowid

@@ -36,10 +36,10 @@ def init_user_state(user_id):
     db = get_db()
     
     try:
-        # Iterate through all topics
-        for topic in all_topics:
-            topic_id = topic["topic_id"]
-            
+    # Iterate through all topics
+    for topic in all_topics:
+        topic_id = topic["topic_id"]
+        
             # Check if already exists
             existing = db.cursor.execute(
                 'SELECT progress_id FROM user_progress WHERE user_id = ? AND topic_id = ?',
@@ -182,45 +182,45 @@ def record_answer(user_id, topic_id, correct: bool):
         
         # Convert to dict for easier manipulation
         stats_dict = dict(stats)
-        
-        # Update basic counters
+    
+    # Update basic counters
         attempts = stats_dict["attempts"] + 1
-        
-        # NESTED STRUCTURE requirement: IF inside FOR loop
-        if correct:
+    
+    # NESTED STRUCTURE requirement: IF inside FOR loop
+    if correct:
             correct_count = stats_dict["correct"] + 1
             streak_correct = stats_dict["streak_correct"] + 1
             streak_wrong = 0
-            quality = 4  # Good recall for SM-2 algorithm
-        else:
+        quality = 4  # Good recall for SM-2 algorithm
+    else:
             correct_count = stats_dict["correct"]
             streak_wrong = stats_dict["streak_wrong"] + 1
             streak_correct = 0
-            quality = 1  # Failed recall for SM-2 algorithm
-        
-        # Calculate current retention using forgetting curve
+        quality = 1  # Failed recall for SM-2 algorithm
+    
+    # Calculate current retention using forgetting curve
         last_reviewed = stats_dict["last_reviewed"]
         if last_reviewed:
             if isinstance(last_reviewed, str):
                 last_reviewed = datetime.fromisoformat(last_reviewed)
             retention = calculate_forgetting_factor(last_reviewed, stats_dict["mastery"])
-        else:
-            retention = 1.0
-        
-        # Update mastery with time-weighted calculation
+    else:
+        retention = 1.0
+    
+    # Update mastery with time-weighted calculation
         raw_accuracy = correct_count / max(1, attempts)
         mastery = (raw_accuracy * 0.7) + (retention * 0.3)
-        
-        # Update easiness factor using SM-2 algorithm
+    
+    # Update easiness factor using SM-2 algorithm
         easiness_factor = update_easiness_factor(stats_dict["easiness_factor"], quality)
-        
-        # Calculate next review interval using SM-2
-        interval, new_review_count = calculate_sm2_interval(
+    
+    # Calculate next review interval using SM-2
+    interval, new_review_count = calculate_sm2_interval(
             easiness_factor,
             stats_dict["review_count"],
-            quality
-        )
-        
+        quality
+    )
+    
         # Update database
         next_review = current_time + timedelta(days=interval)
         
@@ -271,26 +271,26 @@ def get_target_difficulty(user_id, topic_id):
         ).fetchone()
         
         if not stats:
-            return "easy"
-        
-        mastery = stats["mastery"]
-        streak_correct = stats["streak_correct"]
-        streak_wrong = stats["streak_wrong"]
-        
-        # Adaptive difficulty with streak modifiers
-        # IF-ELIF-ELSE requirement
-        if streak_wrong >= 3:
-            return "easy"  # Struggling, make it easier
-        elif streak_correct >= 5 and mastery > 0.7:
-            return "hard"  # On a roll with high mastery
-        elif mastery < 0.3:
-            return "easy"
-        elif mastery < 0.6:
-            return "medium"
-        elif mastery < 0.85:
-            return "medium" if streak_correct < 3 else "hard"
-        else:
-            return "hard"
+        return "easy"
+    
+    mastery = stats["mastery"]
+    streak_correct = stats["streak_correct"]
+    streak_wrong = stats["streak_wrong"]
+    
+    # Adaptive difficulty with streak modifiers
+    # IF-ELIF-ELSE requirement
+    if streak_wrong >= 3:
+        return "easy"  # Struggling, make it easier
+    elif streak_correct >= 5 and mastery > 0.7:
+        return "hard"  # On a roll with high mastery
+    elif mastery < 0.3:
+        return "easy"
+    elif mastery < 0.6:
+        return "medium"
+    elif mastery < 0.85:
+        return "medium" if streak_correct < 3 else "hard"
+    else:
+        return "hard"
     finally:
         db.disconnect()
 
@@ -313,41 +313,41 @@ def calculate_review_priority(user_id):
         progress = db.cursor.execute(
             'SELECT * FROM user_progress WHERE user_id = ?', (user_id,)
         ).fetchall()
-        
-        # FOR LOOP with NESTED IF statements
+    
+    # FOR LOOP with NESTED IF statements
         for row in progress:
             stats = dict(row)
             topic_id = stats["topic_id"]
             
-            # Skip if never attempted
-            if stats["attempts"] == 0:
-                priority_list.append((topic_id, 100.0))  # High priority for new topics
-                continue
-            
-            # Calculate components of priority score
-            mastery_factor = 1.0 - stats["mastery"]  # Lower mastery = higher priority
-            
-            # Time-based urgency (is review overdue?)
+        # Skip if never attempted
+        if stats["attempts"] == 0:
+            priority_list.append((topic_id, 100.0))  # High priority for new topics
+            continue
+        
+        # Calculate components of priority score
+        mastery_factor = 1.0 - stats["mastery"]  # Lower mastery = higher priority
+        
+        # Time-based urgency (is review overdue?)
             next_review = stats["next_review"]
             if next_review:
                 if isinstance(next_review, str):
                     next_review = datetime.fromisoformat(next_review)
                 time_until_review = (next_review - current_time).total_seconds() / 3600.0
-                
-                # NESTED IF-ELIF-ELSE inside FOR loop
-                if time_until_review < 0:
-                    # Overdue review
-                    urgency_factor = min(2.0, abs(time_until_review) / 24.0)
-                elif time_until_review < 24:
-                    # Due soon
-                    urgency_factor = 0.5
-                else:
-                    # Not due yet
-                    urgency_factor = 0.0
-            else:
-                urgency_factor = 0.5
             
-            # Forgetting curve impact
+            # NESTED IF-ELIF-ELSE inside FOR loop
+            if time_until_review < 0:
+                # Overdue review
+                urgency_factor = min(2.0, abs(time_until_review) / 24.0)
+            elif time_until_review < 24:
+                # Due soon
+                urgency_factor = 0.5
+            else:
+                # Not due yet
+                urgency_factor = 0.0
+        else:
+            urgency_factor = 0.5
+        
+        # Forgetting curve impact
             last_reviewed = stats["last_reviewed"]
             if last_reviewed:
                 if isinstance(last_reviewed, str):
@@ -356,15 +356,15 @@ def calculate_review_priority(user_id):
             else:
                 retention = 1.0
             
-            forgetting_factor = 1.0 - retention
-            
-            # Combined priority score (weighted sum)
-            priority = (mastery_factor * 0.4) + (urgency_factor * 0.3) + (forgetting_factor * 0.3)
-            priority_list.append((topic_id, priority))
+        forgetting_factor = 1.0 - retention
         
-        # Sort by priority (highest first)
-        priority_list.sort(key=lambda x: x[1], reverse=True)
-        return priority_list
+        # Combined priority score (weighted sum)
+        priority = (mastery_factor * 0.4) + (urgency_factor * 0.3) + (forgetting_factor * 0.3)
+        priority_list.append((topic_id, priority))
+    
+    # Sort by priority (highest first)
+    priority_list.sort(key=lambda x: x[1], reverse=True)
+    return priority_list
     finally:
         db.disconnect()
 
@@ -390,23 +390,23 @@ def get_learning_velocity(user_id, topic_id):
             WHERE user_id = ? AND topic_id = ?
             ORDER BY timestamp DESC LIMIT 5
         ''', (user_id, topic_id)).fetchall()
-        
-        # Need at least 3 attempts to calculate velocity
-        if len(history) < 3:
-            return 0.0
-        
+    
+    # Need at least 3 attempts to calculate velocity
+    if len(history) < 3:
+        return 0.0
+    
         # Count correct answers
-        correct_count = 0
-        index = 0
-        
-        # WHILE loop counting correct answers
+    correct_count = 0
+    index = 0
+    
+    # WHILE loop counting correct answers
         while index < len(history):
             if history[index]["correct"]:
-                correct_count += 1
-            index += 1
-        
+            correct_count += 1
+        index += 1
+    
         velocity = correct_count / len(history)
-        return velocity
+    return velocity
     finally:
         db.disconnect()
 
@@ -544,33 +544,33 @@ def generate_progress_report(user_id):
         ).fetchall()
         
         if not progress:
-            return "No progress data available."
-        
-        report_lines = []
-        report_lines.append("=" * 60)
-        report_lines.append("LEARNING PROGRESS REPORT")
-        report_lines.append("=" * 60)
-        
-        # Calculate overall statistics
-        total_attempts = 0
-        total_correct = 0
-        
-        # FOR loop to aggregate data
+        return "No progress data available."
+    
+    report_lines = []
+    report_lines.append("=" * 60)
+    report_lines.append("LEARNING PROGRESS REPORT")
+    report_lines.append("=" * 60)
+    
+    # Calculate overall statistics
+    total_attempts = 0
+    total_correct = 0
+    
+    # FOR loop to aggregate data
         for row in progress:
             total_attempts += row["attempts"]
             total_correct += row["correct"]
-        
-        overall_accuracy = (total_correct / total_attempts * 100) if total_attempts > 0 else 0
-        
-        report_lines.append(f"\nOverall Statistics:")
-        report_lines.append(f"  Total Attempts: {total_attempts}")
-        report_lines.append(f"  Total Correct: {total_correct}")
-        report_lines.append(f"  Overall Accuracy: {overall_accuracy:.1f}%")
+    
+    overall_accuracy = (total_correct / total_attempts * 100) if total_attempts > 0 else 0
+    
+    report_lines.append(f"\nOverall Statistics:")
+    report_lines.append(f"  Total Attempts: {total_attempts}")
+    report_lines.append(f"  Total Correct: {total_correct}")
+    report_lines.append(f"  Overall Accuracy: {overall_accuracy:.1f}%")
         report_lines.append(f"\nTopics Mastered (>80%): {sum(1 for s in progress if s['mastery'] > 0.8)}")
         report_lines.append(f"Topics In Progress (40-80%): {sum(1 for s in progress if 0.4 <= s['mastery'] <= 0.8)}")
         report_lines.append(f"Topics Struggling (<40%): {sum(1 for s in progress if s['mastery'] < 0.4)}")
-        
-        return "\n".join(report_lines)
+    
+    return "\n".join(report_lines)
     finally:
         db.disconnect()
 
