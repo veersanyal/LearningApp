@@ -1278,11 +1278,11 @@ def get_exam_questions(exam_id):
                     question_data['question_type'] = topics_data.get('question_type')
                 
                 # Format image path for frontend
-                if q['image_path']:
+                if q.get('image_path'):
                     # Extract just the filename from the path
                     if 'exams/' in q['image_path']:
                         question_data['image_path'] = q['image_path'].split('exams/')[1]
-        else:
+                    else:
                         question_data['image_path'] = q['image_path']
                 
                 result.append(question_data)
