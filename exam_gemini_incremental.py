@@ -5,10 +5,15 @@ Incremental exam question extraction - processes 2 pages at a time and saves inc
 import os
 import json
 import io
+import sys
 from typing import List, Dict, Optional
 from PIL import Image
 from pdf2image import convert_from_bytes
 from database import get_db
+
+# Force stdout/stderr to be unbuffered
+sys.stdout.reconfigure(line_buffering=True) if hasattr(sys.stdout, 'reconfigure') else None
+sys.stderr.reconfigure(line_buffering=True) if hasattr(sys.stderr, 'reconfigure') else None
 
 
 def process_exam_incremental(file_bytes: bytes, file_type: str, exam_id: int, vision_model, 
@@ -74,9 +79,13 @@ For LaTeX/math notation:
 Return ONLY the JSON, no markdown formatting, no explanations."""
 
     try:
-        print(f"[INCREMENTAL] Starting incremental processing for exam {exam_id}")
-        print(f"[INCREMENTAL] Vision model available: {vision_model is not None}")
+        print(f"[INCREMENTAL] ========== STARTING INCREMENTAL PROCESSING ==========", flush=True)
+        print(f"[INCREMENTAL] Starting incremental processing for exam {exam_id}", flush=True)
+        print(f"[INCREMENTAL] Vision model available: {vision_model is not None}", flush=True)
+        sys.stdout.flush()
         if not vision_model:
+            print(f"[INCREMENTAL] ERROR: Vision model is None!", flush=True)
+            sys.stdout.flush()
             return {"error": "Vision model not initialized"}
         
         total_questions = 0

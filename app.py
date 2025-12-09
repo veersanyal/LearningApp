@@ -1041,9 +1041,11 @@ def upload_exam():
             # CRITICAL: Need Flask app context for database access
             with app.app_context():
                 try:
-                    print(f"[EXAM_UPLOAD_BG] Starting background processing for exam {exam_id}")
-                    print(f"[EXAM_UPLOAD_BG] File type: {file_type}, File size: {len(file_bytes)} bytes")
-                    print(f"[EXAM_UPLOAD_BG] Vision model available: {vision_model is not None}")
+                    print(f"[EXAM_UPLOAD_BG] ========== BACKGROUND THREAD STARTED ==========", flush=True)
+                    print(f"[EXAM_UPLOAD_BG] Starting background processing for exam {exam_id}", flush=True)
+                    print(f"[EXAM_UPLOAD_BG] File type: {file_type}, File size: {len(file_bytes)} bytes", flush=True)
+                    print(f"[EXAM_UPLOAD_BG] Vision model available: {vision_model is not None}", flush=True)
+                    sys.stdout.flush()
                     
                     if not vision_model:
                         print(f"[EXAM_UPLOAD_BG] ERROR: Vision model is None!")
@@ -1098,11 +1100,13 @@ def upload_exam():
                         print(f"[EXAM_UPLOAD_BG] Failed to update DB: {db_err}")
         
         # Start background processing
-        print(f"[EXAM_UPLOAD] Starting background thread for exam {exam_id}")
+        print(f"[EXAM_UPLOAD] Starting background thread for exam {exam_id}", flush=True)
+        sys.stdout.flush()
         thread = threading.Thread(target=process_in_background, name=f"ExamProcess-{exam_id}")
         thread.daemon = False  # Non-daemon so it doesn't get killed when request ends
         thread.start()
-        print(f"[EXAM_UPLOAD] Background thread started: {thread.name} (daemon=False)")
+        print(f"[EXAM_UPLOAD] Background thread started: {thread.name} (daemon=False, alive={thread.is_alive()})", flush=True)
+        sys.stdout.flush()
         
         # Return immediately with exam_id
         return jsonify({
