@@ -1380,7 +1380,8 @@ def get_exam_questions(exam_id):
                     question_data['question_type'] = topics_data.get('question_type')
                 
                 # Format image path for frontend
-                if q.get('image_path'):
+                # sqlite3.Row doesn't support .get(); access directly
+                if q['image_path']:
                     # Extract just the filename from the path
                     if 'exams/' in q['image_path']:
                         question_data['image_path'] = q['image_path'].split('exams/')[1]
