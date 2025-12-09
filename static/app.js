@@ -1390,10 +1390,12 @@ function app() {
         // Exam Questions Functions
         async loadExams() {
             try {
-                const response = await fetch('/exams');
+                const response = await fetch('/exam/list');
                 const data = await response.json();
                 if (response.ok) {
                     this.exams = data.exams || [];
+                } else {
+                    console.error('Error loading exams:', data.error);
                 }
             } catch (err) {
                 console.error('Error loading exams:', err);
