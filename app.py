@@ -1000,29 +1000,37 @@ def upload_exam():
         
         # Create exam record immediately (before processing)
         db = get_db()
+        exam_file_path = None
         try:
             exam_dir = os.path.join(os.path.dirname(__file__), 'uploads', 'exams', str(current_user.id))
             os.makedirs(exam_dir, exist_ok=True)
+            
+            # Save the file for potential retry
+            file_ext = os.path.splitext(filename)[1] if '.' in filename else ('.pdf' if file_type == 'pdf' else '.png')
+            exam_file_path = os.path.join(exam_dir, f"exam_{uuid.uuid4()}{file_ext}")
+            with open(exam_file_path, 'wb') as f:
+                f.write(file_bytes)
+            print(f"[EXAM_UPLOAD] Saved exam file to {exam_file_path}")
             
             # Estimate total pages for PDF
             total_pages_estimate = 0
             if file_type == 'pdf':
                 try:
-                    from pdf2image import convert_from_bytes
-                    pdf_images = convert_from_bytes(file_bytes, dpi=150, first_page=1, last_page=1)
-                    # Get actual page count
                     from PyPDF2 import PdfReader
                     reader = PdfReader(io.BytesIO(file_bytes))
                     total_pages_estimate = len(reader.pages)
-                except:
+                    print(f"[EXAM_UPLOAD] PDF has {total_pages_estimate} pages")
+                except Exception as e:
+                    print(f"[EXAM_UPLOAD] Error counting PDF pages: {e}")
                     total_pages_estimate = 0
             
             db.cursor.execute('''
-                INSERT INTO exams (user_id, exam_name, file_type, total_pages, total_questions)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (current_user.id, exam_name, file_type, total_pages_estimate, 0))
+                INSERT INTO exams (user_id, exam_name, file_type, file_path, total_pages, total_questions)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (current_user.id, exam_name, file_type, exam_file_path, total_pages_estimate, 0))
             db.conn.commit()
             exam_id = db.cursor.lastrowid
+            print(f"[EXAM_UPLOAD] Created exam record {exam_id}")
         finally:
             db.disconnect()
         
