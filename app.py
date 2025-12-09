@@ -576,10 +576,10 @@ def upload():
             file_type = 'pdf'
             try:
                 print("[UPLOAD] Step 1: Extracting text from PDF...")
-            content = extract_text_from_pdf(file_bytes)
+                content = extract_text_from_pdf(file_bytes)
                 print(f"[UPLOAD] Step 1 complete: Extracted {len(content)} characters")
                 print("[UPLOAD] Step 2: Extracting topics from content...")
-            topic_data = extract_topics_from_content(content)
+                topic_data = extract_topics_from_content(content)
                 print(f"[UPLOAD] Step 2 complete: Got topic_data: {topic_data}")
             except Exception as e:
                 print(f"[UPLOAD] EXCEPTION processing PDF: {e}")
@@ -591,7 +591,7 @@ def upload():
             file_type = 'image'
             try:
                 print("[UPLOAD] Extracting topics from image...")
-            topic_data = extract_topics_from_content(None, is_image=True, image_bytes=file_bytes)
+                topic_data = extract_topics_from_content(None, is_image=True, image_bytes=file_bytes)
                 print(f"[UPLOAD] Got topic_data: {topic_data}")
             except Exception as e:
                 print(f"[UPLOAD] EXCEPTION processing image: {e}")
@@ -603,10 +603,10 @@ def upload():
             file_type = 'text'
             try:
                 print("[UPLOAD] Decoding text file...")
-            content = file_bytes.decode('utf-8')
+                content = file_bytes.decode('utf-8')
                 print(f"[UPLOAD] Decoded {len(content)} characters")
                 print("[UPLOAD] Extracting topics from content...")
-            topic_data = extract_topics_from_content(content)
+                topic_data = extract_topics_from_content(content)
                 print(f"[UPLOAD] Got topic_data: {topic_data}")
             except Exception as e:
                 print(f"[UPLOAD] EXCEPTION processing text file: {e}")
