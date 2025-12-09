@@ -1501,6 +1501,58 @@ function app() {
             }
         },
         
+        pollExamProgress(examId) {
+            // Poll every 3 seconds for progress updates
+            const maxPolls = 60; // Poll for up to 3 minutes
+            let pollCount = 0;
+            
+            const pollInterval = setInterval(async () => {
+                pollCount++;
+                if (pollCount > maxPolls) {
+                    clearInterval(pollInterval);
+                    const statusDiv = document.getElementById('exam-upload-status');
+                    if (statusDiv) {
+                        statusDiv.textContent = 'Processing is taking longer than expected. Please refresh the page.';
+                        statusDiv.className = 'text-sm mt-2 text-center text-yellow-400';
+                    }
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/exam/list');
+                    const data = await response.json();
+                    if (response.ok && data.exams) {
+                        const exam = data.exams.find(e => e.exam_id === examId);
+                        if (exam) {
+                            // Update status display
+                            const statusDiv = document.getElementById('exam-upload-status');
+                            if (statusDiv) {
+                                if (exam.is_processing) {
+                                    statusDiv.textContent = `Processing... ${exam.total_questions} questions extracted so far from ${exam.total_pages} pages.`;
+                                    statusDiv.className = 'text-sm mt-2 text-center text-blue-400';
+                                } else {
+                                    // Processing complete
+                                    statusDiv.textContent = `Complete! Extracted ${exam.total_questions} questions from ${exam.total_pages} pages.`;
+                                    statusDiv.className = 'text-sm mt-2 text-center text-green-400';
+                                    clearInterval(pollInterval);
+                                }
+                            }
+                            
+                            // Refresh exam list
+                            this.loadExams();
+                            
+                            // Stop polling if not processing
+                            if (!exam.is_processing) {
+                                clearInterval(pollInterval);
+                            }
+                        }
+                    }
+                } catch (err) {
+                    console.error('Error polling exam progress:', err);
+                }
+            }, 3000); // Poll every 3 seconds
+        },
+        
         async viewExamQuestions(examId) {
             try {
                 console.log('[VIEW_QUESTIONS] Loading questions for exam:', examId);
