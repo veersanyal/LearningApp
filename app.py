@@ -1101,11 +1101,19 @@ def upload_exam():
         
         # Start background processing
         print(f"[EXAM_UPLOAD] Starting background thread for exam {exam_id}", flush=True)
+        print(f"[EXAM_UPLOAD] Thread will process {total_pages_estimate} pages", flush=True)
         sys.stdout.flush()
         thread = threading.Thread(target=process_in_background, name=f"ExamProcess-{exam_id}")
         thread.daemon = False  # Non-daemon so it doesn't get killed when request ends
         thread.start()
         print(f"[EXAM_UPLOAD] Background thread started: {thread.name} (daemon=False, alive={thread.is_alive()})", flush=True)
+        print(f"[EXAM_UPLOAD] Thread ID: {thread.ident}", flush=True)
+        sys.stdout.flush()
+        
+        # Also log immediately after starting to verify logging works
+        import time
+        time.sleep(0.1)  # Brief pause to let thread start
+        print(f"[EXAM_UPLOAD] Thread status check: alive={thread.is_alive()}, ident={thread.ident}", flush=True)
         sys.stdout.flush()
         
         # Return immediately with exam_id
