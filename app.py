@@ -96,19 +96,30 @@ else:
     vision_model = None
 
 
-def extract_text_from_pdf(file_bytes):
-    """Extract text from a PDF file (all pages)."""
+def extract_text_from_pdf(file_bytes, skip_instruction_pages=True):
+    """Extract text from a PDF file, optionally skipping instruction pages."""
     try:
         reader = PdfReader(io.BytesIO(file_bytes))
         text = ""
         total_pages = len(reader.pages)
+        skipped_pages = 0
+        
         for idx in range(total_pages):
             page = reader.pages[idx]
             page_text = page.extract_text() or ""
-            text += page_text
+            
+            # Skip instruction pages if enabled
+            if skip_instruction_pages and page_text:
+                if is_instruction_content(page_text):
+                    print(f"[PDF] Page {idx + 1} appears to be instructions - skipping")
+                    skipped_pages += 1
+                    continue
+            
+            text += page_text + "\n\n"
+        
         if not text or len(text.strip()) < 50:
             print("Warning: PDF extraction returned very little or no text")
-        print(f"Extracted {len(text)} characters from PDF ({total_pages} pages)")
+        print(f"Extracted {len(text)} characters from PDF ({total_pages} pages, {skipped_pages} instruction pages skipped)")
         return text
     except Exception as e:
         print(f"Error extracting text from PDF: {e}")
