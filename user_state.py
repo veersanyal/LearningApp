@@ -36,10 +36,10 @@ def init_user_state(user_id):
     db = get_db()
     
     try:
-    # Iterate through all topics
-    for topic in all_topics:
-        topic_id = topic["topic_id"]
-        
+        # Iterate through all topics
+        for topic in all_topics:
+            topic_id = topic["topic_id"]
+            
             # Check if already exists
             existing = db.cursor.execute(
                 'SELECT progress_id FROM user_progress WHERE user_id = ? AND topic_id = ?',
