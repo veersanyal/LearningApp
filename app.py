@@ -527,14 +527,14 @@ def upload():
         print("[UPLOAD] ========== STARTING UPLOAD ==========")
         print(f"[UPLOAD] User ID: {current_user.id}")
         
-    if 'file' not in request.files:
+        if 'file' not in request.files:
             print("[UPLOAD] ERROR: No file in request.files")
-        return jsonify({"error": "No file provided"}), 400
-    
-    file = request.files['file']
-    if file.filename == '':
+            return jsonify({"error": "No file provided"}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
             print("[UPLOAD] ERROR: Empty filename")
-        return jsonify({"error": "No file selected"}), 400
+            return jsonify({"error": "No file selected"}), 400
     
         original_filename = file.filename
         filename = original_filename.lower()
