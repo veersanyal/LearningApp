@@ -329,7 +329,7 @@ def save_questions_chunk(db, exam_id: int, questions: List[Dict]) -> int:
             # Insert main question
             db.cursor.execute('''
                 INSERT INTO exam_questions 
-                (exam_id, page_num, question_number, raw_text, solved_json, difficulty, topics_json)
+                (exam_id, page_number, question_number, raw_text, solved_json, difficulty, topics_json)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             ''', (
                 exam_id,
@@ -349,7 +349,7 @@ def save_questions_chunk(db, exam_id: int, questions: List[Dict]) -> int:
                     subpart_json = json.dumps(subpart)
                     db.cursor.execute('''
                         INSERT INTO exam_questions 
-                        (exam_id, page_num, question_number, raw_text, solved_json, difficulty, topics_json)
+                        (exam_id, page_number, question_number, raw_text, solved_json, difficulty, topics_json)
                         VALUES (?, ?, ?, ?, ?, ?, ?)
                     ''', (
                         exam_id,

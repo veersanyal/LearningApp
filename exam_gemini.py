@@ -273,7 +273,7 @@ def save_exam_questions_to_db(user_id: int, exam_name: str, file_type: str, ques
             # Insert main question
             db.cursor.execute('''
                 INSERT INTO exam_questions 
-                (exam_id, page_num, question_number, raw_text, solved_json, difficulty, topics_json)
+                (exam_id, page_number, question_number, raw_text, solved_json, difficulty, topics_json)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             ''', (
                 exam_id,
@@ -293,7 +293,7 @@ def save_exam_questions_to_db(user_id: int, exam_name: str, file_type: str, ques
                     subpart_json = json.dumps(subpart)
                     db.cursor.execute('''
                         INSERT INTO exam_questions 
-                        (exam_id, page_num, question_number, raw_text, solved_json, difficulty, topics_json)
+                        (exam_id, page_number, question_number, raw_text, solved_json, difficulty, topics_json)
                         VALUES (?, ?, ?, ?, ?, ?, ?)
                     ''', (
                         exam_id,
