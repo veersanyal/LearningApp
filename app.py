@@ -4,6 +4,7 @@ import re
 import base64
 import uuid
 from datetime import datetime
+from typing import Optional, Dict
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_from_directory
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 import google.generativeai as genai
