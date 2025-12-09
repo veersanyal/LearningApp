@@ -1034,7 +1034,8 @@ def upload_exam():
         finally:
             db.disconnect()
         
-        print(f"[EXAM_UPLOAD] Created exam record {exam_id}, starting incremental processing...")
+        print(f"[EXAM_UPLOAD] Created exam record {exam_id}, starting incremental processing...", flush=True)
+        sys.stdout.flush()
         
         # Process incrementally in background thread
         def process_in_background():
