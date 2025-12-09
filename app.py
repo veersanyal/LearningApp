@@ -92,7 +92,7 @@ else:
     vision_model = None
 
 
-def extract_text_from_pdf(file_bytes, max_pages=20):
+def extract_text_from_pdf(file_bytes, max_pages=10):
     """Extract text from a PDF file with an optional page limit to avoid timeouts."""
     try:
         reader = PdfReader(io.BytesIO(file_bytes))
@@ -155,31 +155,45 @@ Only return the JSON, no other text."""
             return {"topics": [], "error": "Image data not provided."}
         
         # Truncate content if too long (Gemini has token limits)
-        max_chars = 50000  # Conservative limit
-        if not is_image and len(content) > max_chars:
-            print(f"[EXTRACT_TOPICS] Warning: Content too long ({len(content)} chars), truncating to {max_chars}")
-            content = content[:max_chars] + "\n\n[Content truncated...]"
-        
-        print("[EXTRACT_TOPICS] Calling Gemini API...")
-        request_timeout = 30  # seconds to avoid worker timeouts
-        if is_image and image_bytes:
-            # Use vision model for images
-            image = Image.open(io.BytesIO(image_bytes))
-            print("[EXTRACT_TOPICS] Using vision model for image")
-            response = vision_model.generate_content(
-                [prompt, image],
-                request_options={"timeout": request_timeout}
-            )
-            print("[EXTRACT_TOPICS] Vision model response received")
-        else:
-            # Use text model
-            full_prompt = f"{prompt}\n\nContent:\n{content}"
-            print(f"[EXTRACT_TOPICS] Using text model (content length: {len(content)} chars)")
-            response = text_model.generate_content(
-                full_prompt,
-                request_options={"timeout": request_timeout}
-            )
-            print("[EXTRACT_TOPICS] Text model response received")
+        primary_max_chars = 12000  # tighter to avoid timeouts
+        if not is_image and len(content) > primary_max_chars:
+            print(f"[EXTRACT_TOPICS] Warning: Content too long ({len(content)} chars), truncating to {primary_max_chars}")
+            content = content[:primary_max_chars] + "\n\n[Content truncated...]"
+
+        def call_model(active_content):
+            request_timeout = 20  # seconds to avoid worker timeouts
+            if is_image and image_bytes:
+                image = Image.open(io.BytesIO(image_bytes))
+                print(f"[EXTRACT_TOPICS] Using vision model with timeout {request_timeout}s")
+                return vision_model.generate_content(
+                    [prompt, image],
+                    request_options={"timeout": request_timeout}
+                )
+            else:
+                full_prompt = f"{prompt}\n\nContent:\n{active_content}"
+                print(f"[EXTRACT_TOPICS] Using text model (content length: {len(active_content)} chars) with timeout {request_timeout}s")
+                return text_model.generate_content(
+                    full_prompt,
+                    request_options={"timeout": request_timeout}
+                )
+
+        try:
+            response = call_model(content)
+        except Exception as e:
+            err_msg = str(e).lower()
+            print(f"[EXTRACT_TOPICS] First attempt failed: {e}")
+            # Retry once with aggressive truncation for text timeouts
+            if (("timeout" in err_msg or "deadline" in err_msg or "504" in err_msg) and not is_image):
+                fallback_chars = 4000
+                short_content = content[:fallback_chars] + "\n\n[Content truncated further for retry...]"
+                print(f"[EXTRACT_TOPICS] Retrying with shorter content ({len(short_content)} chars)")
+                try:
+                    response = call_model(short_content)
+                except Exception as e2:
+                    print(f"[EXTRACT_TOPICS] Retry failed: {e2}")
+                    return {"topics": [], "error": f"AI timeout on retry: {e2}"}
+            else:
+                return {"topics": [], "error": f"AI request failed: {e}"}
         
         # Parse the response
         print("[EXTRACT_TOPICS] Parsing Gemini response...")
