@@ -1553,6 +1553,28 @@ function app() {
             }, 3000); // Poll every 3 seconds
         },
         
+        async retryExamProcessing(examId) {
+            if (!confirm('This will re-process the exam file. Continue?')) {
+                return;
+            }
+            try {
+                const response = await fetch(`/exam/${examId}/retry`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    alert('Processing restarted. Questions will appear as they are extracted.');
+                    this.loadExams();
+                    this.pollExamProgress(examId);
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to retry processing'));
+                }
+            } catch (err) {
+                console.error('Retry error:', err);
+                alert('Error retrying exam processing');
+            }
+        },
+        
         async viewExamQuestions(examId) {
             try {
                 console.log('[VIEW_QUESTIONS] Loading questions for exam:', examId);

@@ -1077,9 +1077,9 @@ def upload_exam():
         # Start background processing
         print(f"[EXAM_UPLOAD] Starting background thread for exam {exam_id}")
         thread = threading.Thread(target=process_in_background, name=f"ExamProcess-{exam_id}")
-        thread.daemon = True
+        thread.daemon = False  # Non-daemon so it doesn't get killed when request ends
         thread.start()
-        print(f"[EXAM_UPLOAD] Background thread started: {thread.name}")
+        print(f"[EXAM_UPLOAD] Background thread started: {thread.name} (daemon=False)")
         
         # Return immediately with exam_id
         return jsonify({
