@@ -1617,6 +1617,38 @@ function app() {
             }
         },
         
+        async deleteExam(examId) {
+            if (!confirm('Are you sure you want to delete this exam? This will delete all questions and associated data.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/exam/${examId}/delete`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Remove from list
+                    this.exams = this.exams.filter(e => e.exam_id !== examId);
+                    // Clear selected questions if viewing this exam
+                    if (this.selectedExamQuestions && this.selectedExamQuestions.length > 0) {
+                        // Check if we're viewing this exam's questions
+                        const firstQuestion = this.selectedExamQuestions[0];
+                        if (firstQuestion && this.exams.find(e => e.exam_id === examId) === undefined) {
+                            this.selectedExamQuestions = null;
+                        }
+                    }
+                    alert('Exam deleted successfully');
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to delete exam'));
+                }
+            } catch (err) {
+                console.error('Error deleting exam:', err);
+                alert('Error deleting exam');
+            }
+        },
+        
         formatQuestionText(text) {
             if (!text) return '';
             // Escape HTML and preserve line breaks

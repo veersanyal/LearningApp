@@ -1663,6 +1663,83 @@ def delete_document(document_id):
         return jsonify({"error": str(e)}), 500
 
 
+@app.route('/exam/<int:exam_id>/delete', methods=['DELETE'])
+@login_required
+def delete_exam(exam_id):
+    """Delete an exam and all its associated data."""
+    try:
+        db = get_db()
+        try:
+            # Get exam info
+            exam = db.cursor.execute('''
+                SELECT exam_id, file_path, user_id
+                FROM exams
+                WHERE exam_id = ?
+            ''', (exam_id,)).fetchone()
+            
+            if not exam:
+                return jsonify({"error": "Exam not found"}), 404
+            
+            if exam['user_id'] != current_user.id:
+                return jsonify({"error": "Unauthorized"}), 403
+            
+            # Get all question images for this exam
+            question_images = db.cursor.execute('''
+                SELECT image_path FROM exam_questions
+                WHERE exam_id = ? AND image_path IS NOT NULL
+            ''', (exam_id,)).fetchall()
+            
+            # Delete exam file
+            if exam['file_path'] and os.path.exists(exam['file_path']):
+                try:
+                    os.remove(exam['file_path'])
+                    print(f"[DELETE_EXAM] Deleted exam file: {exam['file_path']}")
+                except Exception as e:
+                    print(f"[DELETE_EXAM] Error deleting exam file: {e}")
+            
+            # Delete question images
+            exam_dir = os.path.join(os.path.dirname(__file__), 'uploads', 'exams', str(current_user.id))
+            for img in question_images:
+                if img['image_path']:
+                    # Handle both relative and absolute paths
+                    if os.path.isabs(img['image_path']):
+                        img_path = img['image_path']
+                    else:
+                        img_path = os.path.join(exam_dir, img['image_path'])
+                    
+                    if os.path.exists(img_path):
+                        try:
+                            os.remove(img_path)
+                            print(f"[DELETE_EXAM] Deleted question image: {img_path}")
+                        except Exception as e:
+                            print(f"[DELETE_EXAM] Error deleting question image {img_path}: {e}")
+            
+            # Delete exam question skills (foreign key will handle this, but explicit for clarity)
+            db.cursor.execute('''
+                DELETE FROM exam_question_skills
+                WHERE question_id IN (
+                    SELECT question_id FROM exam_questions WHERE exam_id = ?
+                )
+            ''', (exam_id,))
+            
+            # Delete exam questions (cascade should handle this, but explicit for clarity)
+            db.cursor.execute('DELETE FROM exam_questions WHERE exam_id = ?', (exam_id,))
+            
+            # Delete exam
+            db.cursor.execute('DELETE FROM exams WHERE exam_id = ?', (exam_id,))
+            db.conn.commit()
+            
+            print(f"[DELETE_EXAM] Successfully deleted exam {exam_id} and all associated data")
+            return jsonify({"success": True})
+        finally:
+            db.disconnect()
+    except Exception as e:
+        print(f"[DELETE_EXAM] Error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
 # Gamification Endpoints
 @app.route('/achievements', methods=['GET'])
 @login_required
