@@ -204,14 +204,14 @@ Only return the JSON, no other text."""
             request_timeout = 12  # seconds to avoid worker timeouts
 
             def _do_call():
-        if is_image and image_bytes:
-            image = Image.open(io.BytesIO(image_bytes))
+                if is_image and image_bytes:
+                    image = Image.open(io.BytesIO(image_bytes))
                     print(f"[EXTRACT_TOPICS] Using vision model with timeout {request_timeout}s")
                     return vision_model.generate_content(
                         [prompt, image],
                         request_options={"timeout": request_timeout}
                     )
-        else:
+                else:
                     full_prompt = f"{prompt}\n\nContent:\n{active_content}"
                     print(f"[EXTRACT_TOPICS] Using text model (content length: {len(active_content)} chars) with timeout {request_timeout}s")
                     return text_model.generate_content(
