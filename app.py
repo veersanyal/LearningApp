@@ -1031,6 +1031,9 @@ def upload_exam():
         # Process incrementally in background thread
         def process_in_background():
             try:
+                print(f"[EXAM_UPLOAD_BG] Starting background processing for exam {exam_id}")
+                print(f"[EXAM_UPLOAD_BG] File type: {file_type}, File size: {len(file_bytes)} bytes")
+                
                 result = process_exam_incremental(
                     file_bytes, 
                     file_type, 
@@ -1038,19 +1041,45 @@ def upload_exam():
                     vision_model,
                     callback=None  # Could add progress callback here
                 )
+                
                 if 'error' in result:
-                    print(f"[EXAM_UPLOAD_BG] Error: {result['error']}")
+                    print(f"[EXAM_UPLOAD_BG] ERROR: {result['error']}")
+                    # Update exam with error status
+                    db = get_db()
+                    try:
+                        db.cursor.execute('''
+                            UPDATE exams SET total_questions = -1 WHERE exam_id = ?
+                        ''', (exam_id,))  # -1 indicates error
+                        db.conn.commit()
+                    finally:
+                        db.disconnect()
                 else:
-                    print(f"[EXAM_UPLOAD_BG] Completed: {result['total_questions']} questions from {result['total_pages']} pages")
+                    print(f"[EXAM_UPLOAD_BG] SUCCESS: Completed {result['total_questions']} questions from {result['total_pages']} pages")
+                    if result.get('errors'):
+                        print(f"[EXAM_UPLOAD_BG] Warnings: {len(result['errors'])} errors occurred during processing")
             except Exception as e:
-                print(f"[EXAM_UPLOAD_BG] Exception: {e}")
+                print(f"[EXAM_UPLOAD_BG] CRITICAL EXCEPTION: {e}")
                 import traceback
                 traceback.print_exc()
+                # Try to mark exam as failed
+                try:
+                    db = get_db()
+                    try:
+                        db.cursor.execute('''
+                            UPDATE exams SET total_questions = -1 WHERE exam_id = ?
+                        ''', (exam_id,))
+                        db.conn.commit()
+                    finally:
+                        db.disconnect()
+                except:
+                    pass
         
         # Start background processing
-        thread = threading.Thread(target=process_in_background)
+        print(f"[EXAM_UPLOAD] Starting background thread for exam {exam_id}")
+        thread = threading.Thread(target=process_in_background, name=f"ExamProcess-{exam_id}")
         thread.daemon = True
         thread.start()
+        print(f"[EXAM_UPLOAD] Background thread started: {thread.name}")
         
         # Return immediately with exam_id
         return jsonify({

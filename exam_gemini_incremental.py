@@ -74,6 +74,7 @@ For LaTeX/math notation:
 Return ONLY the JSON, no markdown formatting, no explanations."""
 
     try:
+        print(f"[INCREMENTAL] Starting incremental processing for exam {exam_id}")
         total_questions = 0
         total_pages = 0
         errors = []
@@ -142,10 +143,14 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
                         response_text = response_text.strip()
                         
                         # Parse JSON response
+                        print(f"[INCREMENTAL] Parsing JSON response from pages {chunk_pages[0]}-{chunk_pages[-1]}...")
                         page_data = json.loads(response_text)
+                        print(f"[INCREMENTAL] Parsed response, found {len(page_data.get('questions', []))} questions")
                         
                         # Check for skipped instruction pages
                         skipped_pages = page_data.get("instruction_pages_skipped", [])
+                        if skipped_pages:
+                            print(f"[INCREMENTAL] Pages {skipped_pages} were marked as instructions")
                         
                         # Add questions from this chunk
                         if page_data.get("questions"):
@@ -154,10 +159,14 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
                                 if not q.get("page_number"):
                                     # Default to first page of chunk if not specified
                                     q["page_number"] = page_num1
+                                    print(f"[INCREMENTAL] Question missing page_number, defaulting to {page_num1}")
                                 # Skip if this question's page was marked as instructions
                                 if q["page_number"] in skipped_pages:
+                                    print(f"[INCREMENTAL] Skipping question from instruction page {q['page_number']}")
                                     continue
                                 chunk_questions.append(q)
+                        else:
+                            print(f"[INCREMENTAL] No questions found in response from pages {chunk_pages[0]}-{chunk_pages[-1]}")
                     
                     except json.JSONDecodeError as e:
                         error_msg = f"Failed to parse JSON from pages {chunk_pages[0]}-{chunk_pages[-1]}: {str(e)}"
