@@ -37,18 +37,17 @@ def process_exam_incremental(file_bytes: bytes, file_type: str, exam_id: int, vi
     prompt = """You are an expert at extracting exam questions from academic documents. 
 Analyze this exam document and extract ALL questions in a structured format.
 
-CRITICAL: Extract EVERY question on these pages. Do not skip any questions. If you see question numbers 1, 2, 3, etc., extract ALL of them.
-
-VERY IMPORTANT: Even if a page has some instruction text, if it ALSO has questions, you MUST extract those questions. Only mark a page as "instruction_pages_skipped" if it has ZERO questions and is ONLY instructions/logistics.
+CRITICAL: Extract EVERY question on these pages. Do not skip ANY pages. Look at EVERY page and extract ALL questions you find, regardless of whether there are instructions or other text on the page.
 
 IMPORTANT INSTRUCTIONS:
-1. Skip ONLY pure instruction pages with ZERO questions (scantron instructions, exam policies, etc.) - but if a page has BOTH instructions AND questions, extract ALL the questions
-2. Extract ALL actual exam questions - look for numbered questions (1, 2, 3...), multiple choice options (A, B, C...), and any question text
+1. Extract ALL actual exam questions - look for numbered questions (1, 2, 3...), multiple choice options (A, B, C...), and any question text
+2. IGNORE instruction text, headers, footers, and other non-question content - but STILL extract questions from those pages
 3. Preserve all mathematical notation, equations, and LaTeX formatting exactly as shown
 4. For diagrams/images: Provide a detailed description that would allow someone to recreate the diagram. Include all labels, axes, curves, shapes, and their relationships
 5. Number questions correctly (handle subparts like 1a, 1b, etc.)
 6. For multiple choice questions, extract ALL options (A, B, C, D, E, F, etc.) exactly as written
 7. When processing multiple pages together, make sure to extract questions from BOTH pages and correctly assign the page_number to each question
+8. DO NOT mark any pages as skipped - extract questions from every page that has them
 
 Return a JSON object with this EXACT structure:
 {
@@ -72,8 +71,7 @@ Return a JSON object with this EXACT structure:
         }
       ] or null
     }
-  ],
-  "instruction_pages_skipped": [1] or []
+  ]
 }
 
 For LaTeX/math notation:
@@ -178,12 +176,7 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
                         page_data = json.loads(response_text)
                         print(f"[INCREMENTAL] Parsed response, found {len(page_data.get('questions', []))} questions")
                         
-                        # Check for skipped instruction pages (but don't trust this blindly - if we have questions, keep them)
-                        skipped_pages = page_data.get("instruction_pages_skipped", [])
-                        if skipped_pages:
-                            print(f"[INCREMENTAL] Gemini marked pages {skipped_pages} as instructions, but we'll keep any questions found", flush=True)
-                        
-                        # Add questions from this chunk
+                        # Add ALL questions from this chunk - NO SKIPPING
                         if page_data.get("questions"):
                             questions_found = page_data["questions"]
                             print(f"[INCREMENTAL] Found {len(questions_found)} questions in response from pages {chunk_pages[0]}-{chunk_pages[-1]}", flush=True)
@@ -211,37 +204,15 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
                                 
                                 pages_with_questions.add(q["page_number"])
                                 
-                                # CRITICAL: Only skip if ALL of these conditions are true:
-                                # 1. The page is marked as instructions
-                                # 2. We have questions from OTHER pages in this chunk
-                                # 3. This page has NO questions (or only this one question)
-                                # This prevents skipping pages that actually have questions
-                                if q["page_number"] in skipped_pages:
-                                    # Count how many questions are from this specific page
-                                    questions_from_this_page = [q2 for q2 in questions_found if q2.get("page_number") == q["page_number"]]
-                                    questions_from_other_pages = [q2 for q2 in questions_found if q2.get("page_number") != q["page_number"]]
-                                    
-                                    # Only skip if this page has very few questions AND other pages have questions
-                                    # This means the page is likely truly instruction-only
-                                    if len(questions_from_this_page) <= 1 and len(questions_from_other_pages) > 0:
-                                        print(f"[INCREMENTAL] Skipping question {q.get('question_number', '?')} from page {q['page_number']} (marked as instructions and only {len(questions_from_this_page)} question(s) found)", flush=True)
-                                        continue
-                                    else:
-                                        print(f"[INCREMENTAL] Keeping question {q.get('question_number', '?')} from page {q['page_number']} despite instruction flag (found {len(questions_from_this_page)} question(s) on this page)", flush=True)
-                                
+                                # NO SKIPPING - add all questions found
                                 print(f"[INCREMENTAL] Adding question {q.get('question_number', '?')} from page {q.get('page_number', '?')}", flush=True)
                                 chunk_questions.append(q)
                             
                             # Log which pages actually contributed questions
                             print(f"[INCREMENTAL] Pages with questions in this chunk: {sorted(pages_with_questions)}", flush=True)
                         else:
-                            print(f"[INCREMENTAL] ⚠️ WARNING: No questions found in response from pages {chunk_pages[0]}-{chunk_pages[-1]} - this might indicate an issue", flush=True)
-                            # If no questions found and pages were marked as instructions, log it
-                            if skipped_pages:
-                                print(f"[INCREMENTAL] These pages were marked as instructions: {skipped_pages}", flush=True)
-                            else:
-                                print(f"[INCREMENTAL] ⚠️ CRITICAL: Pages {chunk_pages[0]}-{chunk_pages[-1]} returned NO questions and were NOT marked as instructions!", flush=True)
-                                print(f"[INCREMENTAL] This could mean: 1) Gemini didn't find questions, 2) Questions were filtered out, or 3) Response parsing failed", flush=True)
+                            print(f"[INCREMENTAL] ⚠️ WARNING: No questions found in response from pages {chunk_pages[0]}-{chunk_pages[-1]}", flush=True)
+                            print(f"[INCREMENTAL] This could mean: 1) Gemini didn't find questions on these pages, 2) Response parsing failed, or 3) Pages are truly empty", flush=True)
                     
                     except json.JSONDecodeError as e:
                         error_msg = f"Failed to parse JSON from pages {chunk_pages[0]}-{chunk_pages[-1]}: {str(e)}"

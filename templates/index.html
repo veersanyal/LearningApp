@@ -546,8 +546,7 @@
                                         </button>
                                         <button @click="q.activeTab = 'info'" 
                                                 :class="q.activeTab === 'info' ? 'border-b-2 border-blue-500 text-blue-400' : 'text-slate-400 hover:text-slate-300'"
-                                                class="px-4 py-2 font-medium transition"
-                                                x-show="q.analyzed">
+                                                class="px-4 py-2 font-medium transition">
                                             Info & Solution
                                         </button>
                                     </div>
@@ -566,7 +565,15 @@
                                     </div>
                                     
                                     <!-- Info Tab Content -->
-                                    <div x-show="q.activeTab === 'info' && q.analyzed" class="space-y-4">
+                                    <div x-show="q.activeTab === 'info'" class="space-y-4">
+                                        <!-- Not Analyzed Message -->
+                                        <div x-show="!q.analyzed" class="p-6 bg-yellow-900 bg-opacity-30 rounded-lg border border-yellow-700 text-center">
+                                            <p class="text-yellow-400 mb-2">This question hasn't been analyzed yet.</p>
+                                            <p class="text-slate-400 text-sm">Click "Analyze Questions" or "Re-analyze" on the exam to see solution, difficulty, subtopics, and more.</p>
+                                        </div>
+                                        
+                                        <!-- Analyzed Content -->
+                                        <div x-show="q.analyzed" class="space-y-4">
                                         <!-- Correct Answer -->
                                         <div x-show="q.correct_answer || q.answer" class="p-4 bg-green-900 bg-opacity-30 rounded-lg border border-green-700">
                                             <h5 class="font-semibold mb-2 text-green-400">✓ Correct Answer:</h5>
@@ -655,6 +662,7 @@
                                         <div x-show="q.question_type" class="p-4 bg-slate-700 rounded-lg">
                                             <h5 class="font-semibold mb-2">Question Type:</h5>
                                             <span class="text-slate-300" x-text="q.question_type"></span>
+                                        </div>
                                         </div>
                                     </div>
                                 </div>
