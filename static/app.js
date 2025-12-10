@@ -1528,10 +1528,10 @@ function app() {
                             const statusDiv = document.getElementById('exam-upload-status');
                             if (statusDiv) {
                                 if (exam.is_processing) {
-                                    if (exam.current_page) {
-                                        statusDiv.textContent = `Extracting page ${exam.current_page} of ${exam.total_pages}... ${exam.total_questions} questions extracted so far.`;
-                                    } else if (exam.total_questions > 0 && exam.analyzed_questions < exam.total_questions) {
+                                    if (exam.is_analyzing) {
                                         statusDiv.textContent = `Analyzing questions... ${exam.analyzed_questions} of ${exam.total_questions} analyzed.`;
+                                    } else if (exam.current_page) {
+                                        statusDiv.textContent = `Extracting page ${exam.current_page} of ${exam.total_pages}... ${exam.total_questions} questions extracted so far.`;
                                     } else {
                                         statusDiv.textContent = `Processing... ${exam.total_questions} questions extracted so far from ${exam.total_pages} pages.`;
                                     }

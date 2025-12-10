@@ -1,5 +1,5 @@
 """
-Incremental exam question extraction - processes 2 pages at a time and saves incrementally.
+Incremental exam question extraction - processes 1 page at a time and saves incrementally.
 """
 
 import os
@@ -19,7 +19,7 @@ sys.stderr.reconfigure(line_buffering=True) if hasattr(sys.stderr, 'reconfigure'
 def process_exam_incremental(file_bytes: bytes, file_type: str, exam_id: int, vision_model, 
                              callback=None) -> Dict:
     """
-    Process exam incrementally - 2 pages at a time, saving as we go.
+    Process exam incrementally - 1 page at a time, saving as we go.
     
     Args:
         file_bytes: File content as bytes
@@ -41,13 +41,11 @@ CRITICAL: Extract EVERY question on these pages. Do not skip ANY pages. Look at 
 
 IMPORTANT INSTRUCTIONS:
 1. Extract ALL actual exam questions - look for numbered questions (1, 2, 3...), multiple choice options (A, B, C...), and any question text
-2. IGNORE instruction text, headers, footers, and other non-question content - but STILL extract questions from those pages
+2. IGNORE instruction text, headers, footers, and other non-question content - but STILL extract questions from those pages if they have questions on them - not all pages need to have questions on them
 3. Preserve all mathematical notation, equations, and LaTeX formatting exactly as shown
 4. For diagrams/images: Provide a detailed description that would allow someone to recreate the diagram. Include all labels, axes, curves, shapes, and their relationships
 5. Number questions correctly (handle subparts like 1a, 1b, etc.)
 6. For multiple choice questions, extract ALL options (A, B, C, D, E, F, etc.) exactly as written
-7. When processing multiple pages together, make sure to extract questions from BOTH pages and correctly assign the page_number to each question
-8. DO NOT mark any pages as skipped - extract questions from every page that has them
 
 Return a JSON object with this EXACT structure:
 {
@@ -114,12 +112,12 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
                 db.conn.commit()
                 print(f"[INCREMENTAL] Updated exam {exam_id} with total_pages = {total_pages}", flush=True)
                 
-                # Process one page at a time
+                # Process one page at a time - process ALL pages
                 for page_idx in range(total_pages):
                     page_num = page_idx + 1
                     page_image = pdf_images[page_idx]
                     
-                    print(f"[INCREMENTAL] Processing page {page_num} of {total_pages}...", flush=True)
+                    print(f"[INCREMENTAL] ========== Processing page {page_num} of {total_pages} ==========", flush=True)
                     
                     # Update progress in database
                     db.cursor.execute('''

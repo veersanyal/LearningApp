@@ -1099,54 +1099,82 @@ def upload_exam():
                                         ORDER BY page_number, question_number
                                     ''', (exam_id,)).fetchall()
                                     
+                                    total_to_analyze = len(questions)
                                     analyzed_count = 0
-                                    for question in questions:
+                                    
+                                    print(f"[EXAM_UPLOAD_BG] Starting analysis of {total_to_analyze} questions...", flush=True)
+                                    
+                                    for idx, question in enumerate(questions, 1):
                                         question_id = question['question_id']
                                         question_text = question['raw_text']
-                                        image_path = question['image_path']
                                         
-                                        print(f"[EXAM_UPLOAD_BG] Analyzing question {question_id}...", flush=True)
-                                        analysis = analyze_question_with_gemini(question_text, image_path)
+                                        # Update progress: negative with question number indicates analyzing
+                                        db.cursor.execute('''
+                                            UPDATE exams SET total_questions = ? WHERE exam_id = ?
+                                        ''', (-(1000 + question_id), exam_id))  # Use 1000+ to indicate analysis phase
+                                        db.conn.commit()
                                         
-                                        if 'error' not in analysis:
-                                            required_skills = analysis.get('required_skills', [])
-                                            prerequisite_skills = analysis.get('prerequisite_skills', [])
-                                            subskills = analysis.get('subskills', [])
-                                            all_skills = list(set(required_skills + prerequisite_skills + subskills))
+                                        print(f"[EXAM_UPLOAD_BG] Analyzing question {idx}/{total_to_analyze} (ID: {question_id})...", flush=True)
+                                        
+                                        try:
+                                            analysis = analyze_question_with_gemini(question_text, None)  # Don't use image
                                             
-                                            difficulty = analysis.get('difficulty', 3)
-                                            topics_json = json.dumps({
-                                                'required_skills': required_skills,
-                                                'prerequisite_skills': prerequisite_skills,
-                                                'subskills': subskills,
-                                                'question_type': analysis.get('question_type', ''),
-                                                'subtopics': analysis.get('subtopics', []),
-                                                'topics_tested': analysis.get('topics_tested', [])
-                                            })
-                                            
-                                            db.cursor.execute('''
-                                                UPDATE exam_questions
-                                                SET solved_json = ?, difficulty = ?, topics_json = ?
-                                                WHERE question_id = ?
-                                            ''', (
-                                                json.dumps(analysis),
-                                                difficulty,
-                                                topics_json,
-                                                question_id
-                                            ))
-                                            
-                                            for skill_name in all_skills:
-                                                is_prereq = skill_name in prerequisite_skills
+                                            if 'error' not in analysis:
+                                                required_skills = analysis.get('required_skills', [])
+                                                prerequisite_skills = analysis.get('prerequisite_skills', [])
+                                                subskills = analysis.get('subskills', [])
+                                                all_skills = list(set(required_skills + prerequisite_skills + subskills))
+                                                
+                                                difficulty = analysis.get('difficulty', 3)
+                                                topics_json = json.dumps({
+                                                    'required_skills': required_skills,
+                                                    'prerequisite_skills': prerequisite_skills,
+                                                    'subskills': subskills,
+                                                    'question_type': analysis.get('question_type', ''),
+                                                    'subtopics': analysis.get('subtopics', []),
+                                                    'topics_tested': analysis.get('topics_tested', [])
+                                                })
+                                                
                                                 db.cursor.execute('''
-                                                    INSERT OR IGNORE INTO exam_question_skills
-                                                    (question_id, skill_name, is_prerequisite)
-                                                    VALUES (?, ?, ?)
-                                                ''', (question_id, skill_name, is_prereq))
-                                            
-                                            db.conn.commit()
-                                            analyzed_count += 1
+                                                    UPDATE exam_questions
+                                                    SET solved_json = ?, difficulty = ?, topics_json = ?
+                                                    WHERE question_id = ?
+                                                ''', (
+                                                    json.dumps(analysis),
+                                                    difficulty,
+                                                    topics_json,
+                                                    question_id
+                                                ))
+                                                
+                                                for skill_name in all_skills:
+                                                    is_prereq = skill_name in prerequisite_skills
+                                                    db.cursor.execute('''
+                                                        INSERT OR IGNORE INTO exam_question_skills
+                                                        (question_id, skill_name, is_prerequisite)
+                                                        VALUES (?, ?, ?)
+                                                    ''', (question_id, skill_name, is_prereq))
+                                                
+                                                db.conn.commit()
+                                                analyzed_count += 1
+                                                print(f"[EXAM_UPLOAD_BG] ✓ Question {question_id} analyzed ({analyzed_count}/{total_to_analyze})", flush=True)
+                                            else:
+                                                print(f"[EXAM_UPLOAD_BG] ✗ Error analyzing question {question_id}: {analysis.get('error')}", flush=True)
+                                        except Exception as q_err:
+                                            print(f"[EXAM_UPLOAD_BG] ✗ Exception analyzing question {question_id}: {q_err}", flush=True)
+                                            import traceback
+                                            traceback.print_exc()
                                     
-                                    print(f"[EXAM_UPLOAD_BG] Analysis complete: {analyzed_count} questions analyzed", flush=True)
+                                    # Update exam with final question count (positive = complete)
+                                    db.cursor.execute('''
+                                        SELECT COUNT(*) FROM exam_questions WHERE exam_id = ?
+                                    ''', (exam_id,))
+                                    final_count = db.cursor.fetchone()[0]
+                                    db.cursor.execute('''
+                                        UPDATE exams SET total_questions = ? WHERE exam_id = ?
+                                    ''', (final_count, exam_id))
+                                    db.conn.commit()
+                                    
+                                    print(f"[EXAM_UPLOAD_BG] Analysis complete: {analyzed_count}/{total_to_analyze} questions analyzed", flush=True)
                                 finally:
                                     db.disconnect()
                             except Exception as analyze_err:
@@ -1276,21 +1304,9 @@ Question text:
 """ + question_text
     
     try:
-        # Use vision model if image available
-        if question_image_path:
-            # Handle both absolute and relative paths
-            if not os.path.isabs(question_image_path):
-                # Relative path - construct full path
-                question_image_path = os.path.join(os.path.dirname(__file__), 'uploads', question_image_path)
-            
-            if os.path.exists(question_image_path):
-                image = Image.open(question_image_path)
-                response = vision_model.generate_content([prompt, image])
-            else:
-                # Image path doesn't exist, use text only
-                response = text_model.generate_content(prompt)
-        else:
-            response = text_model.generate_content(prompt)
+        # Always use text model (2.5 flash lite) for analysis, not vision model
+        # The question text should contain all necessary information
+        response = text_model.generate_content(prompt)
         
         response_text = response.text.strip()
         
@@ -1597,11 +1613,19 @@ def list_exams():
                 # Check if still processing
                 is_processing = False
                 current_page = None
+                is_analyzing = False
                 if exam['total_pages'] and exam['total_pages'] > 0:
-                    # Negative total_questions indicates current page being extracted
+                    # Negative total_questions indicates processing
                     if exam['total_questions'] < 0:
                         is_processing = True
-                        current_page = abs(exam['total_questions'])
+                        abs_val = abs(exam['total_questions'])
+                        if abs_val >= 1000:
+                            # 1000+ indicates analysis phase
+                            is_analyzing = True
+                            current_page = None  # Analysis doesn't track by page
+                        else:
+                            # Less than 1000 indicates extraction phase
+                            current_page = abs_val
                     elif exam['total_questions'] == 0 and actual_count == 0:
                         # Check if recent (within last 10 minutes) - if old, probably failed
                         from datetime import datetime, timedelta
@@ -1614,6 +1638,7 @@ def list_exams():
                     elif actual_count > 0 and analyzed < actual_count:
                         # Has questions but not all analyzed - might be analyzing
                         is_processing = True
+                        is_analyzing = True
                 
                 result.append({
                     'exam_id': exam['exam_id'],
@@ -1624,6 +1649,7 @@ def list_exams():
                     'analyzed_questions': analyzed,
                     'uploaded_at': exam['created_at'],
                     'is_processing': is_processing,
+                    'is_analyzing': is_analyzing,  # Whether currently analyzing questions
                     'current_page': current_page  # Current page being extracted (if processing)
                 })
             
