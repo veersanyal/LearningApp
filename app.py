@@ -1155,22 +1155,52 @@ def analyze_question_with_gemini(question_text: str, question_image_path: Option
         return {"error": "AI model not initialized"}
     
     prompt = """You are an expert tutor analyzing an exam question. Your task is to:
-1. Solve the question completely
-2. Identify ALL required skills and subskills (e.g., "u-substitution", "vector projections", "line integrals")
-3. Identify prerequisite skills needed
-4. Rate difficulty from 1-5 (1=very easy, 5=very hard)
-5. Classify the question type
+1. Solve the question completely and find the correct answer (especially for multiple choice questions)
+2. Identify ALL required skills and subskills needed to solve this question (e.g., "u-substitution", "vector projections", "line integrals", "integration by parts")
+3. Identify ALL subtopics required - if a Lagrange multiplier question requires integration by parts to arrive at the final solution, then "integration by parts" is a subtopic
+4. Identify prerequisite skills needed
+5. Rate difficulty from 1-5 (1=very easy, 5=very hard)
+6. Classify the question type
+7. For each topic/subtopic, indicate at what difficulty level it's being tested
+
+CRITICAL: Identify ALL subtopics needed to solve the question. For example:
+- If solving requires Lagrange multipliers AND integration by parts, both are subtopics
+- If solving requires partial derivatives AND chain rule, both are subtopics
+- List every technique, method, or concept needed to arrive at the solution
 
 Return ONLY a JSON object with this exact structure:
 {
-  "solution": "Complete step-by-step solution",
-  "answer": "Final answer",
+  "solution": "Complete step-by-step solution explaining each step clearly",
+  "answer": "Final answer (for multiple choice, indicate which option is correct, e.g., 'Option A' or the letter/number)",
+  "correct_answer": "A" or "1" or the specific answer,
   "required_skills": ["skill1", "skill2", ...],
   "prerequisite_skills": ["prereq1", "prereq2", ...],
+  "subtopics": [
+    {
+      "name": "integration by parts",
+      "difficulty_level": 2,
+      "description": "Used to evaluate the integral in step 3"
+    },
+    {
+      "name": "Lagrange multipliers",
+      "difficulty_level": 3,
+      "description": "Main technique to find constrained extrema"
+    }
+  ],
   "difficulty": 3,
   "difficulty_reasoning": "Brief explanation of difficulty rating",
   "question_type": "classification (e.g., calculus/integration, linear_algebra/vectors)",
-  "subskills": ["detailed subskill 1", "detailed subskill 2", ...]
+  "subskills": ["detailed subskill 1", "detailed subskill 2", ...],
+  "topics_tested": [
+    {
+      "topic": "multivariable_calculus/lagrange_multipliers",
+      "difficulty": 3
+    },
+    {
+      "topic": "calculus/integration_by_parts",
+      "difficulty": 2
+    }
+  ]
 }
 
 Question text:
@@ -1371,12 +1401,15 @@ def get_exam_questions(exam_id):
                     solved_data = json.loads(q['solved_json'])
                     question_data['solution'] = solved_data.get('solution')
                     question_data['answer'] = solved_data.get('answer')
+                    question_data['correct_answer'] = solved_data.get('correct_answer')  # New field for correct answer
                     question_data['difficulty_reasoning'] = solved_data.get('difficulty_reasoning')
                     question_data['options'] = solved_data.get('options')  # Multiple choice options
                     question_data['question_type'] = solved_data.get('question_type')
                     question_data['has_diagram'] = solved_data.get('has_diagram', False)
                     question_data['diagram_description'] = solved_data.get('diagram_description')
                     question_data['subparts'] = solved_data.get('subparts')
+                    question_data['subtopics'] = solved_data.get('subtopics', [])  # New field for subtopics
+                    question_data['topics_tested'] = solved_data.get('topics_tested', [])  # New field for topics at difficulty
                 
                 if q['topics_json']:
                     topics_data = json.loads(q['topics_json'])
@@ -1524,8 +1557,7 @@ def list_exams():
                     'exam_name': exam['exam_name'],
                     'file_type': exam['file_type'],
                     'total_pages': exam['total_pages'],
-                    'total_questions': exam['total_questions'],
-                    'actual_questions_in_db': actual_count,  # Debug field
+                    'total_questions': actual_count,  # Use actual count from database, not stored value
                     'analyzed_questions': analyzed,
                     'uploaded_at': exam['created_at'],
                     'is_processing': is_processing

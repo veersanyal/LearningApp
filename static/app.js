@@ -1588,7 +1588,10 @@ function app() {
                 console.log('[VIEW_QUESTIONS] Response:', data);
                 
                 if (response.ok) {
-                    this.selectedExamQuestions = data.questions || [];
+                    this.selectedExamQuestions = (data.questions || []).map(q => ({
+                        ...q,
+                        activeTab: 'question'  // Initialize tab state for each question
+                    }));
                     console.log('[VIEW_QUESTIONS] Loaded', this.selectedExamQuestions.length, 'questions');
                     
                     // Scroll to questions section (whether empty or not)

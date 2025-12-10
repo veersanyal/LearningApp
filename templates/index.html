@@ -536,32 +536,126 @@
                                     </div>
                                 </template>
                                 
-                                <!-- Solution (if analyzed) -->
-                                <div x-show="q.solution" class="mb-4 p-4 bg-green-900 bg-opacity-20 rounded-lg border border-green-700">
-                                    <h5 class="font-semibold text-green-400 mb-2">Solution:</h5>
-                                    <div class="text-slate-300 whitespace-pre-wrap" x-html="formatQuestionText(q.solution)"></div>
-                                    <div x-show="q.answer" class="mt-2">
-                                        <span class="font-semibold">Answer: </span>
-                                        <span class="text-green-400" x-text="q.answer"></span>
+                                <!-- Tabs for Question and Info -->
+                                <div class="mb-4">
+                                    <div class="flex border-b border-slate-700 mb-4">
+                                        <button @click="q.activeTab = 'question'" 
+                                                :class="(q.activeTab || 'question') === 'question' ? 'border-b-2 border-blue-500 text-blue-400' : 'text-slate-400 hover:text-slate-300'"
+                                                class="px-4 py-2 font-medium transition">
+                                            Question
+                                        </button>
+                                        <button @click="q.activeTab = 'info'" 
+                                                :class="q.activeTab === 'info' ? 'border-b-2 border-blue-500 text-blue-400' : 'text-slate-400 hover:text-slate-300'"
+                                                class="px-4 py-2 font-medium transition"
+                                                x-show="q.analyzed">
+                                            Info & Solution
+                                        </button>
                                     </div>
-                                </div>
-                                
-                                <!-- Skills (if analyzed) -->
-                                <div x-show="q.skills && q.skills.length > 0" class="mb-4">
-                                    <h5 class="font-semibold mb-2">Required Skills:</h5>
-                                    <div class="flex flex-wrap gap-2">
-                                        <template x-for="skill in q.skills" :key="skill">
-                                            <span class="px-3 py-1 bg-blue-600 bg-opacity-30 rounded-full text-sm" x-text="skill"></span>
-                                        </template>
+                                    
+                                    <!-- Question Tab Content -->
+                                    <div x-show="(q.activeTab || 'question') === 'question'">
+                                        <!-- Solution (if analyzed) - shown in question tab too -->
+                                        <div x-show="q.solution" class="mb-4 p-4 bg-green-900 bg-opacity-20 rounded-lg border border-green-700">
+                                            <h5 class="font-semibold text-green-400 mb-2">Solution:</h5>
+                                            <div class="text-slate-300 whitespace-pre-wrap" x-html="formatQuestionText(q.solution)"></div>
+                                            <div x-show="q.answer" class="mt-2">
+                                                <span class="font-semibold">Answer: </span>
+                                                <span class="text-green-400" x-html="renderMath(q.answer)"></span>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                
-                                <div x-show="q.prerequisite_skills && q.prerequisite_skills.length > 0" class="mb-4">
-                                    <h5 class="font-semibold mb-2">Prerequisite Skills:</h5>
-                                    <div class="flex flex-wrap gap-2">
-                                        <template x-for="skill in q.prerequisite_skills" :key="skill">
-                                            <span class="px-3 py-1 bg-yellow-600 bg-opacity-30 rounded-full text-sm" x-text="skill"></span>
-                                        </template>
+                                    
+                                    <!-- Info Tab Content -->
+                                    <div x-show="q.activeTab === 'info' && q.analyzed" class="space-y-4">
+                                        <!-- Correct Answer -->
+                                        <div x-show="q.correct_answer || q.answer" class="p-4 bg-green-900 bg-opacity-30 rounded-lg border border-green-700">
+                                            <h5 class="font-semibold mb-2 text-green-400">✓ Correct Answer:</h5>
+                                            <div class="prose prose-invert max-w-none text-green-300 text-lg font-medium" x-html="renderMath(q.correct_answer || q.answer)"></div>
+                                        </div>
+                                        
+                                        <!-- Solution Explanation -->
+                                        <div x-show="q.solution" class="p-4 bg-blue-900 bg-opacity-20 rounded-lg border border-blue-700">
+                                            <h5 class="font-semibold mb-2 text-blue-400">📝 Solution Explanation:</h5>
+                                            <div class="text-slate-300 whitespace-pre-wrap" x-html="formatQuestionText(q.solution)"></div>
+                                        </div>
+                                        
+                                        <!-- Difficulty -->
+                                        <div x-show="q.difficulty" class="p-4 bg-slate-700 rounded-lg">
+                                            <h5 class="font-semibold mb-2">Difficulty:</h5>
+                                            <div class="flex items-center gap-3">
+                                                <span class="text-2xl font-bold" 
+                                                      :class="q.difficulty <= 2 ? 'text-green-400' : q.difficulty <= 3 ? 'text-yellow-400' : 'text-red-400'"
+                                                      x-text="q.difficulty + '/5'"></span>
+                                                <span x-show="q.difficulty_reasoning" class="text-slate-300 text-sm" x-text="q.difficulty_reasoning"></span>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Subtopics -->
+                                        <div x-show="q.subtopics && q.subtopics.length > 0" class="p-4 bg-purple-900 bg-opacity-20 rounded-lg border border-purple-700">
+                                            <h5 class="font-semibold mb-3 text-purple-400">🔧 Subtopics Required:</h5>
+                                            <div class="space-y-2">
+                                                <template x-for="(subtopic, idx) in q.subtopics" :key="idx">
+                                                    <div class="p-3 bg-slate-800 rounded">
+                                                        <div class="flex items-center justify-between mb-1">
+                                                            <span class="font-medium text-purple-300" x-text="subtopic.name"></span>
+                                                            <span class="text-sm text-slate-400" x-text="'Difficulty: ' + subtopic.difficulty_level + '/5'"></span>
+                                                        </div>
+                                                        <div x-show="subtopic.description" class="text-sm text-slate-400 mt-1" x-text="subtopic.description"></div>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Topics Tested at Difficulty -->
+                                        <div x-show="q.topics_tested && q.topics_tested.length > 0" class="p-4 bg-indigo-900 bg-opacity-20 rounded-lg border border-indigo-700">
+                                            <h5 class="font-semibold mb-3 text-indigo-400">📚 Topics Tested:</h5>
+                                            <div class="space-y-2">
+                                                <template x-for="(topic, idx) in q.topics_tested" :key="idx">
+                                                    <div class="flex items-center justify-between p-2 bg-slate-800 rounded">
+                                                        <span class="text-indigo-300" x-text="topic.topic"></span>
+                                                        <span class="text-sm px-2 py-1 rounded" 
+                                                              :class="topic.difficulty <= 2 ? 'bg-green-600' : topic.difficulty <= 3 ? 'bg-yellow-600' : 'bg-red-600'"
+                                                              x-text="topic.difficulty + '/5'"></span>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Required Skills -->
+                                        <div x-show="q.skills && q.skills.length > 0" class="p-4 bg-blue-900 bg-opacity-20 rounded-lg border border-blue-700">
+                                            <h5 class="font-semibold mb-2 text-blue-400">🎯 Required Skills:</h5>
+                                            <div class="flex flex-wrap gap-2">
+                                                <template x-for="skill in q.skills" :key="skill">
+                                                    <span class="px-3 py-1 bg-blue-600 bg-opacity-30 rounded-full text-sm" x-text="skill"></span>
+                                                </template>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Prerequisite Skills -->
+                                        <div x-show="q.prerequisite_skills && q.prerequisite_skills.length > 0" class="p-4 bg-orange-900 bg-opacity-20 rounded-lg border border-orange-700">
+                                            <h5 class="font-semibold mb-2 text-orange-400">📖 Prerequisite Skills:</h5>
+                                            <div class="flex flex-wrap gap-2">
+                                                <template x-for="skill in q.prerequisite_skills" :key="skill">
+                                                    <span class="px-3 py-1 bg-orange-600 bg-opacity-30 rounded-full text-sm" x-text="skill"></span>
+                                                </template>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Subskills -->
+                                        <div x-show="q.subskills && q.subskills.length > 0" class="p-4 bg-teal-900 bg-opacity-20 rounded-lg border border-teal-700">
+                                            <h5 class="font-semibold mb-2 text-teal-400">🔍 Detailed Subskills:</h5>
+                                            <div class="flex flex-wrap gap-2">
+                                                <template x-for="subskill in q.subskills" :key="subskill">
+                                                    <span class="px-3 py-1 bg-teal-600 bg-opacity-30 rounded-full text-sm" x-text="subskill"></span>
+                                                </template>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Question Type -->
+                                        <div x-show="q.question_type" class="p-4 bg-slate-700 rounded-lg">
+                                            <h5 class="font-semibold mb-2">Question Type:</h5>
+                                            <span class="text-slate-300" x-text="q.question_type"></span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

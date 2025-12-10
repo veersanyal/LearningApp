@@ -62,7 +62,6 @@ Return a JSON object with this EXACT structure:
       "page_number": 2,
       "has_diagram": true/false,
       "diagram_description": "Description of any diagrams or images",
-      "difficulty_estimate": 1-5,
       "topics": ["topic1", "topic2", ...],
       "subparts": [
         {
@@ -236,10 +235,13 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
                             # Log which pages actually contributed questions
                             print(f"[INCREMENTAL] Pages with questions in this chunk: {sorted(pages_with_questions)}", flush=True)
                         else:
-                            print(f"[INCREMENTAL] WARNING: No questions found in response from pages {chunk_pages[0]}-{chunk_pages[-1]} - this might indicate an issue", flush=True)
+                            print(f"[INCREMENTAL] ⚠️ WARNING: No questions found in response from pages {chunk_pages[0]}-{chunk_pages[-1]} - this might indicate an issue", flush=True)
                             # If no questions found and pages were marked as instructions, log it
                             if skipped_pages:
                                 print(f"[INCREMENTAL] These pages were marked as instructions: {skipped_pages}", flush=True)
+                            else:
+                                print(f"[INCREMENTAL] ⚠️ CRITICAL: Pages {chunk_pages[0]}-{chunk_pages[-1]} returned NO questions and were NOT marked as instructions!", flush=True)
+                                print(f"[INCREMENTAL] This could mean: 1) Gemini didn't find questions, 2) Questions were filtered out, or 3) Response parsing failed", flush=True)
                     
                     except json.JSONDecodeError as e:
                         error_msg = f"Failed to parse JSON from pages {chunk_pages[0]}-{chunk_pages[-1]}: {str(e)}"
@@ -393,7 +395,7 @@ def save_questions_chunk(db, exam_id: int, questions: List[Dict]) -> int:
                 "subparts": q.get("subparts")
             })
             
-            # Insert main question
+            # Insert main question (difficulty will be NULL until analyzed)
             db.cursor.execute('''
                 INSERT INTO exam_questions 
                 (exam_id, page_number, question_number, raw_text, solved_json, difficulty, topics_json, diagram_note)
@@ -404,7 +406,7 @@ def save_questions_chunk(db, exam_id: int, questions: List[Dict]) -> int:
                 q.get("question_number", "?"),
                 q.get("question_text", ""),
                 question_json,
-                q.get("difficulty_estimate", 3),
+                None,  # Difficulty will be set during analysis phase
                 json.dumps({"topics": q.get("topics", [])}),
                 q.get("diagram_description")  # Store diagram description in diagram_note column
             ))
@@ -425,7 +427,7 @@ def save_questions_chunk(db, exam_id: int, questions: List[Dict]) -> int:
                         subpart.get("subpart_number", "?"),
                         subpart.get("subpart_text", ""),
                         subpart_json,
-                        q.get("difficulty_estimate", 3),
+                        None,  # Difficulty will be set during analysis phase
                         json.dumps({"topics": q.get("topics", [])})
                     ))
             
