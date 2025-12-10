@@ -1528,11 +1528,17 @@ function app() {
                             const statusDiv = document.getElementById('exam-upload-status');
                             if (statusDiv) {
                                 if (exam.is_processing) {
-                                    statusDiv.textContent = `Processing... ${exam.total_questions} questions extracted so far from ${exam.total_pages} pages.`;
+                                    if (exam.current_page) {
+                                        statusDiv.textContent = `Extracting page ${exam.current_page} of ${exam.total_pages}... ${exam.total_questions} questions extracted so far.`;
+                                    } else if (exam.total_questions > 0 && exam.analyzed_questions < exam.total_questions) {
+                                        statusDiv.textContent = `Analyzing questions... ${exam.analyzed_questions} of ${exam.total_questions} analyzed.`;
+                                    } else {
+                                        statusDiv.textContent = `Processing... ${exam.total_questions} questions extracted so far from ${exam.total_pages} pages.`;
+                                    }
                                     statusDiv.className = 'text-sm mt-2 text-center text-blue-400';
                                 } else {
                                     // Processing complete
-                                    statusDiv.textContent = `Complete! Extracted ${exam.total_questions} questions from ${exam.total_pages} pages.`;
+                                    statusDiv.textContent = `Complete! Extracted ${exam.total_questions} questions from ${exam.total_pages} pages. ${exam.analyzed_questions} analyzed.`;
                                     statusDiv.className = 'text-sm mt-2 text-center text-green-400';
                                     clearInterval(pollInterval);
                                 }

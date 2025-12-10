@@ -1081,9 +1081,78 @@ def upload_exam():
                         finally:
                             db.disconnect()
                     else:
-                        print(f"[EXAM_UPLOAD_BG] SUCCESS: Completed {result['total_questions']} questions from {result['total_pages']} pages")
+                        print(f"[EXAM_UPLOAD_BG] SUCCESS: Completed extraction - {result['total_questions']} questions from {result['total_pages']} pages")
                         if result.get('errors'):
                             print(f"[EXAM_UPLOAD_BG] Warnings: {len(result['errors'])} errors occurred during processing")
+                        
+                        # Automatically start analysis after extraction completes
+                        if result.get('extraction_complete') and result['total_questions'] > 0:
+                            print(f"[EXAM_UPLOAD_BG] Starting automatic analysis of {result['total_questions']} questions...", flush=True)
+                            try:
+                                # Analyze questions in background
+                                db = get_db()
+                                try:
+                                    questions = db.cursor.execute('''
+                                        SELECT question_id, raw_text, image_path, solved_json
+                                        FROM exam_questions
+                                        WHERE exam_id = ? AND solved_json IS NULL
+                                        ORDER BY page_number, question_number
+                                    ''', (exam_id,)).fetchall()
+                                    
+                                    analyzed_count = 0
+                                    for question in questions:
+                                        question_id = question['question_id']
+                                        question_text = question['raw_text']
+                                        image_path = question['image_path']
+                                        
+                                        print(f"[EXAM_UPLOAD_BG] Analyzing question {question_id}...", flush=True)
+                                        analysis = analyze_question_with_gemini(question_text, image_path)
+                                        
+                                        if 'error' not in analysis:
+                                            required_skills = analysis.get('required_skills', [])
+                                            prerequisite_skills = analysis.get('prerequisite_skills', [])
+                                            subskills = analysis.get('subskills', [])
+                                            all_skills = list(set(required_skills + prerequisite_skills + subskills))
+                                            
+                                            difficulty = analysis.get('difficulty', 3)
+                                            topics_json = json.dumps({
+                                                'required_skills': required_skills,
+                                                'prerequisite_skills': prerequisite_skills,
+                                                'subskills': subskills,
+                                                'question_type': analysis.get('question_type', ''),
+                                                'subtopics': analysis.get('subtopics', []),
+                                                'topics_tested': analysis.get('topics_tested', [])
+                                            })
+                                            
+                                            db.cursor.execute('''
+                                                UPDATE exam_questions
+                                                SET solved_json = ?, difficulty = ?, topics_json = ?
+                                                WHERE question_id = ?
+                                            ''', (
+                                                json.dumps(analysis),
+                                                difficulty,
+                                                topics_json,
+                                                question_id
+                                            ))
+                                            
+                                            for skill_name in all_skills:
+                                                is_prereq = skill_name in prerequisite_skills
+                                                db.cursor.execute('''
+                                                    INSERT OR IGNORE INTO exam_question_skills
+                                                    (question_id, skill_name, is_prerequisite)
+                                                    VALUES (?, ?, ?)
+                                                ''', (question_id, skill_name, is_prereq))
+                                            
+                                            db.conn.commit()
+                                            analyzed_count += 1
+                                    
+                                    print(f"[EXAM_UPLOAD_BG] Analysis complete: {analyzed_count} questions analyzed", flush=True)
+                                finally:
+                                    db.disconnect()
+                            except Exception as analyze_err:
+                                print(f"[EXAM_UPLOAD_BG] Error during automatic analysis: {analyze_err}", flush=True)
+                                import traceback
+                                traceback.print_exc()
                 except Exception as e:
                     print(f"[EXAM_UPLOAD_BG] CRITICAL EXCEPTION: {e}")
                     import traceback
@@ -1525,12 +1594,15 @@ def list_exams():
                     SELECT COUNT(*) FROM exam_questions WHERE exam_id = ?
                 ''', (exam['exam_id'],)).fetchone()[0]
                 
-                # Check if still processing (has pages but no questions yet, or questions < expected)
+                # Check if still processing
                 is_processing = False
+                current_page = None
                 if exam['total_pages'] and exam['total_pages'] > 0:
-                    # If we have pages but very few questions relative to pages, likely still processing
-                    # Or if total_questions is 0 but we have pages
-                    if exam['total_questions'] == 0 and actual_count == 0:
+                    # Negative total_questions indicates current page being extracted
+                    if exam['total_questions'] < 0:
+                        is_processing = True
+                        current_page = abs(exam['total_questions'])
+                    elif exam['total_questions'] == 0 and actual_count == 0:
                         # Check if recent (within last 10 minutes) - if old, probably failed
                         from datetime import datetime, timedelta
                         try:
@@ -1538,19 +1610,10 @@ def list_exams():
                             if datetime.now(created.tzinfo) - created < timedelta(minutes=10):
                                 is_processing = True
                         except:
-                            # If date parsing fails, assume not processing if it's been a while
                             pass
-                    elif exam['total_questions'] < exam['total_pages'] * 0.3:  # Less than 30% of pages have questions
-                        # Check if recent (within last 10 minutes) - if old, probably failed
-                        from datetime import datetime, timedelta
-                        try:
-                            created = datetime.fromisoformat(exam['created_at'].replace('Z', '+00:00'))
-                            if datetime.now(created.tzinfo) - created < timedelta(minutes=10):
-                                is_processing = True
-                        except:
-                            # If date parsing fails, assume processing if questions < pages
-                            if exam['total_questions'] < exam['total_pages']:
-                                is_processing = True
+                    elif actual_count > 0 and analyzed < actual_count:
+                        # Has questions but not all analyzed - might be analyzing
+                        is_processing = True
                 
                 result.append({
                     'exam_id': exam['exam_id'],
@@ -1560,7 +1623,8 @@ def list_exams():
                     'total_questions': actual_count,  # Use actual count from database, not stored value
                     'analyzed_questions': analyzed,
                     'uploaded_at': exam['created_at'],
-                    'is_processing': is_processing
+                    'is_processing': is_processing,
+                    'current_page': current_page  # Current page being extracted (if processing)
                 })
             
             return jsonify({"exams": result})
