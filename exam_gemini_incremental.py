@@ -6,6 +6,7 @@ import os
 import json
 import io
 import sys
+import re
 from typing import List, Dict, Optional
 from PIL import Image
 from pdf2image import convert_from_bytes
@@ -161,9 +162,82 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
                                     response_text = response_text[4:]
                         response_text = response_text.strip()
                         
-                        # Parse JSON response
+                        # Parse JSON response with better error handling for LaTeX backslashes
                         print(f"[INCREMENTAL] Parsing JSON response from page {page_num}...", flush=True)
-                        page_data = json.loads(response_text)
+                        try:
+                            page_data = json.loads(response_text)
+                        except json.JSONDecodeError as json_err:
+                            # Try to fix common JSON issues with LaTeX backslashes
+                            print(f"[INCREMENTAL] JSON parse error at position {json_err.pos}: {json_err.msg}", flush=True)
+                            print(f"[INCREMENTAL] Attempting to fix escaped backslashes in LaTeX notation...", flush=True)
+                            
+                            # Fix unescaped backslashes in LaTeX notation within string values
+                            # Strategy: Find all string values and escape backslashes that aren't part of valid JSON escape sequences
+                            def fix_json_backslashes(text):
+                                """Fix unescaped backslashes in JSON string values."""
+                                # Find all string values (between quotes)
+                                result = []
+                                i = 0
+                                in_string = False
+                                escape_next = False
+                                
+                                while i < len(text):
+                                    char = text[i]
+                                    
+                                    if escape_next:
+                                        # We're escaping the next character
+                                        result.append(char)
+                                        escape_next = False
+                                        i += 1
+                                        continue
+                                    
+                                    if char == '\\':
+                                        if in_string:
+                                            # Check if this is a valid JSON escape sequence
+                                            if i + 1 < len(text):
+                                                next_char = text[i + 1]
+                                                # Valid JSON escapes: ", \, /, b, f, n, r, t, u
+                                                if next_char in ['"', '\\', '/', 'b', 'f', 'n', 'r', 't', 'u']:
+                                                    result.append('\\')
+                                                    result.append(next_char)
+                                                    i += 2
+                                                    continue
+                                                else:
+                                                    # Invalid escape - double it
+                                                    result.append('\\\\')
+                                                    result.append(next_char)
+                                                    i += 2
+                                                    continue
+                                            else:
+                                                # Backslash at end - escape it
+                                                result.append('\\\\')
+                                                i += 1
+                                        else:
+                                            # Not in string, keep as is
+                                            result.append(char)
+                                            i += 1
+                                    elif char == '"':
+                                        # Toggle string state
+                                        in_string = not in_string
+                                        result.append(char)
+                                        i += 1
+                                    else:
+                                        result.append(char)
+                                        i += 1
+                                
+                                return ''.join(result)
+                            
+                            fixed_text = fix_json_backslashes(response_text)
+                            try:
+                                page_data = json.loads(fixed_text)
+                                print(f"[INCREMENTAL] ✓ Successfully parsed after fixing backslashes", flush=True)
+                            except json.JSONDecodeError as json_err2:
+                                print(f"[INCREMENTAL] Still failed after fixing backslashes: {json_err2.msg} at position {json_err2.pos}", flush=True)
+                                # Log the problematic area
+                                error_start = max(0, json_err2.pos - 100)
+                                error_end = min(len(fixed_text), json_err2.pos + 100)
+                                print(f"[INCREMENTAL] Problematic area: {fixed_text[error_start:error_end]}", flush=True)
+                                raise json_err  # Re-raise original error
                         print(f"[INCREMENTAL] Parsed response, found {len(page_data.get('questions', []))} questions", flush=True)
                         
                         # Add ALL questions from this page - NO SKIPPING
