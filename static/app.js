@@ -1508,7 +1508,7 @@ function app() {
         
         pollExamProgress(examId) {
             // Poll every 3 seconds for progress updates
-            const maxPolls = 60; // Poll for up to 3 minutes
+            const maxPolls = 200; // Poll for up to 10 minutes (for analysis)
             let pollCount = 0;
             
             const pollInterval = setInterval(async () => {
@@ -1549,8 +1549,13 @@ function app() {
                                 }
                             }
                             
-                            // Refresh exam list
+                            // Refresh exam list to update analyzed count
                             this.loadExams();
+                            
+                            // Refresh questions if viewing them
+                            if (this.selectedExamQuestions && this.selectedExamQuestions.length > 0) {
+                                this.viewExamQuestions(examId);
+                            }
                             
                             // Stop polling if not processing
                             if (!exam.is_processing) {
