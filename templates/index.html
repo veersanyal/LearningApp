@@ -214,106 +214,108 @@
             </div>
     </div>
 
-    <!-- Main Layout: Sidebar + Content + Right Panel -->
-    <div x-show="isAuthenticated" class="app-shell flex h-screen overflow-hidden">
+    <!-- Main Layout: Header + Main Content -->
+    <div x-show="isAuthenticated" x-cloak class="app-shell">
         
-        <!-- Left Sidebar Navigation -->
-        <aside class="app-nav w-64 bg-slate-800 border-r border-slate-700 flex flex-col">
-            <!-- Logo & Brand -->
-            <div class="h-16 flex items-center px-6 border-b border-slate-700">
-                <h1 class="text-xl font-bold text-white">StudyBoiler</h1>
-            </div>
-            
-            <!-- Navigation Links -->
-            <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-                <button @click="currentView = 'home'" 
-                        class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate"
-                        :class="{ 'nav-item--active': currentView === 'home' }">
-                    <span class="text-xl">🏠</span>
-                    <span class="font-medium">Home</span>
-                </button>
+        <!-- App Header with Navigation -->
+        <header class="app-header">
+            <div class="app-header-content">
+                <!-- Left: Logo -->
+                <div class="app-header-left">
+                    <h1 class="text-xl font-bold text-white">StudyBoiler</h1>
+                </div>
                 
-                <button @click="currentView = 'documents'" 
-                        class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate"
-                        :class="{ 'nav-item--active': currentView === 'documents' }">
-                    <span class="text-xl">📄</span>
-                    <span class="font-medium">Documents</span>
-                </button>
+                <!-- Center: Navigation -->
+                <nav class="app-header-nav">
+                    <button @click="currentView = 'home'" 
+                            class="nav-item flex items-center space-x-2 px-4 py-2 rounded-lg transition btn-animate"
+                            :class="{ 'nav-item--active': currentView === 'home' }">
+                        <span>🏠</span>
+                        <span class="font-medium">Home</span>
+                    </button>
+                    
+                    <button @click="currentView = 'documents'" 
+                            class="nav-item flex items-center space-x-2 px-4 py-2 rounded-lg transition btn-animate"
+                            :class="{ 'nav-item--active': currentView === 'documents' }">
+                        <span>📄</span>
+                        <span class="font-medium">Documents</span>
+                    </button>
+                    
+                    <button @click="currentView = 'exam-questions'" 
+                            class="nav-item flex items-center space-x-2 px-4 py-2 rounded-lg transition btn-animate"
+                            :class="{ 'nav-item--active': currentView === 'exam-questions' }">
+                        <span>📝</span>
+                        <span class="font-medium">Exam Questions</span>
+                    </button>
+                    
+                    <button @click="currentView = 'study'" 
+                            class="nav-item flex items-center space-x-2 px-4 py-2 rounded-lg transition btn-animate"
+                            :class="{ 'nav-item--active': currentView === 'study' }">
+                        <span>🎯</span>
+                        <span class="font-medium">Study</span>
+                    </button>
+                    
+                    <button @click="currentView = 'analytics'" 
+                            class="nav-item flex items-center space-x-2 px-4 py-2 rounded-lg transition btn-animate"
+                            :class="{ 'nav-item--active': currentView === 'analytics' }">
+                        <span>📊</span>
+                        <span class="font-medium">Analytics</span>
+                    </button>
+                    
+                    <button @click="currentView = 'exam-prep'" 
+                            class="nav-item flex items-center space-x-2 px-4 py-2 rounded-lg transition btn-animate"
+                            :class="{ 'nav-item--active': currentView === 'exam-prep' }">
+                        <span>📚</span>
+                        <span class="font-medium">Exam Prep</span>
+                    </button>
+                    
+                    <button @click="currentView = 'leaderboards'" 
+                            class="nav-item flex items-center space-x-2 px-4 py-2 rounded-lg transition btn-animate"
+                            :class="{ 'nav-item--active': currentView === 'leaderboards' }">
+                        <span>🏆</span>
+                        <span class="font-medium">Leaderboards</span>
+                    </button>
+                    
+                    <button @click="currentView = 'achievements'" 
+                            class="nav-item flex items-center space-x-2 px-4 py-2 rounded-lg transition btn-animate"
+                            :class="{ 'nav-item--active': currentView === 'achievements' }">
+                        <span>🎖️</span>
+                        <span class="font-medium">Achievements</span>
+                    </button>
+                    
+                    <button @click="currentView = 'settings'" 
+                            class="nav-item flex items-center space-x-2 px-4 py-2 rounded-lg transition btn-animate"
+                            :class="{ 'nav-item--active': currentView === 'settings' }">
+                        <span>⚙️</span>
+                        <span class="font-medium">Settings</span>
+                    </button>
+                </nav>
                 
-                <button @click="currentView = 'exam-questions'" 
-                        class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate"
-                        :class="{ 'nav-item--active': currentView === 'exam-questions' }">
-                    <span class="text-xl">📝</span>
-                    <span class="font-medium">Exam Questions</span>
-                </button>
-                
-                <button @click="currentView = 'study'" 
-                        class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate"
-                        :class="{ 'nav-item--active': currentView === 'study' }">
-                    <span class="text-xl">🎯</span>
-                    <span class="font-medium">Study</span>
-                </button>
-                
-                <button @click="currentView = 'analytics'" 
-                        class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate"
-                        :class="{ 'nav-item--active': currentView === 'analytics' }">
-                    <span class="text-xl">📊</span>
-                    <span class="font-medium">Analytics</span>
-                </button>
-                
-                <button @click="currentView = 'exam-prep'" 
-                        class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate"
-                        :class="{ 'nav-item--active': currentView === 'exam-prep' }">
-                    <span class="text-xl">📚</span>
-                    <span class="font-medium">Exam Prep</span>
-                </button>
-                
-                <button @click="currentView = 'leaderboards'" 
-                        class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate"
-                        :class="{ 'nav-item--active': currentView === 'leaderboards' }">
-                    <span class="text-xl">🏆</span>
-                    <span class="font-medium">Leaderboards</span>
-                </button>
-                
-                <button @click="currentView = 'achievements'" 
-                        class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate"
-                        :class="{ 'nav-item--active': currentView === 'achievements' }">
-                    <span class="text-xl">🎖️</span>
-                    <span class="font-medium">Achievements</span>
-                </button>
-                
-                <button @click="currentView = 'settings'" 
-                        class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate"
-                        :class="{ 'nav-item--active': currentView === 'settings' }">
-                    <span class="text-xl">⚙️</span>
-                    <span class="font-medium">Settings</span>
-                </button>
-            </nav>
-            
-            <!-- User Profile (Bottom) -->
-            <div class="p-4 border-t border-slate-700">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-lg font-bold"
-                         x-text="currentUser.username ? currentUser.username.substring(0, 1).toUpperCase() : 'U'">
-                    </div>
-                    <div class="flex-1">
-                        <p class="font-medium text-sm" x-text="currentUser.username || 'Student'"></p>
-                        <p class="text-xs text-slate-400">Level <span x-text="xpProgress.current_level || 1"></span></p>
+                <!-- Right: User Profile -->
+                <div class="app-header-right">
+                    <div class="flex items-center space-x-3">
+                        <div class="text-right">
+                            <p class="font-medium text-sm" x-text="currentUser.username || 'Student'"></p>
+                            <p class="text-xs text-slate-400">Level <span x-text="xpProgress.current_level || 1"></span></p>
+                        </div>
+                        <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-lg font-bold"
+                             x-text="currentUser.username ? currentUser.username.substring(0, 1).toUpperCase() : 'U'">
+                        </div>
+                        <button @click="logout()" class="px-3 py-1 text-xs text-slate-400 hover:text-white transition rounded">
+                            Logout
+                        </button>
                     </div>
                 </div>
-                <button @click="logout()" class="mt-2 w-full text-xs text-slate-400 hover:text-white transition">
-                    Logout
-                </button>
             </div>
-        </aside>
+        </header>
         
         <!-- Main Content Area -->
-        <main class="flex-1 overflow-y-auto app-content">
+        <main class="app-main">
             <div class="max-w-6xl mx-auto p-8">
                 
                 <!-- HOME VIEW -->
-                <section class="view is-active" data-view="home" x-cloak>
-                    <h2 class="text-3xl font-bold mb-6">Welcome Back!</h2>
+                <section class="view is-active" data-view="home">
+                    <h1 class="text-3xl font-bold mb-6">Welcome Back!</h1>
                     
                     <!-- Upload Section -->
                     <div class="card mb-6">
@@ -359,8 +361,8 @@
                 </section>
                 
                 <!-- DOCUMENTS VIEW -->
-                <section class="view" data-view="documents" x-cloak>
-                    <h2 class="text-3xl font-bold mb-6">My Documents</h2>
+                <section class="view" data-view="documents">
+                    <h1 class="text-3xl font-bold mb-6">My Documents</h1>
                     <p class="text-slate-400 mb-6">View and manage your uploaded study materials</p>
                     
                     <!-- Documents List -->
@@ -412,8 +414,8 @@
                 </section>
                 
                 <!-- EXAM QUESTIONS VIEW -->
-                <section class="view" data-view="exam-questions" x-cloak>
-                    <h2 class="text-3xl font-bold mb-4">Exam Questions</h2>
+                <section class="view" data-view="exam-questions">
+                    <h1 class="text-3xl font-bold mb-4">Exam Questions</h1>
                     <p class="text-slate-400 mb-6">
                         The program trains you to answer questions like these. Upload exam PDFs or images to extract questions, 
                         and we'll analyze them to identify the skills you need to master.
@@ -716,8 +718,8 @@
                 </section>
                 
                 <!-- STUDY VIEW -->
-                <section class="view" data-view="study" x-cloak>
-                    <h2 class="text-3xl font-bold mb-6">Study Session</h2>
+                <section class="view" data-view="study">
+                    <h1 class="text-3xl font-bold mb-6">Study Session</h1>
                     
                     <!-- Quiz Section -->
                     <div id="quiz-section" style="display: none;" class="card">
@@ -769,8 +771,8 @@
                 </section>
                 
                 <!-- ANALYTICS VIEW -->
-                <section class="view" data-view="analytics" x-cloak>
-                    <h2 class="text-3xl font-bold mb-6">Learning Analytics</h2>
+                <section class="view" data-view="analytics">
+                    <h1 class="text-3xl font-bold mb-6">Learning Analytics</h1>
                     
                     <!-- Stats Grid -->
                     <div class="grid grid-cols-4 gap-4 mb-6">
@@ -856,8 +858,8 @@
                 </section>
                 
                 <!-- EXAM PREP VIEW -->
-                <section class="view" data-view="exam-prep" x-cloak>
-                    <h2 class="text-3xl font-bold mb-6">Exam Preparation</h2>
+                <section class="view" data-view="exam-prep">
+                    <h1 class="text-3xl font-bold mb-6">Exam Preparation</h1>
                     
                     <!-- Create New Exam Plan -->
                     <div class="card mb-6">
@@ -923,8 +925,8 @@
                 </section>
                 
                 <!-- LEADERBOARDS VIEW -->
-                <section class="view" data-view="leaderboards" x-cloak>
-                    <h2 class="text-3xl font-bold mb-6">Leaderboards</h2>
+                <section class="view" data-view="leaderboards">
+                    <h1 class="text-3xl font-bold mb-6">Leaderboards</h1>
                     
                     <!-- Leaderboard Filters -->
                     <div class="card p-4 mb-6 flex items-center justify-between">
@@ -973,8 +975,8 @@
                 </section>
                 
                 <!-- ACHIEVEMENTS VIEW -->
-                <section class="view" data-view="achievements" x-cloak>
-                    <h2 class="text-3xl font-bold mb-6">Achievements</h2>
+                <section class="view" data-view="achievements">
+                    <h1 class="text-3xl font-bold mb-6">Achievements</h1>
                     
                     <div class="grid grid-cols-3 gap-4 animate-card-stagger">
                         <!-- Achievement cards will be inserted here -->
@@ -994,8 +996,8 @@
                 </section>
                 
                 <!-- SETTINGS VIEW -->
-                <section class="view" data-view="settings" x-cloak>
-                    <h2 class="text-3xl font-bold mb-6">Settings</h2>
+                <section class="view" data-view="settings">
+                    <h1 class="text-3xl font-bold mb-6">Settings</h1>
                     
                     <div class="card space-y-6">
                         <div>
@@ -1033,61 +1035,6 @@
                 
             </div>
         </main>
-        
-        <!-- Right Panel: Quick Stats & Upcoming Reviews -->
-        <aside class="w-80 bg-slate-800 border-l border-slate-700 overflow-y-auto">
-            <div class="p-6">
-                <!-- Streak Tracker -->
-                <div class="bg-gradient-to-br from-orange-500 to-red-600 rounded-xl p-6 mb-6 text-center">
-                    <div class="text-5xl mb-2">🔥</div>
-                    <div class="text-4xl font-bold" x-text="studyStreak"></div>
-                    <div class="text-sm opacity-90">Day Streak</div>
-                    <div class="mt-3 text-xs opacity-75">Keep it going! Study daily to maintain your streak.</div>
-                </div>
-                
-                <!-- Today's Progress -->
-                <div class="bg-slate-700 rounded-xl p-4 mb-6">
-                    <h3 class="font-semibold mb-3">Today's Progress</h3>
-                    <div class="space-y-2">
-                        <div class="flex justify-between text-sm">
-                            <span>Daily Goal</span>
-                            <span x-text="dailyProgress + '/10'"></span>
-                        </div>
-                        <div class="w-full bg-slate-600 rounded-full h-2">
-                            <div class="bg-blue-500 h-2 rounded-full transition-all" 
-                                 :style="'width: ' + (dailyProgress * 10) + '%'"></div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Upcoming Reviews -->
-                <div class="bg-slate-700 rounded-xl p-4 mb-6">
-                    <h3 class="font-semibold mb-3">Upcoming Reviews</h3>
-                    <div id="upcoming-reviews-list" class="space-y-2 text-sm">
-                        <p class="text-slate-400 text-xs">Topics due for review will appear here</p>
-                    </div>
-                </div>
-                
-                <!-- Activity Feed -->
-                <div class="bg-slate-700 rounded-xl p-4 mb-6">
-                    <h3 class="font-semibold mb-3">Recent Activity</h3>
-                    <div id="activity-feed" class="space-y-3 max-h-64 overflow-y-auto">
-                        <!-- Will be populated dynamically -->
-                    </div>
-                </div>
-                
-                <!-- Weak Topics Alert -->
-                <div class="bg-slate-700 rounded-xl p-4">
-                    <h3 class="font-semibold mb-3 flex items-center">
-                        <span class="text-yellow-500 mr-2">⚠️</span>
-                        <span>Needs Practice</span>
-                    </h3>
-                    <div id="weak-topics-list" class="space-y-2 text-sm">
-                        <p class="text-slate-400 text-xs">Topics needing attention will appear here</p>
-                    </div>
-                </div>
-            </div>
-        </aside>
         
     </div>
     

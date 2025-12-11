@@ -92,11 +92,15 @@ function app() {
             
             // Set initial active view
             if (this.isAuthenticated) {
-                // Set initial view as active
-                const initialView = document.querySelector(`[data-view="${this.currentView}"]`);
-                if (initialView) {
-                    initialView.classList.add('is-active');
-                }
+                // Ensure initial view is visible after Alpine loads
+                this.$nextTick(() => {
+                    const initialView = document.querySelector(`[data-view="${this.currentView}"]`);
+                    if (initialView) {
+                        initialView.classList.add('is-active');
+                        // Also call showView to ensure proper state
+                        showView(this.currentView);
+                    }
+                });
             }
             
             if (this.isAuthenticated) {
