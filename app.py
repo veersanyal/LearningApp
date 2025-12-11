@@ -1550,11 +1550,22 @@ def list_exams():
             result = []
             for exam in exams:
                 # Count analyzed questions - check if solved_json contains analysis data (has 'solution' or 'answer')
-                analyzed = db.cursor.execute('''
-                    SELECT COUNT(*) FROM exam_questions
-                    WHERE exam_id = ? AND solved_json IS NOT NULL 
-                    AND (solved_json LIKE '%"solution"%' OR solved_json LIKE '%"answer"%')
-                ''', (exam['exam_id'],)).fetchone()[0]
+                # We need to parse JSON to check properly, so get all questions and count
+                all_questions = db.cursor.execute('''
+                    SELECT solved_json FROM exam_questions
+                    WHERE exam_id = ?
+                ''', (exam['exam_id'],)).fetchall()
+                
+                analyzed = 0
+                for q in all_questions:
+                    if q['solved_json']:
+                        try:
+                            solved_data = json.loads(q['solved_json'])
+                            # Check if this is analysis data (has 'solution' or 'answer')
+                            if 'solution' in solved_data or 'answer' in solved_data:
+                                analyzed += 1
+                        except:
+                            pass
                 
                 # Count actual questions in database (for debugging)
                 actual_count = db.cursor.execute('''
