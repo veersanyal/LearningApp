@@ -111,15 +111,15 @@ function app() {
                 
                 // Watch for view changes and trigger animations
                 this.$watch('currentView', (newView, oldView) => {
-                    // Alpine.js x-transition handles view transitions automatically
-                    // We just need to animate content within views
+                    // Wait for Alpine transition to complete before animating content
+                    // View transition is 300ms, so wait 350ms to be safe
                     this.$nextTick(() => {
                         setTimeout(() => {
                             // Animate stats cards in the new view
                             this.animateStatsCards();
                             // Animate card lists
                             this.animateCardLists();
-                        }, 400);
+                        }, 350);
                     });
                     
                     if (newView === 'leaderboards') {
@@ -134,7 +134,7 @@ function app() {
                         // Ensure charts are initialized
                         setTimeout(() => {
                             this.initCharts();
-                        }, 500);
+                        }, 400);
                     }
                 });
             } else {

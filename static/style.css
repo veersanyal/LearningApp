@@ -315,15 +315,27 @@ canvas {
     opacity: 0;
 }
 
-/* View Transitions - Alpine.js handles transitions via x-transition directive */
-.animate-view-in {
-    /* Base styles - Alpine.js x-transition handles the animation */
-    /* No initial opacity/transform needed as Alpine manages it */
+/* Hide elements until Alpine.js initializes */
+[x-cloak] { 
+    display: none !important; 
 }
 
-/* Staggered Animations for Lists */
+/* View Transitions - Alpine.js handles transitions via x-transition directive */
+.animate-view-in {
+    /* Let Alpine handle everything - no initial styles */
+    will-change: transform, opacity;
+    position: relative;
+    width: 100%;
+}
+
+/* Ensure views don't overlap during transition */
+main > div > div[x-show] {
+    position: relative;
+}
+
+/* Staggered Animations for Lists - JavaScript handles animation */
 .animate-card-stagger > * {
-    animation: fadeInUp 0.4s var(--ease-secondary) forwards;
+    /* Remove CSS animation - let JavaScript handle it */
     opacity: 0;
 }
 
@@ -352,9 +364,9 @@ canvas {
 .animate-row-stagger > *:nth-child(5) { animation-delay: 120ms; }
 .animate-row-stagger > *:nth-child(n+6) { animation-delay: 150ms; }
 
-/* Stats Cards Animation */
+/* Stats Cards Animation - JavaScript handles animation */
 .animate-stats-card {
-    animation: scaleIn 0.4s var(--ease-secondary) forwards;
+    /* Remove CSS animation - let JavaScript handle it */
     opacity: 0;
 }
 
