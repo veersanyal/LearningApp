@@ -10,6 +10,12 @@ function showView(viewName) {
 
     requestAnimationFrame(() => {
         target.classList.add('is-active');
+        // Reset scroll position when switching views
+        const main = document.querySelector('.app-main');
+        if (main) {
+            main.scrollTop = 0;
+        }
+        window.scrollTo({ top: 0, behavior: 'auto' });
     });
 }
 
@@ -38,6 +44,7 @@ function app() {
         
         // View State
         currentView: 'home',
+        mobileNavOpen: false,
         
         // User Stats
         studyStreak: 0,
@@ -157,11 +164,14 @@ function app() {
                     } else if (newView === 'exam-questions') {
                         this.loadExams();
                     } else if (newView === 'analytics') {
-                        // Ensure charts are initialized
+                        // Lazy-load charts only when Analytics view is active
                         setTimeout(() => {
                             this.initCharts();
-                        }, 300);
+                        }, 100);
                     }
+                    
+                    // Close mobile nav when switching views
+                    this.mobileNavOpen = false;
                 });
             } else {
                 // Load social proof for login screen
@@ -515,7 +525,14 @@ function app() {
         },
         
         initCharts() {
-            // Will be populated when analytics view is loaded
+            // Lazy-load charts only when Analytics view is active
+            // This prevents unnecessary chart initialization on page load
+            if (this.currentView !== 'analytics') {
+                return;
+            }
+            
+            // TODO: Consider using Intersection Observer for even better lazy loading
+            // For now, load charts when Analytics view becomes active
             setTimeout(() => {
                 if (this.currentView === 'analytics') {
                     this.loadForgettingCurveData();
@@ -524,7 +541,7 @@ function app() {
                     this.loadTopicDistributionData();
                     this.generateStudyHeatmap();
                 }
-            }, 500);
+            }, 300);
         },
         
         loadForgettingCurveData() {

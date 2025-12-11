@@ -218,75 +218,194 @@
     <div x-show="isAuthenticated" x-cloak class="app-shell">
         
         <!-- App Header with Navigation -->
-        <header class="app-header">
+        <header class="app-header" role="banner">
             <div class="app-header-content">
                 <!-- Left: Logo -->
                 <div class="app-header-left">
                     <h1 class="text-xl font-bold text-white">StudyBoiler</h1>
                 </div>
                 
+                <!-- Mobile Nav Toggle -->
+                <button 
+                    class="nav-toggle"
+                    @click="mobileNavOpen = !mobileNavOpen"
+                    :aria-expanded="mobileNavOpen"
+                    aria-label="Toggle navigation menu"
+                    aria-controls="primary-nav">
+                    <span x-show="!mobileNavOpen">☰</span>
+                    <span x-show="mobileNavOpen">✕</span>
+                </button>
+                
                 <!-- Center: Navigation -->
-                <nav class="app-header-nav">
-                    <button @click="currentView = 'home'" 
-                            class="nav-item flex items-center space-x-2 px-4 py-2 rounded-lg transition btn-animate"
-                            :class="{ 'nav-item--active': currentView === 'home' }">
-                        <span>🏠</span>
+                <nav id="primary-nav" class="app-header-nav" aria-label="Primary navigation">
+                    <button 
+                        @click="currentView = 'home'; mobileNavOpen = false" 
+                        class="nav-item"
+                        :class="{ 'nav-item--active': currentView === 'home' }"
+                        aria-label="Go to Home"
+                        aria-current="page"
+                        x-show="currentView === 'home' ? true : undefined">
+                        <span aria-hidden="true">🏠</span>
                         <span class="font-medium">Home</span>
                     </button>
                     
-                    <button @click="currentView = 'documents'" 
-                            class="nav-item flex items-center space-x-2 px-4 py-2 rounded-lg transition btn-animate"
-                            :class="{ 'nav-item--active': currentView === 'documents' }">
-                        <span>📄</span>
+                    <button 
+                        @click="currentView = 'documents'; mobileNavOpen = false" 
+                        class="nav-item"
+                        :class="{ 'nav-item--active': currentView === 'documents' }"
+                        aria-label="Go to Documents"
+                        aria-current="page"
+                        x-show="currentView === 'documents' ? true : undefined">
+                        <span aria-hidden="true">📄</span>
                         <span class="font-medium">Documents</span>
                     </button>
                     
-                    <button @click="currentView = 'exam-questions'" 
-                            class="nav-item flex items-center space-x-2 px-4 py-2 rounded-lg transition btn-animate"
-                            :class="{ 'nav-item--active': currentView === 'exam-questions' }">
-                        <span>📝</span>
+                    <button 
+                        @click="currentView = 'exam-questions'; mobileNavOpen = false" 
+                        class="nav-item"
+                        :class="{ 'nav-item--active': currentView === 'exam-questions' }"
+                        aria-label="Go to Exam Questions"
+                        aria-current="page"
+                        x-show="currentView === 'exam-questions' ? true : undefined">
+                        <span aria-hidden="true">📝</span>
                         <span class="font-medium">Exam Questions</span>
                     </button>
                     
-                    <button @click="currentView = 'study'" 
-                            class="nav-item flex items-center space-x-2 px-4 py-2 rounded-lg transition btn-animate"
-                            :class="{ 'nav-item--active': currentView === 'study' }">
-                        <span>🎯</span>
+                    <button 
+                        @click="currentView = 'study'; mobileNavOpen = false" 
+                        class="nav-item"
+                        :class="{ 'nav-item--active': currentView === 'study' }"
+                        aria-label="Go to Study"
+                        aria-current="page"
+                        x-show="currentView === 'study' ? true : undefined">
+                        <span aria-hidden="true">🎯</span>
                         <span class="font-medium">Study</span>
                     </button>
                     
-                    <button @click="currentView = 'analytics'" 
-                            class="nav-item flex items-center space-x-2 px-4 py-2 rounded-lg transition btn-animate"
-                            :class="{ 'nav-item--active': currentView === 'analytics' }">
-                        <span>📊</span>
+                    <button 
+                        @click="currentView = 'analytics'; mobileNavOpen = false" 
+                        class="nav-item"
+                        :class="{ 'nav-item--active': currentView === 'analytics' }"
+                        aria-label="Go to Analytics"
+                        aria-current="page"
+                        x-show="currentView === 'analytics' ? true : undefined">
+                        <span aria-hidden="true">📊</span>
                         <span class="font-medium">Analytics</span>
                     </button>
                     
-                    <button @click="currentView = 'exam-prep'" 
-                            class="nav-item flex items-center space-x-2 px-4 py-2 rounded-lg transition btn-animate"
-                            :class="{ 'nav-item--active': currentView === 'exam-prep' }">
-                        <span>📚</span>
+                    <button 
+                        @click="currentView = 'exam-prep'; mobileNavOpen = false" 
+                        class="nav-item"
+                        :class="{ 'nav-item--active': currentView === 'exam-prep' }"
+                        aria-label="Go to Exam Prep"
+                        aria-current="page"
+                        x-show="currentView === 'exam-prep' ? true : undefined">
+                        <span aria-hidden="true">📚</span>
                         <span class="font-medium">Exam Prep</span>
                     </button>
                     
-                    <button @click="currentView = 'leaderboards'" 
-                            class="nav-item flex items-center space-x-2 px-4 py-2 rounded-lg transition btn-animate"
-                            :class="{ 'nav-item--active': currentView === 'leaderboards' }">
-                        <span>🏆</span>
+                    <button 
+                        @click="currentView = 'leaderboards'; mobileNavOpen = false" 
+                        class="nav-item"
+                        :class="{ 'nav-item--active': currentView === 'leaderboards' }"
+                        aria-label="Go to Leaderboards"
+                        aria-current="page"
+                        x-show="currentView === 'leaderboards' ? true : undefined">
+                        <span aria-hidden="true">🏆</span>
                         <span class="font-medium">Leaderboards</span>
                     </button>
                     
-                    <button @click="currentView = 'achievements'" 
-                            class="nav-item flex items-center space-x-2 px-4 py-2 rounded-lg transition btn-animate"
-                            :class="{ 'nav-item--active': currentView === 'achievements' }">
-                        <span>🎖️</span>
+                    <button 
+                        @click="currentView = 'achievements'; mobileNavOpen = false" 
+                        class="nav-item"
+                        :class="{ 'nav-item--active': currentView === 'achievements' }"
+                        aria-label="Go to Achievements"
+                        aria-current="page"
+                        x-show="currentView === 'achievements' ? true : undefined">
+                        <span aria-hidden="true">🎖️</span>
                         <span class="font-medium">Achievements</span>
                     </button>
                     
-                    <button @click="currentView = 'settings'" 
-                            class="nav-item flex items-center space-x-2 px-4 py-2 rounded-lg transition btn-animate"
-                            :class="{ 'nav-item--active': currentView === 'settings' }">
-                        <span>⚙️</span>
+                    <button 
+                        @click="currentView = 'settings'; mobileNavOpen = false" 
+                        class="nav-item"
+                        :class="{ 'nav-item--active': currentView === 'settings' }"
+                        aria-label="Go to Settings"
+                        aria-current="page"
+                        x-show="currentView === 'settings' ? true : undefined">
+                        <span aria-hidden="true">⚙️</span>
+                        <span class="font-medium">Settings</span>
+                    </button>
+                </nav>
+                
+                <!-- Mobile Navigation Menu -->
+                <nav 
+                    class="nav-menu-mobile"
+                    :class="{ 'is-open': mobileNavOpen }"
+                    aria-label="Mobile navigation menu"
+                    x-show="mobileNavOpen"
+                    x-cloak>
+                    <button 
+                        @click="currentView = 'home'; mobileNavOpen = false" 
+                        class="nav-item"
+                        :class="{ 'nav-item--active': currentView === 'home' }">
+                        <span aria-hidden="true">🏠</span>
+                        <span class="font-medium">Home</span>
+                    </button>
+                    <button 
+                        @click="currentView = 'documents'; mobileNavOpen = false" 
+                        class="nav-item"
+                        :class="{ 'nav-item--active': currentView === 'documents' }">
+                        <span aria-hidden="true">📄</span>
+                        <span class="font-medium">Documents</span>
+                    </button>
+                    <button 
+                        @click="currentView = 'exam-questions'; mobileNavOpen = false" 
+                        class="nav-item"
+                        :class="{ 'nav-item--active': currentView === 'exam-questions' }">
+                        <span aria-hidden="true">📝</span>
+                        <span class="font-medium">Exam Questions</span>
+                    </button>
+                    <button 
+                        @click="currentView = 'study'; mobileNavOpen = false" 
+                        class="nav-item"
+                        :class="{ 'nav-item--active': currentView === 'study' }">
+                        <span aria-hidden="true">🎯</span>
+                        <span class="font-medium">Study</span>
+                    </button>
+                    <button 
+                        @click="currentView = 'analytics'; mobileNavOpen = false" 
+                        class="nav-item"
+                        :class="{ 'nav-item--active': currentView === 'analytics' }">
+                        <span aria-hidden="true">📊</span>
+                        <span class="font-medium">Analytics</span>
+                    </button>
+                    <button 
+                        @click="currentView = 'exam-prep'; mobileNavOpen = false" 
+                        class="nav-item"
+                        :class="{ 'nav-item--active': currentView === 'exam-prep' }">
+                        <span aria-hidden="true">📚</span>
+                        <span class="font-medium">Exam Prep</span>
+                    </button>
+                    <button 
+                        @click="currentView = 'leaderboards'; mobileNavOpen = false" 
+                        class="nav-item"
+                        :class="{ 'nav-item--active': currentView === 'leaderboards' }">
+                        <span aria-hidden="true">🏆</span>
+                        <span class="font-medium">Leaderboards</span>
+                    </button>
+                    <button 
+                        @click="currentView = 'achievements'; mobileNavOpen = false" 
+                        class="nav-item"
+                        :class="{ 'nav-item--active': currentView === 'achievements' }">
+                        <span aria-hidden="true">🎖️</span>
+                        <span class="font-medium">Achievements</span>
+                    </button>
+                    <button 
+                        @click="currentView = 'settings'; mobileNavOpen = false" 
+                        class="nav-item"
+                        :class="{ 'nav-item--active': currentView === 'settings' }">
+                        <span aria-hidden="true">⚙️</span>
                         <span class="font-medium">Settings</span>
                     </button>
                 </nav>
@@ -299,9 +418,13 @@
                             <p class="text-xs text-slate-400">Level <span x-text="xpProgress.current_level || 1"></span></p>
                         </div>
                         <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-lg font-bold"
-                             x-text="currentUser.username ? currentUser.username.substring(0, 1).toUpperCase() : 'U'">
+                             x-text="currentUser.username ? currentUser.username.substring(0, 1).toUpperCase() : 'U'"
+                             aria-label="User avatar">
                         </div>
-                        <button @click="logout()" class="px-3 py-1 text-xs text-slate-400 hover:text-white transition rounded">
+                        <button 
+                            @click="logout()" 
+                            class="px-3 py-1 text-xs text-slate-400 hover:text-white transition rounded"
+                            aria-label="Logout">
                             Logout
                         </button>
                     </div>
@@ -310,16 +433,19 @@
         </header>
         
         <!-- Main Content Area -->
-        <main class="app-main">
-            <div class="max-w-6xl mx-auto p-8">
+        <main class="app-main" role="main">
                 
                 <!-- HOME VIEW -->
                 <section class="view is-active" data-view="home">
-                    <h1 class="text-3xl font-bold mb-6">Welcome Back!</h1>
+                    <div class="page">
+                        <div>
+                            <h1 class="text-3xl font-bold mb-2">Welcome Back!</h1>
+                            <p class="text-slate-400 mb-6">Upload study materials and track your progress</p>
+                        </div>
                     
                     <!-- Upload Section -->
                     <div class="card mb-6">
-                        <h3 class="text-xl font-semibold mb-4">Upload Study Material</h3>
+                        <h2 class="text-xl font-semibold mb-4">Upload Study Material</h2>
                         <p class="text-slate-400 mb-4">Upload a PDF, image, or text file to extract topics</p>
                         <form id="upload-form" class="flex gap-4">
                             <input type="file" id="file-input" accept=".pdf,.txt,.png,.jpg,.jpeg,.gif,.webp"
@@ -333,7 +459,7 @@
                     
                     <!-- Topics Section -->
                     <div id="topics-section" style="display: none;" class="card mb-6">
-                        <h3 class="text-xl font-semibold mb-4">Extracted Topics</h3>
+                        <h2 class="text-xl font-semibold mb-4">Extracted Topics</h2>
                         <ul id="topics-list" class="space-y-2 mb-4"></ul>
                         <button id="start-quiz-btn" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-lg font-medium transition">
                             Start Adaptive Quiz
@@ -341,29 +467,33 @@
                     </div>
                     
                     <!-- Quick Stats -->
-                    <div class="grid grid-cols-3 gap-4 mb-6">
-                        <div class="bg-slate-800 rounded-xl p-6 depth-1 lift-on-hover animate-stats-card" data-animate-delay="0">
-                            <div class="text-3xl mb-2">📊</div>
-                            <div class="text-2xl font-bold" x-text="totalQuestions"></div>
-                            <div class="text-sm text-slate-400">Total Questions</div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="stat-card animate-stats-card" data-animate-delay="0">
+                            <div class="stat-card-icon" aria-hidden="true">📊</div>
+                            <div class="stat-card-value" x-text="totalQuestions"></div>
+                            <div class="stat-card-label">Total Questions</div>
                         </div>
-                        <div class="bg-slate-800 rounded-xl p-6 depth-1 lift-on-hover animate-stats-card" data-animate-delay="1">
-                            <div class="text-3xl mb-2">🎯</div>
-                            <div class="text-2xl font-bold" x-text="accuracy + '%'"></div>
-                            <div class="text-sm text-slate-400">Accuracy</div>
+                        <div class="stat-card animate-stats-card" data-animate-delay="1">
+                            <div class="stat-card-icon" aria-hidden="true">🎯</div>
+                            <div class="stat-card-value" x-text="accuracy + '%'"></div>
+                            <div class="stat-card-label">Accuracy</div>
                         </div>
-                        <div class="bg-slate-800 rounded-xl p-6 depth-1 lift-on-hover animate-stats-card" data-animate-delay="2">
-                            <div class="text-3xl mb-2">📈</div>
-                            <div class="text-2xl font-bold" x-text="topicsStudied"></div>
-                            <div class="text-sm text-slate-400">Topics Studied</div>
+                        <div class="stat-card animate-stats-card" data-animate-delay="2">
+                            <div class="stat-card-icon" aria-hidden="true">📈</div>
+                            <div class="stat-card-value" x-text="topicsStudied"></div>
+                            <div class="stat-card-label">Topics Studied</div>
                         </div>
+                    </div>
                     </div>
                 </section>
                 
                 <!-- DOCUMENTS VIEW -->
                 <section class="view" data-view="documents">
-                    <h1 class="text-3xl font-bold mb-6">My Documents</h1>
-                    <p class="text-slate-400 mb-6">View and manage your uploaded study materials</p>
+                    <div class="page">
+                        <div>
+                            <h1 class="text-3xl font-bold mb-2">My Documents</h1>
+                            <p class="text-slate-400 mb-6">View and manage your uploaded study materials</p>
+                        </div>
                     
                     <!-- Documents List -->
                     <div class="space-y-4 animate-card-stagger">
@@ -378,7 +508,7 @@
                                                 <template x-if="doc && doc.file_type === 'text'">📝</template>
                                             </span>
                                             <div>
-                                                <h3 class="text-lg font-semibold" x-text="doc.filename"></h3>
+                                                <h2 class="text-lg font-semibold" x-text="doc.filename"></h2>
                                                 <p class="text-sm text-slate-400">
                                                     <span x-text="doc.topics_count"></span> topics extracted • 
                                                     <span x-text="formatFileSize(doc.file_size)"></span> • 
@@ -401,29 +531,33 @@
                             </div>
                         </template>
                         
-                        <div x-show="documents.length === 0" class="card p-12 text-center">
-                            <div class="text-6xl mb-4">📄</div>
-                            <h3 class="text-xl font-semibold mb-2">No documents yet</h3>
-                            <p class="text-slate-400 mb-4">Upload your first study material to get started</p>
+                        <div x-show="documents.length === 0" class="card empty-state-card">
+                            <div class="empty-state-icon" aria-hidden="true">📄</div>
+                            <h2 class="empty-state-title">No documents yet</h2>
+                            <p class="empty-state-description">Upload your first PDF, slide deck, or image to start extracting topics.</p>
                             <button @click="currentView = 'home'" 
-                                    class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition">
-                                Go to Upload
+                                    class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition btn-animate">
+                                Upload Study Material
                             </button>
                         </div>
+                    </div>
                     </div>
                 </section>
                 
                 <!-- EXAM QUESTIONS VIEW -->
                 <section class="view" data-view="exam-questions">
-                    <h1 class="text-3xl font-bold mb-4">Exam Questions</h1>
-                    <p class="text-slate-400 mb-6">
-                        The program trains you to answer questions like these. Upload exam PDFs or images to extract questions, 
-                        and we'll analyze them to identify the skills you need to master.
-                    </p>
+                    <div class="page">
+                        <div>
+                            <h1 class="text-3xl font-bold mb-2">Exam Questions</h1>
+                            <p class="text-slate-400 mb-6">
+                                The program trains you to answer questions like these. Upload exam PDFs or images to extract questions, 
+                                and we'll analyze them to identify the skills you need to master.
+                            </p>
+                        </div>
                     
                     <!-- Upload Exam Section -->
                     <div class="card mb-6">
-                        <h3 class="text-xl font-semibold mb-4">Upload Exam</h3>
+                        <h2 class="text-xl font-semibold mb-4">Upload Exam</h2>
                         <form id="exam-upload-form" @submit.prevent="uploadExam()" class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium mb-2">Exam Name</label>
@@ -446,9 +580,11 @@
                     
                     <!-- Exams List -->
                     <div class="space-y-4">
-                        <h3 class="text-xl font-semibold">My Exams</h3>
-                        <div x-show="exams.length === 0" class="text-slate-400 text-center py-8">
-                            No exams uploaded yet. Upload your first exam above!
+                        <h2 class="text-xl font-semibold">My Exams</h2>
+                        <div x-show="exams.length === 0" class="card empty-state-card">
+                            <div class="empty-state-icon" aria-hidden="true">📝</div>
+                            <h3 class="empty-state-title">No exams yet</h3>
+                            <p class="empty-state-description">Upload an exam PDF or image to generate practice questions.</p>
                         </div>
                         <div class="space-y-4 animate-card-stagger">
                             <template x-for="exam in exams" :key="exam.exam_id">
@@ -485,7 +621,7 @@
                     
                     <!-- Questions List (shown when viewing an exam) -->
                     <div x-show="selectedExamQuestions !== null && selectedExamQuestions.length > 0" class="mt-8">
-                        <h3 class="text-xl font-semibold mb-4">Questions</h3>
+                        <h2 class="text-xl font-semibold mb-4">Questions</h2>
                         <div class="space-y-4 animate-card-stagger">
                         <template x-for="(q, idx) in selectedExamQuestions" :key="q.question_id">
                             <div class="card mb-4 depth-1 lift-on-hover">
@@ -699,10 +835,10 @@
                     
                     <!-- Empty state for questions -->
                     <div x-show="selectedExamQuestions !== null && selectedExamQuestions.length === 0" class="mt-8">
-                        <div class="card p-8 text-center">
-                            <div class="text-4xl mb-4">📝</div>
-                            <h3 class="text-xl font-semibold mb-2">No Questions Found</h3>
-                            <p class="text-slate-400 mb-4">
+                        <div class="card empty-state-card">
+                            <div class="empty-state-icon" aria-hidden="true">📝</div>
+                            <h2 class="empty-state-title">No Questions Found</h2>
+                            <p class="empty-state-description">
                                 This exam doesn't have any questions extracted yet. This might happen if:
                             </p>
                             <ul class="text-slate-400 text-left max-w-md mx-auto mb-4 space-y-2">
@@ -710,16 +846,21 @@
                                 <li>• The OCR couldn't identify question patterns</li>
                                 <li>• The exam file needs to be re-uploaded</li>
                             </ul>
-                            <p class="text-slate-400 text-sm">
+                            <p class="text-slate-400 text-sm mb-4">
                                 Try uploading the exam again, or make sure your exam file contains actual questions (not just instructions).
                             </p>
                         </div>
+                    </div>
                     </div>
                 </section>
                 
                 <!-- STUDY VIEW -->
                 <section class="view" data-view="study">
-                    <h1 class="text-3xl font-bold mb-6">Study Session</h1>
+                    <div class="page">
+                        <div>
+                            <h1 class="text-3xl font-bold mb-2">Study Session</h1>
+                            <p class="text-slate-400 mb-6">Practice questions and improve your understanding</p>
+                        </div>
                     
                     <!-- Quiz Section -->
                     <div id="quiz-section" style="display: none;" class="card">
@@ -759,50 +900,66 @@
                     </div>
                     
                     <!-- No Quiz Active Message -->
-                    <div id="no-quiz-message" class="card p-12 text-center">
-                        <div class="text-6xl mb-4">📚</div>
-                        <h3 class="text-2xl font-bold mb-2">No Active Study Session</h3>
-                        <p class="text-slate-400 mb-6">Upload study materials or select a topic to begin</p>
+                    <div id="no-quiz-message" class="card empty-state-card">
+                        <div class="empty-state-icon" aria-hidden="true">📚</div>
+                        <h2 class="empty-state-title">No Active Study Session</h2>
+                        <p class="empty-state-description">Upload study materials or select a topic to begin practicing.</p>
                         <button @click="currentView = 'home'" 
-                                class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition">
+                                class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition btn-animate">
                             Go to Home
                         </button>
+                    </div>
                     </div>
                 </section>
                 
                 <!-- ANALYTICS VIEW -->
                 <section class="view" data-view="analytics">
-                    <h1 class="text-3xl font-bold mb-6">Learning Analytics</h1>
+                    <div class="page">
+                        <div>
+                            <h1 class="text-3xl font-bold mb-2">Learning Analytics</h1>
+                            <p class="text-slate-400 mb-6">Track your progress and identify areas for improvement</p>
+                        </div>
                     
                     <!-- Stats Grid -->
-                    <div class="grid grid-cols-4 gap-4 mb-6">
-                        <div class="bg-slate-800 rounded-xl p-6 depth-1 lift-on-hover animate-stats-card" data-animate-delay="0">
-                            <div class="text-3xl mb-2">🔥</div>
-                            <div class="text-3xl font-bold" x-text="studyStreak"></div>
-                            <div class="text-sm text-slate-400">Day Streak</div>
+                    <div class="grid grid-cols-4 gap-4" x-show="totalQuestions > 0">
+                        <div class="stat-card animate-stats-card" data-animate-delay="0">
+                            <div class="stat-card-icon" aria-hidden="true">🔥</div>
+                            <div class="stat-card-value" x-text="studyStreak"></div>
+                            <div class="stat-card-label">Day Streak</div>
                         </div>
-                        <div class="bg-slate-800 rounded-xl p-6 depth-1 lift-on-hover animate-stats-card" data-animate-delay="1">
-                            <div class="text-3xl mb-2">📊</div>
-                            <div class="text-3xl font-bold" x-text="weeklyQuestions"></div>
-                            <div class="text-sm text-slate-400">Questions This Week</div>
+                        <div class="stat-card animate-stats-card" data-animate-delay="1">
+                            <div class="stat-card-icon" aria-hidden="true">📊</div>
+                            <div class="stat-card-value" x-text="weeklyQuestions"></div>
+                            <div class="stat-card-label">Questions This Week</div>
                         </div>
-                        <div class="bg-slate-800 rounded-xl p-6 depth-1 lift-on-hover animate-stats-card" data-animate-delay="2">
-                            <div class="text-3xl mb-2">🎯</div>
-                            <div class="text-3xl font-bold" x-text="accuracy + '%'"></div>
-                            <div class="text-sm text-slate-400">Overall Accuracy</div>
+                        <div class="stat-card animate-stats-card" data-animate-delay="2">
+                            <div class="stat-card-icon" aria-hidden="true">🎯</div>
+                            <div class="stat-card-value" x-text="accuracy + '%'"></div>
+                            <div class="stat-card-label">Overall Accuracy</div>
                         </div>
-                        <div class="bg-slate-800 rounded-xl p-6 depth-1 lift-on-hover animate-stats-card" data-animate-delay="3">
-                            <div class="text-3xl mb-2">⭐</div>
-                            <div class="text-3xl font-bold" x-text="masteredTopics"></div>
-                            <div class="text-sm text-slate-400">Topics Mastered</div>
+                        <div class="stat-card animate-stats-card" data-animate-delay="3">
+                            <div class="stat-card-icon" aria-hidden="true">⭐</div>
+                            <div class="stat-card-value" x-text="masteredTopics"></div>
+                            <div class="stat-card-label">Topics Mastered</div>
                         </div>
                     </div>
                     
+                    <!-- Analytics Empty State -->
+                    <div x-show="totalQuestions === 0" class="card empty-state-card">
+                        <div class="empty-state-icon" aria-hidden="true">📊</div>
+                        <h2 class="empty-state-title">No Analytics Yet</h2>
+                        <p class="empty-state-description">We'll show your performance here once you've answered some questions.</p>
+                        <button @click="currentView = 'study'" 
+                                class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition btn-animate">
+                            Start Practicing
+                        </button>
+                    </div>
+                    
                     <!-- Charts Grid -->
-                    <div class="grid grid-cols-2 gap-6">
+                    <div class="grid grid-cols-2 gap-6" x-show="totalQuestions > 0">
                         <!-- Forgetting Curve Chart -->
                         <div class="bg-slate-800 rounded-xl p-6">
-                            <h3 class="text-lg font-semibold mb-4">Forgetting Curve Analysis</h3>
+                            <h2 class="text-lg font-semibold mb-4">Forgetting Curve Analysis</h2>
                             <canvas id="forgettingCurveChart"></canvas>
                             <p class="text-xs text-slate-400 mt-3">
                                 📌 Shows predicted retention over time for each topic
@@ -811,7 +968,7 @@
                         
                         <!-- Mastery Progress Chart -->
                         <div class="bg-slate-800 rounded-xl p-6">
-                            <h3 class="text-lg font-semibold mb-4">Mastery Progress Over Time</h3>
+                            <h2 class="text-lg font-semibold mb-4">Mastery Progress Over Time</h2>
                             <canvas id="masteryProgressChart"></canvas>
                             <p class="text-xs text-slate-400 mt-3">
                                 📈 Track how your understanding improves with practice
@@ -820,7 +977,7 @@
                         
                         <!-- Study Heatmap -->
                         <div class="bg-slate-800 rounded-xl p-6">
-                            <h3 class="text-lg font-semibold mb-4">Study Activity Heatmap</h3>
+                            <h2 class="text-lg font-semibold mb-4">Study Activity Heatmap</h2>
                             <div id="studyHeatmap" class="flex flex-col space-y-1">
                                 <!-- Generated dynamically -->
                             </div>
@@ -831,7 +988,7 @@
                         
                         <!-- Time of Day Performance -->
                         <div class="bg-slate-800 rounded-xl p-6">
-                            <h3 class="text-lg font-semibold mb-4">Performance by Time of Day</h3>
+                            <h2 class="text-lg font-semibold mb-4">Performance by Time of Day</h2>
                             <canvas id="timeOfDayChart"></canvas>
                             <p class="text-xs text-slate-400 mt-3">
                                 ⏰ Discover when you study most effectively
@@ -840,7 +997,7 @@
                         
                         <!-- Topic Distribution -->
                         <div class="bg-slate-800 rounded-xl p-6 col-span-2">
-                            <h3 class="text-lg font-semibold mb-4">Topic Distribution</h3>
+                            <h2 class="text-lg font-semibold mb-4">Topic Distribution</h2>
                             <canvas id="topicDistributionChart"></canvas>
                             <p class="text-xs text-slate-400 mt-3">
                                 📚 Time spent practicing each topic
@@ -850,20 +1007,25 @@
                     
                     <!-- Performance Insights -->
                     <div class="mt-6 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl p-6">
-                        <h3 class="text-xl font-semibold mb-4">🌟 Performance Insights</h3>
+                        <h2 class="text-xl font-semibold mb-4">🌟 Performance Insights</h2>
                         <div id="performance-insights" class="space-y-2 text-sm">
                             <!-- Generated dynamically -->
                         </div>
+                    </div>
                     </div>
                 </section>
                 
                 <!-- EXAM PREP VIEW -->
                 <section class="view" data-view="exam-prep">
-                    <h1 class="text-3xl font-bold mb-6">Exam Preparation</h1>
+                    <div class="page">
+                        <div>
+                            <h1 class="text-3xl font-bold mb-2">Exam Preparation</h1>
+                            <p class="text-slate-400 mb-6">Create personalized study plans for your upcoming exams</p>
+                        </div>
                     
                     <!-- Create New Exam Plan -->
                     <div class="card mb-6">
-                        <h3 class="text-xl font-semibold mb-4">Create Exam Prep Plan</h3>
+                        <h2 class="text-xl font-semibold mb-4">Create Exam Prep Plan</h2>
                         <form id="exam-prep-form" class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium mb-2">Exam Name</label>
@@ -888,28 +1050,39 @@
                         </form>
                     </div>
                     
+                    <!-- Exam Prep Empty State -->
+                    <div x-show="allTopics.length === 0" class="card empty-state-card">
+                        <div class="empty-state-icon" aria-hidden="true">📚</div>
+                        <h2 class="empty-state-title">No Study Plan Yet</h2>
+                        <p class="empty-state-description">Upload study materials to extract topics, then create a personalized exam prep plan.</p>
+                        <button @click="currentView = 'home'" 
+                                class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition btn-animate">
+                            Upload Study Material
+                        </button>
+                    </div>
+                    
                     <!-- Exam Readiness Dashboard -->
                     <div id="exam-readiness-dashboard" style="display: none;">
-                        <div class="grid grid-cols-3 gap-4 mb-6">
-                            <div class="bg-slate-800 rounded-xl p-6">
-                                <div class="text-3xl mb-2">📊</div>
-                                <div class="text-3xl font-bold" id="overall-readiness">0%</div>
-                                <div class="text-sm text-slate-400">Overall Readiness</div>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="stat-card">
+                                <div class="stat-card-icon" aria-hidden="true">📊</div>
+                                <div class="stat-card-value" id="overall-readiness">0%</div>
+                                <div class="stat-card-label">Overall Readiness</div>
                             </div>
-                            <div class="bg-slate-800 rounded-xl p-6">
-                                <div class="text-3xl mb-2">📅</div>
-                                <div class="text-3xl font-bold" id="days-until-exam">0</div>
-                                <div class="text-sm text-slate-400">Days Until Exam</div>
+                            <div class="stat-card">
+                                <div class="stat-card-icon" aria-hidden="true">📅</div>
+                                <div class="stat-card-value" id="days-until-exam">0</div>
+                                <div class="stat-card-label">Days Until Exam</div>
                             </div>
-                            <div class="bg-slate-800 rounded-xl p-6">
-                                <div class="text-3xl mb-2">🎯</div>
-                                <div class="text-3xl font-bold" id="predicted-score">0%</div>
-                                <div class="text-sm text-slate-400">Predicted Score</div>
+                            <div class="stat-card">
+                                <div class="stat-card-icon" aria-hidden="true">🎯</div>
+                                <div class="stat-card-value" id="predicted-score">0%</div>
+                                <div class="stat-card-label">Predicted Score</div>
                             </div>
                         </div>
                         
                         <div class="bg-slate-800 rounded-xl p-6 mb-6">
-                            <h3 class="text-xl font-semibold mb-4">Topic Readiness</h3>
+                            <h2 class="text-xl font-semibold mb-4">Topic Readiness</h2>
                             <div id="topic-readiness-list" class="space-y-4">
                                 <!-- Topic readiness bars will be generated here -->
                             </div>
@@ -922,11 +1095,16 @@
                             </div>
                         </div>
                     </div>
+                    </div>
                 </section>
                 
                 <!-- LEADERBOARDS VIEW -->
                 <section class="view" data-view="leaderboards">
-                    <h1 class="text-3xl font-bold mb-6">Leaderboards</h1>
+                    <div class="page">
+                        <div>
+                            <h1 class="text-3xl font-bold mb-2">Leaderboards</h1>
+                            <p class="text-slate-400 mb-6">See how you rank among other students</p>
+                        </div>
                     
                     <!-- Leaderboard Filters -->
                     <div class="card p-4 mb-6 flex items-center justify-between">
@@ -953,7 +1131,7 @@
                     
                     <!-- My Rank Card -->
                     <div id="my-rank-card" class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 mb-6">
-                        <h3 class="text-xl font-semibold mb-4">Your Rank</h3>
+                        <h2 class="text-xl font-semibold mb-4">Your Rank</h2>
                         <div class="flex justify-between items-center">
                             <div>
                                 <div class="text-4xl font-bold" x-text="'#' + (myRank || '-')"></div>
@@ -972,11 +1150,16 @@
                             <!-- Leaderboard entries will be inserted here -->
                         </div>
                     </div>
+                    </div>
                 </section>
                 
                 <!-- ACHIEVEMENTS VIEW -->
                 <section class="view" data-view="achievements">
-                    <h1 class="text-3xl font-bold mb-6">Achievements</h1>
+                    <div class="page">
+                        <div>
+                            <h1 class="text-3xl font-bold mb-2">Achievements</h1>
+                            <p class="text-slate-400 mb-6">Unlock achievements as you progress in your studies</p>
+                        </div>
                     
                     <div class="grid grid-cols-3 gap-4 animate-card-stagger">
                         <!-- Achievement cards will be inserted here -->
@@ -993,15 +1176,20 @@
                             </div>
                         </template>
                     </div>
+                    </div>
                 </section>
                 
                 <!-- SETTINGS VIEW -->
                 <section class="view" data-view="settings">
-                    <h1 class="text-3xl font-bold mb-6">Settings</h1>
+                    <div class="page">
+                        <div>
+                            <h1 class="text-3xl font-bold mb-2">Settings</h1>
+                            <p class="text-slate-400 mb-6">Manage your account and preferences</p>
+                        </div>
                     
                     <div class="card space-y-6">
                         <div>
-                            <h3 class="text-lg font-semibold mb-4">Account Information</h3>
+                            <h2 class="text-lg font-semibold mb-4">Account Information</h2>
                             <div class="space-y-3 text-sm">
                                 <div class="flex justify-between">
                                     <span class="text-slate-400">Username:</span>
@@ -1023,7 +1211,7 @@
                         </div>
                         
                         <div>
-                            <h3 class="text-lg font-semibold mb-4">Database Actions</h3>
+                            <h2 class="text-lg font-semibold mb-4">Database Actions</h2>
                             <button @click="clearUserData()" 
                                     class="px-6 py-3 bg-red-600 hover:bg-red-500 rounded-lg font-medium transition">
                                 ⚠️ Clear All Progress
@@ -1031,9 +1219,9 @@
                             <p class="mt-2 text-xs text-slate-400">This will delete all your progress data.</p>
                         </div>
                     </div>
+                    </div>
                 </section>
                 
-            </div>
         </main>
         
     </div>
@@ -1043,7 +1231,7 @@
          class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 modal-backdrop">
         <div class="bg-slate-800 rounded-xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto modal-content depth-3">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold">💡 Guided Learning</h3>
+                <h2 class="text-2xl font-bold">💡 Guided Learning</h2>
                 <button @click="closeGuideMeModal()" class="text-slate-400 hover:text-white text-2xl">&times;</button>
             </div>
             
@@ -1053,6 +1241,6 @@
         </div>
     </div>
 
-    <script src="/static/app.js"></script>
+    <script src="/static/app.js" defer></script>
 </body>
 </html>
