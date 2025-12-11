@@ -98,8 +98,28 @@ function app() {
                     }
                 }, 60000);
                 
-                // Watch for view changes
+                // Watch for view changes and trigger animations
                 this.$watch('currentView', (newView) => {
+                    // Trigger view animation
+                    this.$nextTick(() => {
+                        const viewContainers = document.querySelectorAll('.animate-view-in');
+                        viewContainers.forEach(container => {
+                            if (container.style.display !== 'none') {
+                                // Reset animation
+                                container.style.opacity = '0';
+                                container.style.transform = 'translateX(30px)';
+                                // Trigger animation
+                                requestAnimationFrame(() => {
+                                    container.style.transition = 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+                                    setTimeout(() => {
+                                        container.style.opacity = '1';
+                                        container.style.transform = 'translateX(0)';
+                                    }, 10);
+                                });
+                            }
+                        });
+                    });
+                    
                     if (newView === 'leaderboards') {
                         this.loadLeaderboard();
                     } else if (newView === 'achievements') {
@@ -1285,7 +1305,7 @@ function app() {
                 const medal = user.rank === 1 ? '🥇' : user.rank === 2 ? '🥈' : user.rank === 3 ? '🥉' : '';
                 
                 return `
-                    <div class="p-4 flex items-center justify-between ${isCurrentUser ? 'bg-blue-900/30' : 'hover:bg-slate-700'}">
+                    <div class="p-4 flex items-center justify-between depth-1 lift-on-hover ${isCurrentUser ? 'bg-blue-900/30' : 'hover:bg-slate-700'}">
                         <div class="flex items-center space-x-4">
                             <span class="text-2xl font-bold text-slate-400 w-12">${medal || '#' + user.rank}</span>
                             <div>
@@ -1308,6 +1328,11 @@ function app() {
                     </div>
                 `;
             }).join('');
+            
+            // Trigger staggered animations for leaderboard entries
+            this.$nextTick(() => {
+                this.animateStaggeredElements(container);
+            });
         },
         
         async loadDocuments() {
@@ -1316,6 +1341,13 @@ function app() {
                 const data = await response.json();
                 if (response.ok) {
                     this.documents = data.documents || [];
+                    // Trigger animations for document cards
+                    this.$nextTick(() => {
+                        const docContainer = document.querySelector('.animate-card-stagger');
+                        if (docContainer) {
+                            this.animateStaggeredElements(docContainer);
+                        }
+                    });
                 }
             } catch (err) {
                 console.error('Error loading documents:', err);
@@ -1397,6 +1429,13 @@ function app() {
                 const data = await response.json();
                 if (response.ok) {
                     this.exams = data.exams || [];
+                    // Trigger animations for exam cards
+                    this.$nextTick(() => {
+                        const examContainer = document.querySelector('.animate-card-stagger');
+                        if (examContainer) {
+                            this.animateStaggeredElements(examContainer);
+                        }
+                    });
                 } else {
                     console.error('Error loading exams:', data.error);
                 }
@@ -1630,8 +1669,15 @@ function app() {
                     
                     console.log('[VIEW_QUESTIONS] Loaded', this.selectedExamQuestions.length, 'questions');
                     
-                    // Initialize lazy loading for MathJax after DOM updates
+                    // Trigger card animations for newly loaded questions
                     this.$nextTick(() => {
+                        // Animate cards in
+                        const questionContainer = document.querySelector('.animate-card-stagger');
+                        if (questionContainer) {
+                            this.animateStaggeredElements(questionContainer);
+                        }
+                        
+                        // Initialize lazy loading for MathJax after DOM updates
                         setTimeout(() => {
                             this.initMathJaxLazyLoading();
                             // Re-initialize after a longer delay to catch all dynamically added content
@@ -1863,6 +1909,13 @@ function app() {
                 
                 if (data.achievements) {
                     this.allAchievements = data.achievements;
+                    // Trigger animations for achievement cards
+                    this.$nextTick(() => {
+                        const achievementContainer = document.querySelector('.animate-card-stagger');
+                        if (achievementContainer) {
+                            this.animateStaggeredElements(achievementContainer);
+                        }
+                    });
                 }
             } catch (err) {
                 console.error('Error loading achievements:', err);
@@ -1915,6 +1968,33 @@ function app() {
             if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
             if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
             return `${Math.floor(seconds / 86400)}d ago`;
+        },
+        
+        // Animation helper: Animate staggered elements
+        animateStaggeredElements(container, delay = 50) {
+            if (!container) return;
+            const elements = Array.from(container.children);
+            elements.forEach((el, index) => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(20px) scale(0.95)';
+                setTimeout(() => {
+                    el.style.transition = 'opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0) scale(1)';
+                }, index * delay);
+            });
+        },
+        
+        // Animation helper: Animate single element with fade-in-up
+        animateElement(element, delay = 0) {
+            if (!element) return;
+            element.style.opacity = '0';
+            element.style.transform = 'translateY(20px) scale(0.95)';
+            setTimeout(() => {
+                element.style.transition = 'opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                element.style.opacity = '1';
+                element.style.transform = 'translateY(0) scale(1)';
+            }, delay);
         }
     };
 }

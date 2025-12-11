@@ -228,63 +228,63 @@
             <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
                 <button @click="currentView = 'home'" 
                         :class="currentView === 'home' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700'"
-                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate nav-active-indicator">
                     <span class="text-xl">🏠</span>
                     <span class="font-medium">Home</span>
                 </button>
                 
                 <button @click="currentView = 'documents'" 
                         :class="currentView === 'documents' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700'"
-                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate nav-active-indicator">
                     <span class="text-xl">📄</span>
                     <span class="font-medium">Documents</span>
                 </button>
                 
                 <button @click="currentView = 'exam-questions'" 
                         :class="currentView === 'exam-questions' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700'"
-                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate nav-active-indicator">
                     <span class="text-xl">📝</span>
                     <span class="font-medium">Exam Questions</span>
                 </button>
                 
                 <button @click="currentView = 'study'" 
                         :class="currentView === 'study' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700'"
-                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate nav-active-indicator">
                     <span class="text-xl">🎯</span>
                     <span class="font-medium">Study</span>
                 </button>
                 
                 <button @click="currentView = 'analytics'" 
                         :class="currentView === 'analytics' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700'"
-                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate nav-active-indicator">
                     <span class="text-xl">📊</span>
                     <span class="font-medium">Analytics</span>
                 </button>
                 
                 <button @click="currentView = 'exam-prep'" 
                         :class="currentView === 'exam-prep' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700'"
-                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate nav-active-indicator">
                     <span class="text-xl">📚</span>
                     <span class="font-medium">Exam Prep</span>
                 </button>
                 
                 <button @click="currentView = 'leaderboards'" 
                         :class="currentView === 'leaderboards' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700'"
-                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate nav-active-indicator">
                     <span class="text-xl">🏆</span>
                     <span class="font-medium">Leaderboards</span>
                 </button>
                 
                 <button @click="currentView = 'achievements'" 
                         :class="currentView === 'achievements' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700'"
-                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate nav-active-indicator">
                     <span class="text-xl">🎖️</span>
                     <span class="font-medium">Achievements</span>
                 </button>
                 
                 <button @click="currentView = 'settings'" 
                         :class="currentView === 'settings' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700'"
-                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate nav-active-indicator">
                     <span class="text-xl">⚙️</span>
                     <span class="font-medium">Settings</span>
                 </button>
@@ -312,7 +312,7 @@
             <div class="max-w-6xl mx-auto p-8">
                 
                 <!-- HOME VIEW -->
-                <div x-show="currentView === 'home'" x-transition>
+                <div x-show="currentView === 'home'" x-transition class="animate-view-in">
                     <h2 class="text-3xl font-bold mb-6">Welcome Back!</h2>
                     
                     <!-- Upload Section -->
@@ -322,7 +322,7 @@
                         <form id="upload-form" class="flex gap-4">
                             <input type="file" id="file-input" accept=".pdf,.txt,.png,.jpg,.jpeg,.gif,.webp"
                                    class="flex-1 px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-500">
-                            <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition">
+                            <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition btn-animate">
                                 Upload & Extract Topics
                             </button>
                         </form>
@@ -340,17 +340,17 @@
                     
                     <!-- Quick Stats -->
                     <div class="grid grid-cols-3 gap-4 mb-6">
-                        <div class="bg-slate-800 rounded-xl p-6">
+                        <div class="bg-slate-800 rounded-xl p-6 depth-1 lift-on-hover animate-stats-card" data-animate-delay="0">
                             <div class="text-3xl mb-2">📊</div>
                             <div class="text-2xl font-bold" x-text="totalQuestions"></div>
                             <div class="text-sm text-slate-400">Total Questions</div>
                         </div>
-                        <div class="bg-slate-800 rounded-xl p-6">
+                        <div class="bg-slate-800 rounded-xl p-6 depth-1 lift-on-hover animate-stats-card" data-animate-delay="1">
                             <div class="text-3xl mb-2">🎯</div>
                             <div class="text-2xl font-bold" x-text="accuracy + '%'"></div>
                             <div class="text-sm text-slate-400">Accuracy</div>
                         </div>
-                        <div class="bg-slate-800 rounded-xl p-6">
+                        <div class="bg-slate-800 rounded-xl p-6 depth-1 lift-on-hover animate-stats-card" data-animate-delay="2">
                             <div class="text-3xl mb-2">📈</div>
                             <div class="text-2xl font-bold" x-text="topicsStudied"></div>
                             <div class="text-sm text-slate-400">Topics Studied</div>
@@ -359,14 +359,14 @@
                 </div>
                 
                 <!-- DOCUMENTS VIEW -->
-                <div x-show="currentView === 'documents'" x-transition>
+                <div x-show="currentView === 'documents'" x-transition class="animate-view-in">
                     <h2 class="text-3xl font-bold mb-6">My Documents</h2>
                     <p class="text-slate-400 mb-6">View and manage your uploaded study materials</p>
                     
                     <!-- Documents List -->
-                    <div class="space-y-4">
+                    <div class="space-y-4 animate-card-stagger">
                         <template x-for="doc in documents" :key="doc.document_id">
-                            <div class="bg-slate-800 rounded-xl p-6 hover:bg-slate-750 transition">
+                            <div class="bg-slate-800 rounded-xl p-6 hover:bg-slate-750 transition depth-1 lift-on-hover">
                                 <div class="flex items-start justify-between">
                                     <div class="flex-1">
                                         <div class="flex items-center space-x-3 mb-2">
@@ -387,11 +387,11 @@
                                     </div>
                                     <div class="flex space-x-2">
                                         <button @click="loadDocument(doc.document_id)" 
-                                                class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition text-sm">
+                                                class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition text-sm btn-animate">
                                             Load Topics
                                         </button>
                                         <button @click="deleteDocument(doc.document_id)" 
-                                                class="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg font-medium transition text-sm">
+                                                class="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg font-medium transition text-sm btn-animate">
                                             Delete
                                         </button>
                                     </div>
@@ -412,7 +412,7 @@
                 </div>
                 
                 <!-- EXAM QUESTIONS VIEW -->
-                <div x-show="currentView === 'exam-questions'" x-transition>
+                <div x-show="currentView === 'exam-questions'" x-transition class="animate-view-in">
                     <h2 class="text-3xl font-bold mb-4">Exam Questions</h2>
                     <p class="text-slate-400 mb-6">
                         The program trains you to answer questions like these. Upload exam PDFs or images to extract questions, 
@@ -448,8 +448,9 @@
                         <div x-show="exams.length === 0" class="text-slate-400 text-center py-8">
                             No exams uploaded yet. Upload your first exam above!
                         </div>
-                        <template x-for="exam in exams" :key="exam.exam_id">
-                            <div class="bg-slate-800 rounded-xl p-6 hover:bg-slate-750 transition">
+                        <div class="space-y-4 animate-card-stagger">
+                            <template x-for="exam in exams" :key="exam.exam_id">
+                                <div class="bg-slate-800 rounded-xl p-6 hover:bg-slate-750 transition depth-1 lift-on-hover">
                                 <div class="flex items-start justify-between mb-4">
                                     <div class="flex-1">
                                         <h4 class="text-lg font-semibold mb-2" x-text="exam.exam_name"></h4>
@@ -463,15 +464,15 @@
                                         <button @click="analyzeExam(exam.exam_id)" 
                                                 :disabled="exam.analyzed_questions >= exam.total_questions && exam.total_questions > 0"
                                                 :class="exam.analyzed_questions >= exam.total_questions && exam.total_questions > 0 ? 'bg-slate-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500'"
-                                                class="px-4 py-2 rounded-lg font-medium transition text-sm">
+                                                class="px-4 py-2 rounded-lg font-medium transition text-sm btn-animate">
                                             <span x-text="exam.analyzed_questions >= exam.total_questions && exam.total_questions > 0 ? 'Analyzed' : 'Analyze Questions'"></span>
                                         </button>
                                         <button @click="viewExamQuestions(exam.exam_id)" 
-                                                class="px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg font-medium transition text-sm">
+                                                class="px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg font-medium transition text-sm btn-animate">
                                             View Questions
                                         </button>
                                         <button @click="deleteExam(exam.exam_id)" 
-                                                class="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg font-medium transition text-sm">
+                                                class="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg font-medium transition text-sm btn-animate">
                                             Delete
                                         </button>
                                     </div>
@@ -483,8 +484,9 @@
                     <!-- Questions List (shown when viewing an exam) -->
                     <div x-show="selectedExamQuestions !== null && selectedExamQuestions.length > 0" class="mt-8">
                         <h3 class="text-xl font-semibold mb-4">Questions</h3>
+                        <div class="space-y-4 animate-card-stagger">
                         <template x-for="(q, idx) in selectedExamQuestions" :key="q.question_id">
-                            <div class="bg-slate-800 rounded-xl p-6 mb-4">
+                            <div class="bg-slate-800 rounded-xl p-6 mb-4 depth-1 lift-on-hover">
                                 <div class="flex items-start justify-between mb-4">
                                     <div>
                                         <h4 class="text-lg font-semibold">
@@ -690,6 +692,7 @@
                                 </div>
                             </div>
                         </template>
+                        </div>
                     </div>
                     
                     <!-- Empty state for questions -->
@@ -713,7 +716,7 @@
                 </div>
                 
                 <!-- STUDY VIEW -->
-                <div x-show="currentView === 'study'" x-transition>
+                <div x-show="currentView === 'study'" x-transition class="animate-view-in">
                     <h2 class="text-3xl font-bold mb-6">Study Session</h2>
                     
                     <!-- Quiz Section -->
@@ -735,7 +738,7 @@
                         <!-- Guide Me Button -->
                         <div id="guide-me-container" class="mb-6">
                             <button @click="openGuideMeModal()" 
-                                    class="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-lg font-medium transition flex items-center space-x-2">
+                                    class="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-lg font-medium transition flex items-center space-x-2 btn-animate">
                                 <span>💡</span>
                                 <span>Guide Me Through This</span>
                             </button>
@@ -766,7 +769,7 @@
                 </div>
                 
                 <!-- ANALYTICS VIEW -->
-                <div x-show="currentView === 'analytics'" x-transition>
+                <div x-show="currentView === 'analytics'" x-transition class="animate-view-in">
                     <h2 class="text-3xl font-bold mb-6">Learning Analytics</h2>
                     
                     <!-- Stats Grid -->
@@ -853,7 +856,7 @@
                 </div>
                 
                 <!-- EXAM PREP VIEW -->
-                <div x-show="currentView === 'exam-prep'" x-transition>
+                <div x-show="currentView === 'exam-prep'" x-transition class="animate-view-in">
                     <h2 class="text-3xl font-bold mb-6">Exam Preparation</h2>
                     
                     <!-- Create New Exam Plan -->
@@ -920,7 +923,7 @@
                 </div>
                 
                 <!-- LEADERBOARDS VIEW -->
-                <div x-show="currentView === 'leaderboards'" x-transition>
+                <div x-show="currentView === 'leaderboards'" x-transition class="animate-view-in">
                     <h2 class="text-3xl font-bold mb-6">Leaderboards</h2>
                     
                     <!-- Leaderboard Filters -->
@@ -963,20 +966,20 @@
                     
                     <!-- Leaderboard Table -->
                     <div class="bg-slate-800 rounded-xl overflow-hidden">
-                        <div id="leaderboard-list" class="divide-y divide-slate-700">
+                        <div id="leaderboard-list" class="divide-y divide-slate-700 animate-row-stagger">
                             <!-- Leaderboard entries will be inserted here -->
                         </div>
                     </div>
                 </div>
                 
                 <!-- ACHIEVEMENTS VIEW -->
-                <div x-show="currentView === 'achievements'" x-transition>
+                <div x-show="currentView === 'achievements'" x-transition class="animate-view-in">
                     <h2 class="text-3xl font-bold mb-6">Achievements</h2>
                     
-                    <div class="grid grid-cols-3 gap-4">
+                    <div class="grid grid-cols-3 gap-4 animate-card-stagger">
                         <!-- Achievement cards will be inserted here -->
                         <template x-for="achievement in allAchievements" :key="achievement.achievement_id">
-                            <div class="bg-slate-800 rounded-xl p-6 text-center"
+                            <div class="bg-slate-800 rounded-xl p-6 text-center depth-1 lift-on-hover"
                                  :class="achievement.unlocked ? 'ring-2 ring-blue-500' : 'opacity-50'">
                                 <div class="text-5xl mb-3" x-text="achievement.badge_icon"></div>
                                 <h4 class="font-semibold mb-2" x-text="achievement.achievement_name"></h4>
@@ -991,7 +994,7 @@
                 </div>
                 
                 <!-- SETTINGS VIEW -->
-                <div x-show="currentView === 'settings'" x-transition>
+                <div x-show="currentView === 'settings'" x-transition class="animate-view-in">
                     <h2 class="text-3xl font-bold mb-6">Settings</h2>
                     
                     <div class="bg-slate-800 rounded-xl p-6 space-y-6">
@@ -1090,8 +1093,8 @@
     
     <!-- Guide Me Modal -->
     <div x-show="showGuideMeModal" x-cloak 
-         class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-        <div class="bg-slate-800 rounded-xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+         class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 modal-backdrop">
+        <div class="bg-slate-800 rounded-xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto modal-content depth-3">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-2xl font-bold">💡 Guided Learning</h3>
                 <button @click="closeGuideMeModal()" class="text-slate-400 hover:text-white text-2xl">&times;</button>

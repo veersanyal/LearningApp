@@ -233,3 +233,311 @@ canvas {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+/* ============================================
+   MODERN UI ANIMATIONS AND DEPTH SYSTEM
+   ============================================ */
+
+/* Keyframe Animations */
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes depthLift {
+    from {
+        transform: translateY(0) scale(1);
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    }
+    to {
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+/* Easing Functions */
+:root {
+    --ease-primary: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-secondary: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --ease-tertiary: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Animation Utility Classes - Tier System */
+.animate-primary {
+    animation: slideInRight 0.6s var(--ease-primary) forwards;
+    opacity: 0;
+}
+
+.animate-secondary {
+    animation: fadeInUp 0.4s var(--ease-secondary) forwards;
+    opacity: 0;
+}
+
+.animate-tertiary {
+    animation: scaleIn 0.3s var(--ease-tertiary) forwards;
+    opacity: 0;
+}
+
+/* View Transitions */
+.animate-view-in {
+    animation: slideInRight 0.6s var(--ease-primary) forwards;
+    opacity: 0;
+}
+
+/* View transition when visible */
+.animate-view-in[x-show="true"],
+.animate-view-in[style*="display: block"],
+.animate-view-in:not([style*="display: none"]) {
+    animation: slideInRight 0.6s var(--ease-primary) forwards;
+}
+
+/* Staggered Animations for Lists */
+.animate-card-stagger > * {
+    animation: fadeInUp 0.4s var(--ease-secondary) forwards;
+    opacity: 0;
+}
+
+.animate-card-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.animate-card-stagger > *:nth-child(2) { animation-delay: 50ms; }
+.animate-card-stagger > *:nth-child(3) { animation-delay: 100ms; }
+.animate-card-stagger > *:nth-child(4) { animation-delay: 150ms; }
+.animate-card-stagger > *:nth-child(5) { animation-delay: 200ms; }
+.animate-card-stagger > *:nth-child(6) { animation-delay: 250ms; }
+.animate-card-stagger > *:nth-child(7) { animation-delay: 300ms; }
+.animate-card-stagger > *:nth-child(8) { animation-delay: 350ms; }
+.animate-card-stagger > *:nth-child(9) { animation-delay: 400ms; }
+.animate-card-stagger > *:nth-child(10) { animation-delay: 450ms; }
+.animate-card-stagger > *:nth-child(n+11) { animation-delay: 500ms; }
+
+/* Row stagger for table-like layouts */
+.animate-row-stagger > * {
+    animation: fadeInUp 0.3s var(--ease-secondary) forwards;
+    opacity: 0;
+}
+
+.animate-row-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.animate-row-stagger > *:nth-child(2) { animation-delay: 30ms; }
+.animate-row-stagger > *:nth-child(3) { animation-delay: 60ms; }
+.animate-row-stagger > *:nth-child(4) { animation-delay: 90ms; }
+.animate-row-stagger > *:nth-child(5) { animation-delay: 120ms; }
+.animate-row-stagger > *:nth-child(n+6) { animation-delay: 150ms; }
+
+/* Stats Cards Animation */
+.animate-stats-card {
+    animation: scaleIn 0.4s var(--ease-secondary) forwards;
+    opacity: 0;
+}
+
+.animate-stats-card[data-animate-delay="0"] { animation-delay: 0ms; }
+.animate-stats-card[data-animate-delay="1"] { animation-delay: 100ms; }
+.animate-stats-card[data-animate-delay="2"] { animation-delay: 200ms; }
+.animate-stats-card[data-animate-delay="3"] { animation-delay: 300ms; }
+
+/* Depth System - Shadow Levels */
+.depth-0 {
+    box-shadow: none;
+}
+
+.depth-1 {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.depth-2 {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.depth-3 {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+}
+
+.depth-4 {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* Hover Lift Effect */
+.lift-on-hover {
+    transition: transform 0.3s var(--ease-secondary), box-shadow 0.3s var(--ease-secondary);
+    position: relative;
+    z-index: 10;
+}
+
+.lift-on-hover:hover {
+    transform: translateY(-4px) scale(1.02);
+    z-index: 20;
+}
+
+.lift-on-hover.depth-1:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+}
+
+.lift-on-hover.depth-2:hover {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+}
+
+/* Button Hover Scale */
+button, .btn-animate {
+    transition: transform 0.2s var(--ease-secondary);
+}
+
+button:hover:not(:disabled), .btn-animate:hover:not(:disabled) {
+    transform: scale(1.02);
+}
+
+button:active:not(:disabled), .btn-animate:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+/* Card Initial State - Apply depth and prepare for animation */
+.card-animate {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    transition: transform 0.3s var(--ease-secondary), box-shadow 0.3s var(--ease-secondary);
+}
+
+.card-animate.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+/* Modal Animations */
+.modal-backdrop {
+    animation: fadeIn 0.3s var(--ease-primary) forwards;
+    opacity: 0;
+}
+
+.modal-content {
+    animation: scaleIn 0.4s var(--ease-primary) 0.1s forwards;
+    opacity: 0;
+}
+
+/* Navigation Active Indicator */
+.nav-active-indicator {
+    transition: transform 0.3s var(--ease-primary), background-color 0.3s var(--ease-primary), color 0.3s var(--ease-primary);
+    position: relative;
+}
+
+.nav-active-indicator::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 0;
+    height: 2px;
+    background: #3b82f6;
+    transition: width 0.3s var(--ease-primary);
+}
+
+.nav-active-indicator.bg-blue-600::after {
+    width: 100%;
+}
+
+/* Accessibility - Reduced Motion Override */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    
+    .animate-primary,
+    .animate-secondary,
+    .animate-tertiary,
+    .animate-view-in,
+    .animate-card-stagger > *,
+    .animate-row-stagger > *,
+    .animate-stats-card {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+    
+    .card-animate {
+        opacity: 1 !important;
+        transform: none !important;
+    }
+    
+    .card-animate.visible {
+        opacity: 1 !important;
+        transform: none !important;
+    }
+    
+    .lift-on-hover:hover {
+        transform: none !important;
+    }
+    
+    button:hover:not(:disabled),
+    .btn-animate:hover:not(:disabled) {
+        transform: none !important;
+    }
+    
+    .modal-backdrop,
+    .modal-content {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+}
+
+/* Performance Optimization - will-change for actively animating elements */
+.animate-view-in,
+.animate-card-stagger > *,
+.animate-stats-card {
+    will-change: transform, opacity;
+}
+
+.lift-on-hover {
+    will-change: transform, box-shadow;
+}
+
+/* Remove will-change after animation completes to free GPU memory */
+.animate-view-in,
+.animate-card-stagger > *,
+.animate-stats-card {
+    animation-fill-mode: forwards;
+}
+
+.animate-view-in[style*="opacity: 1"],
+.animate-card-stagger > *.visible,
+.animate-stats-card[style*="opacity: 1"] {
+    will-change: auto;
+}
