@@ -74,6 +74,9 @@ function app() {
             // Check authentication
             await this.checkAuth();
             
+            // Initialize MathJax lazy loading
+            this.initMathJaxLazyLoading();
+            
             if (this.isAuthenticated) {
                 this.loadStats();
                 this.initCharts();
@@ -1622,14 +1625,12 @@ function app() {
                     
                     console.log('[VIEW_QUESTIONS] Loaded', this.selectedExamQuestions.length, 'questions');
                     
-                    // Trigger MathJax rendering after a short delay
-                    setTimeout(() => {
-                        if (window.MathJax && window.MathJax.typesetPromise) {
-                            MathJax.typesetPromise().catch((err) => {
-                                console.log('MathJax rendering error:', err);
-                            });
-                        }
-                    }, 200);
+                    // Initialize lazy loading for MathJax after DOM updates
+                    this.$nextTick(() => {
+                        setTimeout(() => {
+                            this.initMathJaxLazyLoading();
+                        }, 100);
+                    });
                     
                     // Scroll to questions section (whether empty or not)
                     setTimeout(() => {
@@ -1715,22 +1716,123 @@ function app() {
                 // Convert newlines to <br>
                 processed = processed.replace(/\n/g, '<br>');
                 
-                // Fix common LaTeX issues - ensure backslashes are preserved
-                // MathJax will automatically detect and render $...$ and $$...$$ blocks
-                // Trigger MathJax rendering after DOM update
-                this.$nextTick(() => {
-                    if (window.MathJax && window.MathJax.typesetPromise) {
-                        MathJax.typesetPromise().catch((err) => {
-                            console.log('MathJax rendering error:', err);
-                        });
-                    }
-                });
-                
+                // Add class to mark for MathJax processing (lazy loading)
+                // MathJax will be triggered by Intersection Observer for visible elements
                 return processed;
             } catch (err) {
                 console.error('Error in renderMath:', err);
                 return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             }
+        },
+        
+        // Debounced MathJax rendering function
+        mathJaxRenderQueue: [],
+        mathJaxRenderTimer: null,
+        
+        queueMathJaxRender(element) {
+            // Add element to queue if not already queued
+            if (!this.mathJaxRenderQueue.includes(element)) {
+                this.mathJaxRenderQueue.push(element);
+            }
+            
+            // Debounce: wait 100ms before rendering to batch multiple calls
+            clearTimeout(this.mathJaxRenderTimer);
+            this.mathJaxRenderTimer = setTimeout(() => {
+                this.processMathJaxQueue();
+            }, 100);
+        },
+        
+        async processMathJaxQueue() {
+            if (this.mathJaxRenderQueue.length === 0) return;
+            
+            // Wait for MathJax to be ready
+            if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
+                try {
+                    await window.MathJax.startup.promise;
+                } catch (e) {
+                    console.log('MathJax startup error:', e);
+                }
+            }
+            
+            if (!window.MathJax || !window.MathJax.typesetPromise) {
+                console.log('MathJax not ready yet');
+                return;
+            }
+            
+            // Filter to only visible elements
+            const visibleElements = this.mathJaxRenderQueue.filter(el => {
+                if (!el || !document.contains(el)) return false;
+                const rect = el.getBoundingClientRect();
+                return rect.top < window.innerHeight + 500 && rect.bottom > -500; // 500px buffer
+            });
+            
+            if (visibleElements.length === 0) {
+                this.mathJaxRenderQueue = [];
+                return;
+            }
+            
+            try {
+                // Render only visible elements
+                await window.MathJax.typesetPromise(visibleElements);
+                
+                // Remove rendered elements from queue
+                this.mathJaxRenderQueue = this.mathJaxRenderQueue.filter(
+                    el => !visibleElements.includes(el)
+                );
+            } catch (err) {
+                console.log('MathJax rendering error:', err);
+                // Clear queue on error to prevent infinite retries
+                this.mathJaxRenderQueue = [];
+            }
+        },
+        
+        // Initialize lazy loading for MathJax
+        initMathJaxLazyLoading() {
+            // Wait for MathJax to load
+            if (!window.MathJax) {
+                setTimeout(() => this.initMathJaxLazyLoading(), 100);
+                return;
+            }
+            
+            // Clean up existing observer if any
+            if (this.mathJaxObserver) {
+                this.mathJaxObserver.disconnect();
+            }
+            
+            // Create Intersection Observer for lazy loading
+            const observerOptions = {
+                root: null,
+                rootMargin: '200px', // Start rendering 200px before element is visible
+                threshold: 0.01
+            };
+            
+            const self = this;
+            const mathObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const element = entry.target;
+                        // Mark as processed
+                        element.setAttribute('data-mathjax-processed', 'true');
+                        // Queue for rendering
+                        self.queueMathJaxRender(element);
+                        // Stop observing once processed
+                        mathObserver.unobserve(element);
+                    }
+                });
+            }, observerOptions);
+            
+            // Observe all elements with math content
+            setTimeout(() => {
+                const mathElements = document.querySelectorAll('.mathjax-process');
+                mathElements.forEach(el => {
+                    if (!el.getAttribute('data-mathjax-processed')) {
+                        mathObserver.observe(el);
+                    }
+                });
+            }, 200);
+            
+            // Store observer for cleanup
+            this.mathJaxObserver = mathObserver;
         },
         
         async loadAchievements() {

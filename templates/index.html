@@ -24,8 +24,28 @@
                 inlineMath: [['$', '$'], ['\\(', '\\)']],
                 displayMath: [['$$', '$$'], ['\\[', '\\]']]
             },
-            svg: {
-                fontCache: 'global'
+            options: {
+                // Use CommonHTML for faster rendering
+                output: 'chtml',
+                // Skip menu for better performance
+                menuOptions: {
+                    settings: {
+                        zoom: 'None'
+                    }
+                },
+                // Process only visible elements (lazy loading)
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+                ignoreHtmlClass: 'no-mathjax',
+                processHtmlClass: 'mathjax-process'
+            },
+            chtml: {
+                fontCache: 'global',
+                // Disable line breaks for better performance
+                linebreaks: { automatic: false }
+            },
+            startup: {
+                // Don't typeset on page load - we'll do it manually for visible elements
+                typeset: false
             }
         };
     </script>
@@ -489,14 +509,14 @@
                                 
                                 <!-- Question Text (with LaTeX support) -->
                                 <div class="mb-4 p-4 bg-slate-900 rounded-lg">
-                                    <div class="prose prose-invert max-w-none text-slate-300" x-html="renderMath(q.text || q.question_text || '')"></div>
+                                    <div class="prose prose-invert max-w-none text-slate-300 mathjax-process" x-html="renderMath(q.text || q.question_text || '')"></div>
                                 </div>
                                 
                                 <!-- Diagram Description (if provided) -->
                                 <template x-if="q.diagram_description || q.diagram_note">
                                     <div class="mb-4 p-4 bg-blue-900 bg-opacity-30 rounded-lg border border-blue-700">
                                         <h5 class="font-semibold mb-2 text-blue-400">📊 Diagram/Image Description:</h5>
-                                        <div class="prose prose-invert max-w-none text-blue-300 text-sm" x-html="renderMath(q.diagram_description || q.diagram_note || '')"></div>
+                                        <div class="prose prose-invert max-w-none text-blue-300 text-sm mathjax-process" x-html="renderMath(q.diagram_description || q.diagram_note || '')"></div>
                                     </div>
                                 </template>
                                 
@@ -506,7 +526,7 @@
                                         <h5 class="font-semibold mb-2">Options:</h5>
                                         <ol class="list-decimal list-inside space-y-2">
                                             <template x-for="(option, optIdx) in q.options" :key="optIdx">
-                                                <li class="text-slate-300" x-html="renderMath(option)"></li>
+                                                <li class="text-slate-300 mathjax-process" x-html="renderMath(option)"></li>
                                             </template>
                                         </ol>
                                     </div>
@@ -516,7 +536,7 @@
                                 <template x-if="q.correct_answer">
                                     <div class="mb-4 p-4 bg-green-900 bg-opacity-30 rounded-lg border border-green-700">
                                         <h5 class="font-semibold mb-2 text-green-400">Correct Answer:</h5>
-                                        <div class="prose prose-invert max-w-none text-green-300" x-html="renderMath(q.correct_answer)"></div>
+                                        <div class="prose prose-invert max-w-none text-green-300 mathjax-process" x-html="renderMath(q.correct_answer)"></div>
                                     </div>
                                 </template>
                                 
@@ -527,9 +547,9 @@
                                         <template x-for="(subpart, subIdx) in q.subparts" :key="subIdx">
                                             <div class="mb-3 p-3 bg-slate-800 rounded">
                                                 <h6 class="font-medium mb-1" x-text="subpart.subpart_number"></h6>
-                                                <div class="prose prose-invert max-w-none text-slate-300 text-sm" x-html="renderMath(subpart.subpart_text)"></div>
+                                                <div class="prose prose-invert max-w-none text-slate-300 text-sm mathjax-process" x-html="renderMath(subpart.subpart_text)"></div>
                                                 <template x-if="subpart.correct_answer">
-                                                    <div class="mt-2 text-green-400 text-sm" x-html="renderMath(subpart.correct_answer)"></div>
+                                                    <div class="mt-2 text-green-400 text-sm mathjax-process" x-html="renderMath(subpart.correct_answer)"></div>
                                                 </template>
                                             </div>
                                         </template>
@@ -559,7 +579,7 @@
                                     <div class="text-slate-300 whitespace-pre-wrap" x-html="formatQuestionText(q.solution)"></div>
                                     <div x-show="q.answer" class="mt-2">
                                         <span class="font-semibold">Answer: </span>
-                                                <span class="text-green-400" x-html="renderMath(q.answer)"></span>
+                                                <span class="text-green-400 mathjax-process" x-html="renderMath(q.answer)"></span>
                                             </div>
                                     </div>
                                 </div>
@@ -577,7 +597,7 @@
                                         <!-- Correct Answer -->
                                         <div x-show="q.correct_answer || q.answer" class="p-4 bg-green-900 bg-opacity-30 rounded-lg border border-green-700">
                                             <h5 class="font-semibold mb-2 text-green-400">✓ Correct Answer:</h5>
-                                            <div class="prose prose-invert max-w-none text-green-300 text-lg font-medium" x-html="renderMath(q.correct_answer || q.answer)"></div>
+                                            <div class="prose prose-invert max-w-none text-green-300 text-lg font-medium mathjax-process" x-html="renderMath(q.correct_answer || q.answer)"></div>
                                         </div>
                                         
                                         <!-- Solution Explanation -->
