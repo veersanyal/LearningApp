@@ -98,24 +98,28 @@ function app() {
                     }
                 }, 60000);
                 
-                // Trigger initial view animation on page load
+                // Trigger initial animations on page load
                 this.$nextTick(() => {
                     // Wait for Alpine to finish rendering
                     setTimeout(() => {
-                        this.animateCurrentView();
-                        // Also animate any stats cards on the home view
+                        // Animate stats cards on the current view
                         this.animateStatsCards();
-                    }, 200);
+                        // Animate any card lists
+                        this.animateCardLists();
+                    }, 300);
                 });
                 
                 // Watch for view changes and trigger animations
                 this.$watch('currentView', (newView, oldView) => {
-                    // Trigger view animation when view changes
+                    // Alpine.js x-transition handles view transitions automatically
+                    // We just need to animate content within views
                     this.$nextTick(() => {
-                        // Wait a bit for Alpine to finish showing the new view
                         setTimeout(() => {
-                            this.animateCurrentView();
-                        }, 100);
+                            // Animate stats cards in the new view
+                            this.animateStatsCards();
+                            // Animate card lists
+                            this.animateCardLists();
+                        }, 400);
                     });
                     
                     if (newView === 'leaderboards') {
@@ -130,7 +134,7 @@ function app() {
                         // Ensure charts are initialized
                         setTimeout(() => {
                             this.initCharts();
-                        }, 300);
+                        }, 500);
                     }
                 });
             } else {
@@ -139,63 +143,50 @@ function app() {
             }
         },
         
-        // Animate the current visible view
-        animateCurrentView() {
-            // Find the currently visible view container
-            const viewContainers = document.querySelectorAll('.animate-view-in');
-            viewContainers.forEach(container => {
-                // Check if this container is visible (Alpine.js x-show makes it visible)
-                const rect = container.getBoundingClientRect();
-                const computedStyle = window.getComputedStyle(container);
-                const isVisible = rect.width > 0 && 
-                                 rect.height > 0 &&
-                                 computedStyle.display !== 'none' &&
-                                 computedStyle.visibility !== 'hidden';
-                
-                if (isVisible) {
-                    // Reset to initial state
-                    container.classList.remove('visible');
-                    container.style.opacity = '0';
-                    container.style.transform = 'translateX(30px)';
-                    
-                    // Trigger animation after a brief delay to ensure element is rendered
-                    requestAnimationFrame(() => {
-                        requestAnimationFrame(() => {
-                            // Add visible class to trigger CSS transition
-                            container.classList.add('visible');
-                            
-                            // Also set inline styles as backup
-                            container.style.transition = 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
-                            container.style.opacity = '1';
-                            container.style.transform = 'translateX(0)';
-                            
-                            // Clean up after animation
-                            setTimeout(() => {
-                                container.style.transition = '';
-                            }, 600);
-                        });
-                    });
-                    
-                    // Animate stats cards in this view
-                    setTimeout(() => {
-                        this.animateStatsCards(container);
-                    }, 200);
+        // Animate card lists (documents, exams, questions, etc.)
+        animateCardLists() {
+            // Animate document cards
+            const docContainer = document.querySelector('.animate-card-stagger');
+            if (docContainer) {
+                this.animateStaggeredElements(docContainer);
+            }
+            
+            // Animate question cards
+            const questionContainers = document.querySelectorAll('.animate-card-stagger');
+            questionContainers.forEach(container => {
+                if (container.offsetParent !== null) {
+                    this.animateStaggeredElements(container);
                 }
             });
+            
+            // Animate leaderboard rows
+            const leaderboardContainer = document.querySelector('.animate-row-stagger');
+            if (leaderboardContainer && leaderboardContainer.offsetParent !== null) {
+                this.animateStaggeredElements(leaderboardContainer, 30);
+            }
         },
         
         // Animate stats cards
         animateStatsCards(container = document) {
-            const statsCards = container.querySelectorAll('.animate-stats-card');
+            const statsCards = Array.from(container.querySelectorAll('.animate-stats-card')).filter(card => {
+                // Only animate visible cards
+                const rect = card.getBoundingClientRect();
+                return rect.width > 0 && rect.height > 0;
+            });
+            
             statsCards.forEach((card, index) => {
                 const delay = card.getAttribute('data-animate-delay') || index;
+                // Reset to initial state
                 card.style.opacity = '0';
                 card.style.transform = 'scale(0.95)';
+                
                 setTimeout(() => {
                     requestAnimationFrame(() => {
-                        card.style.transition = 'opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-                        card.style.opacity = '1';
-                        card.style.transform = 'scale(1)';
+                        requestAnimationFrame(() => {
+                            card.style.transition = 'opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                            card.style.opacity = '1';
+                            card.style.transform = 'scale(1)';
+                        });
                     });
                 }, parseInt(delay) * 100);
             });

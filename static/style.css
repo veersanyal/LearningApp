@@ -315,18 +315,10 @@ canvas {
     opacity: 0;
 }
 
-/* View Transitions */
+/* View Transitions - Alpine.js handles transitions via x-transition directive */
 .animate-view-in {
-    /* Start hidden - JavaScript will animate in */
-    opacity: 0;
-    transform: translateX(30px);
-}
-
-/* View transition animation class - applied when visible */
-.animate-view-in.visible {
-    opacity: 1;
-    transform: translateX(0);
-    transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Base styles - Alpine.js x-transition handles the animation */
+    /* No initial opacity/transform needed as Alpine manages it */
 }
 
 /* Staggered Animations for Lists */

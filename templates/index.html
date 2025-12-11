@@ -312,7 +312,14 @@
             <div class="max-w-6xl mx-auto p-8">
                 
                 <!-- HOME VIEW -->
-                <div x-show="currentView === 'home'" x-transition class="animate-view-in">
+                <div x-show="currentView === 'home'" 
+                     x-transition:enter="transition ease-out duration-600"
+                     x-transition:enter-start="opacity-0 transform translate-x-8"
+                     x-transition:enter-end="opacity-100 transform translate-x-0"
+                     x-transition:leave="transition ease-in duration-300"
+                     x-transition:leave-start="opacity-100 transform translate-x-0"
+                     x-transition:leave-end="opacity-0 transform -translate-x-8"
+                     class="animate-view-in">
                     <h2 class="text-3xl font-bold mb-6">Welcome Back!</h2>
                     
                     <!-- Upload Section -->
@@ -359,7 +366,14 @@
                 </div>
                 
                 <!-- DOCUMENTS VIEW -->
-                <div x-show="currentView === 'documents'" x-transition class="animate-view-in">
+                <div x-show="currentView === 'documents'" 
+                     x-transition:enter="transition ease-out duration-600"
+                     x-transition:enter-start="opacity-0 transform translate-x-8"
+                     x-transition:enter-end="opacity-100 transform translate-x-0"
+                     x-transition:leave="transition ease-in duration-300"
+                     x-transition:leave-start="opacity-100 transform translate-x-0"
+                     x-transition:leave-end="opacity-0 transform -translate-x-8"
+                     class="animate-view-in">
                     <h2 class="text-3xl font-bold mb-6">My Documents</h2>
                     <p class="text-slate-400 mb-6">View and manage your uploaded study materials</p>
                     
@@ -412,7 +426,14 @@
                 </div>
                 
                 <!-- EXAM QUESTIONS VIEW -->
-                <div x-show="currentView === 'exam-questions'" x-transition class="animate-view-in">
+                <div x-show="currentView === 'exam-questions'" 
+                     x-transition:enter="transition ease-out duration-600"
+                     x-transition:enter-start="opacity-0 transform translate-x-8"
+                     x-transition:enter-end="opacity-100 transform translate-x-0"
+                     x-transition:leave="transition ease-in duration-300"
+                     x-transition:leave-start="opacity-100 transform translate-x-0"
+                     x-transition:leave-end="opacity-0 transform -translate-x-8"
+                     class="animate-view-in">
                     <h2 class="text-3xl font-bold mb-4">Exam Questions</h2>
                     <p class="text-slate-400 mb-6">
                         The program trains you to answer questions like these. Upload exam PDFs or images to extract questions, 
@@ -716,7 +737,14 @@
                 </div>
                 
                 <!-- STUDY VIEW -->
-                <div x-show="currentView === 'study'" x-transition class="animate-view-in">
+                <div x-show="currentView === 'study'" 
+                     x-transition:enter="transition ease-out duration-600"
+                     x-transition:enter-start="opacity-0 transform translate-x-8"
+                     x-transition:enter-end="opacity-100 transform translate-x-0"
+                     x-transition:leave="transition ease-in duration-300"
+                     x-transition:leave-start="opacity-100 transform translate-x-0"
+                     x-transition:leave-end="opacity-0 transform -translate-x-8"
+                     class="animate-view-in">
                     <h2 class="text-3xl font-bold mb-6">Study Session</h2>
                     
                     <!-- Quiz Section -->
@@ -769,7 +797,14 @@
                 </div>
                 
                 <!-- ANALYTICS VIEW -->
-                <div x-show="currentView === 'analytics'" x-transition class="animate-view-in">
+                <div x-show="currentView === 'analytics'" 
+                     x-transition:enter="transition ease-out duration-600"
+                     x-transition:enter-start="opacity-0 transform translate-x-8"
+                     x-transition:enter-end="opacity-100 transform translate-x-0"
+                     x-transition:leave="transition ease-in duration-300"
+                     x-transition:leave-start="opacity-100 transform translate-x-0"
+                     x-transition:leave-end="opacity-0 transform -translate-x-8"
+                     class="animate-view-in">
                     <h2 class="text-3xl font-bold mb-6">Learning Analytics</h2>
                     
                     <!-- Stats Grid -->
@@ -856,7 +891,14 @@
                 </div>
                 
                 <!-- EXAM PREP VIEW -->
-                <div x-show="currentView === 'exam-prep'" x-transition class="animate-view-in">
+                <div x-show="currentView === 'exam-prep'" 
+                     x-transition:enter="transition ease-out duration-600"
+                     x-transition:enter-start="opacity-0 transform translate-x-8"
+                     x-transition:enter-end="opacity-100 transform translate-x-0"
+                     x-transition:leave="transition ease-in duration-300"
+                     x-transition:leave-start="opacity-100 transform translate-x-0"
+                     x-transition:leave-end="opacity-0 transform -translate-x-8"
+                     class="animate-view-in">
                     <h2 class="text-3xl font-bold mb-6">Exam Preparation</h2>
                     
                     <!-- Create New Exam Plan -->
@@ -923,7 +965,14 @@
                 </div>
                 
                 <!-- LEADERBOARDS VIEW -->
-                <div x-show="currentView === 'leaderboards'" x-transition class="animate-view-in">
+                <div x-show="currentView === 'leaderboards'" 
+                     x-transition:enter="transition ease-out duration-600"
+                     x-transition:enter-start="opacity-0 transform translate-x-8"
+                     x-transition:enter-end="opacity-100 transform translate-x-0"
+                     x-transition:leave="transition ease-in duration-300"
+                     x-transition:leave-start="opacity-100 transform translate-x-0"
+                     x-transition:leave-end="opacity-0 transform -translate-x-8"
+                     class="animate-view-in">
                     <h2 class="text-3xl font-bold mb-6">Leaderboards</h2>
                     
                     <!-- Leaderboard Filters -->
@@ -973,7 +1022,14 @@
                 </div>
                 
                 <!-- ACHIEVEMENTS VIEW -->
-                <div x-show="currentView === 'achievements'" x-transition class="animate-view-in">
+                <div x-show="currentView === 'achievements'" 
+                     x-transition:enter="transition ease-out duration-600"
+                     x-transition:enter-start="opacity-0 transform translate-x-8"
+                     x-transition:enter-end="opacity-100 transform translate-x-0"
+                     x-transition:leave="transition ease-in duration-300"
+                     x-transition:leave-start="opacity-100 transform translate-x-0"
+                     x-transition:leave-end="opacity-0 transform -translate-x-8"
+                     class="animate-view-in">
                     <h2 class="text-3xl font-bold mb-6">Achievements</h2>
                     
                     <div class="grid grid-cols-3 gap-4 animate-card-stagger">
@@ -994,7 +1050,14 @@
                 </div>
                 
                 <!-- SETTINGS VIEW -->
-                <div x-show="currentView === 'settings'" x-transition class="animate-view-in">
+                <div x-show="currentView === 'settings'" 
+                     x-transition:enter="transition ease-out duration-600"
+                     x-transition:enter-start="opacity-0 transform translate-x-8"
+                     x-transition:enter-end="opacity-100 transform translate-x-0"
+                     x-transition:leave="transition ease-in duration-300"
+                     x-transition:leave-start="opacity-100 transform translate-x-0"
+                     x-transition:leave-end="opacity-0 transform -translate-x-8"
+                     class="animate-view-in">
                     <h2 class="text-3xl font-bold mb-6">Settings</h2>
                     
                     <div class="bg-slate-800 rounded-xl p-6 space-y-6">
