@@ -1,5 +1,18 @@
 // Alpine.js App State and Main Application Logic
 
+// Centralized view switching function
+function showView(viewName) {
+    const views = document.querySelectorAll('[data-view]');
+    views.forEach(v => v.classList.remove('is-active'));
+
+    const target = document.querySelector(`[data-view="${viewName}"]`);
+    if (!target) return;
+
+    requestAnimationFrame(() => {
+        target.classList.add('is-active');
+    });
+}
+
 function app() {
     return {
         // Authentication State
@@ -77,6 +90,15 @@ function app() {
             // Initialize MathJax lazy loading
             this.initMathJaxLazyLoading();
             
+            // Set initial active view
+            if (this.isAuthenticated) {
+                // Set initial view as active
+                const initialView = document.querySelector(`[data-view="${this.currentView}"]`);
+                if (initialView) {
+                    initialView.classList.add('is-active');
+                }
+            }
+            
             if (this.isAuthenticated) {
                 this.loadStats();
                 this.initCharts();
@@ -109,17 +131,17 @@ function app() {
                     }, 300);
                 });
                 
-                // Watch for view changes and trigger animations
+                // Watch for view changes - showView() is called via x-init on body
                 this.$watch('currentView', (newView, oldView) => {
-                    // Wait for Alpine transition to complete before animating content
-                    // View transition is 300ms, so wait 350ms to be safe
+                    // showView() is called automatically via x-init="$watch('currentView', value => showView(value))"
+                    // Wait for view transition to complete before animating content
                     this.$nextTick(() => {
                         setTimeout(() => {
                             // Animate stats cards in the new view
                             this.animateStatsCards();
                             // Animate card lists
                             this.animateCardLists();
-                        }, 350);
+                        }, 250); // Reduced delay since CSS handles transition
                     });
                     
                     if (newView === 'leaderboards') {
@@ -134,7 +156,7 @@ function app() {
                         // Ensure charts are initialized
                         setTimeout(() => {
                             this.initCharts();
-                        }, 400);
+                        }, 300);
                     }
                 });
             } else {

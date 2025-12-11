@@ -77,7 +77,7 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 
-<body class="bg-slate-900 text-slate-100 font-sans antialiased" x-data="app()" x-init="init()">
+<body class="bg-slate-900 text-slate-100 font-sans antialiased" x-data="app()" x-init="init(); $watch('currentView', value => showView(value))">
     
     <!-- Login/Register Modal -->
     <div x-show="!isAuthenticated" x-cloak 
@@ -215,10 +215,10 @@
     </div>
 
     <!-- Main Layout: Sidebar + Content + Right Panel -->
-    <div x-show="isAuthenticated" class="flex h-screen overflow-hidden">
+    <div x-show="isAuthenticated" class="app-shell flex h-screen overflow-hidden">
         
         <!-- Left Sidebar Navigation -->
-        <aside class="w-64 bg-slate-800 border-r border-slate-700 flex flex-col">
+        <aside class="app-nav w-64 bg-slate-800 border-r border-slate-700 flex flex-col">
             <!-- Logo & Brand -->
             <div class="h-16 flex items-center px-6 border-b border-slate-700">
                 <h1 class="text-xl font-bold text-white">StudyBoiler</h1>
@@ -227,64 +227,64 @@
             <!-- Navigation Links -->
             <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
                 <button @click="currentView = 'home'" 
-                        :class="currentView === 'home' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700'"
-                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate nav-active-indicator">
+                        class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate"
+                        :class="{ 'nav-item--active': currentView === 'home' }">
                     <span class="text-xl">🏠</span>
                     <span class="font-medium">Home</span>
                 </button>
                 
                 <button @click="currentView = 'documents'" 
-                        :class="currentView === 'documents' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700'"
-                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate nav-active-indicator">
+                        class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate"
+                        :class="{ 'nav-item--active': currentView === 'documents' }">
                     <span class="text-xl">📄</span>
                     <span class="font-medium">Documents</span>
                 </button>
                 
                 <button @click="currentView = 'exam-questions'" 
-                        :class="currentView === 'exam-questions' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700'"
-                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate nav-active-indicator">
+                        class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate"
+                        :class="{ 'nav-item--active': currentView === 'exam-questions' }">
                     <span class="text-xl">📝</span>
                     <span class="font-medium">Exam Questions</span>
                 </button>
                 
                 <button @click="currentView = 'study'" 
-                        :class="currentView === 'study' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700'"
-                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate nav-active-indicator">
+                        class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate"
+                        :class="{ 'nav-item--active': currentView === 'study' }">
                     <span class="text-xl">🎯</span>
                     <span class="font-medium">Study</span>
                 </button>
                 
                 <button @click="currentView = 'analytics'" 
-                        :class="currentView === 'analytics' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700'"
-                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate nav-active-indicator">
+                        class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate"
+                        :class="{ 'nav-item--active': currentView === 'analytics' }">
                     <span class="text-xl">📊</span>
                     <span class="font-medium">Analytics</span>
                 </button>
                 
                 <button @click="currentView = 'exam-prep'" 
-                        :class="currentView === 'exam-prep' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700'"
-                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate nav-active-indicator">
+                        class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate"
+                        :class="{ 'nav-item--active': currentView === 'exam-prep' }">
                     <span class="text-xl">📚</span>
                     <span class="font-medium">Exam Prep</span>
                 </button>
                 
                 <button @click="currentView = 'leaderboards'" 
-                        :class="currentView === 'leaderboards' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700'"
-                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate nav-active-indicator">
+                        class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate"
+                        :class="{ 'nav-item--active': currentView === 'leaderboards' }">
                     <span class="text-xl">🏆</span>
                     <span class="font-medium">Leaderboards</span>
                 </button>
                 
                 <button @click="currentView = 'achievements'" 
-                        :class="currentView === 'achievements' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700'"
-                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate nav-active-indicator">
+                        class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate"
+                        :class="{ 'nav-item--active': currentView === 'achievements' }">
                     <span class="text-xl">🎖️</span>
                     <span class="font-medium">Achievements</span>
                 </button>
                 
                 <button @click="currentView = 'settings'" 
-                        :class="currentView === 'settings' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700'"
-                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate nav-active-indicator">
+                        class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition btn-animate"
+                        :class="{ 'nav-item--active': currentView === 'settings' }">
                     <span class="text-xl">⚙️</span>
                     <span class="font-medium">Settings</span>
                 </button>
@@ -308,23 +308,15 @@
         </aside>
         
         <!-- Main Content Area -->
-        <main class="flex-1 overflow-y-auto">
+        <main class="flex-1 overflow-y-auto app-content">
             <div class="max-w-6xl mx-auto p-8">
                 
                 <!-- HOME VIEW -->
-                <div x-show="currentView === 'home'" 
-                     x-cloak
-                     x-transition:enter="transition ease-out duration-300"
-                     x-transition:enter-start="opacity-0 translate-x-4"
-                     x-transition:enter-end="opacity-100 translate-x-0"
-                     x-transition:leave="transition ease-in duration-200"
-                     x-transition:leave-start="opacity-100 translate-x-0"
-                     x-transition:leave-end="opacity-0 -translate-x-4"
-                     class="animate-view-in">
+                <section class="view is-active" data-view="home" x-cloak>
                     <h2 class="text-3xl font-bold mb-6">Welcome Back!</h2>
                     
                     <!-- Upload Section -->
-                    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+                    <div class="card mb-6">
                         <h3 class="text-xl font-semibold mb-4">Upload Study Material</h3>
                         <p class="text-slate-400 mb-4">Upload a PDF, image, or text file to extract topics</p>
                         <form id="upload-form" class="flex gap-4">
@@ -338,7 +330,7 @@
                     </div>
                     
                     <!-- Topics Section -->
-                    <div id="topics-section" style="display: none;" class="bg-slate-800 rounded-xl p-6 mb-6">
+                    <div id="topics-section" style="display: none;" class="card mb-6">
                         <h3 class="text-xl font-semibold mb-4">Extracted Topics</h3>
                         <ul id="topics-list" class="space-y-2 mb-4"></ul>
                         <button id="start-quiz-btn" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-lg font-medium transition">
@@ -364,25 +356,17 @@
                             <div class="text-sm text-slate-400">Topics Studied</div>
                         </div>
                     </div>
-                </div>
+                </section>
                 
                 <!-- DOCUMENTS VIEW -->
-                <div x-show="currentView === 'documents'" 
-                     x-cloak
-                     x-transition:enter="transition ease-out duration-300"
-                     x-transition:enter-start="opacity-0 translate-x-4"
-                     x-transition:enter-end="opacity-100 translate-x-0"
-                     x-transition:leave="transition ease-in duration-200"
-                     x-transition:leave-start="opacity-100 translate-x-0"
-                     x-transition:leave-end="opacity-0 -translate-x-4"
-                     class="animate-view-in">
+                <section class="view" data-view="documents" x-cloak>
                     <h2 class="text-3xl font-bold mb-6">My Documents</h2>
                     <p class="text-slate-400 mb-6">View and manage your uploaded study materials</p>
                     
                     <!-- Documents List -->
                     <div class="space-y-4 animate-card-stagger">
                         <template x-for="doc in documents" :key="doc.document_id">
-                            <div class="bg-slate-800 rounded-xl p-6 hover:bg-slate-750 transition depth-1 lift-on-hover">
+                            <div class="card hover:bg-slate-750 transition depth-1 lift-on-hover">
                                 <div class="flex items-start justify-between">
                                     <div class="flex-1">
                                         <div class="flex items-center space-x-3 mb-2">
@@ -415,7 +399,7 @@
                             </div>
                         </template>
                         
-                        <div x-show="documents.length === 0" class="bg-slate-800 rounded-xl p-12 text-center">
+                        <div x-show="documents.length === 0" class="card p-12 text-center">
                             <div class="text-6xl mb-4">📄</div>
                             <h3 class="text-xl font-semibold mb-2">No documents yet</h3>
                             <p class="text-slate-400 mb-4">Upload your first study material to get started</p>
@@ -425,18 +409,10 @@
                             </button>
                         </div>
                     </div>
-                </div>
+                </section>
                 
                 <!-- EXAM QUESTIONS VIEW -->
-                <div x-show="currentView === 'exam-questions'" 
-                     x-cloak
-                     x-transition:enter="transition ease-out duration-300"
-                     x-transition:enter-start="opacity-0 translate-x-4"
-                     x-transition:enter-end="opacity-100 translate-x-0"
-                     x-transition:leave="transition ease-in duration-200"
-                     x-transition:leave-start="opacity-100 translate-x-0"
-                     x-transition:leave-end="opacity-0 -translate-x-4"
-                     class="animate-view-in">
+                <section class="view" data-view="exam-questions" x-cloak>
                     <h2 class="text-3xl font-bold mb-4">Exam Questions</h2>
                     <p class="text-slate-400 mb-6">
                         The program trains you to answer questions like these. Upload exam PDFs or images to extract questions, 
@@ -444,7 +420,7 @@
                     </p>
                     
                     <!-- Upload Exam Section -->
-                    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+                    <div class="card mb-6">
                         <h3 class="text-xl font-semibold mb-4">Upload Exam</h3>
                         <form id="exam-upload-form" @submit.prevent="uploadExam()" class="space-y-4">
                             <div>
@@ -474,7 +450,7 @@
                         </div>
                         <div class="space-y-4 animate-card-stagger">
                             <template x-for="exam in exams" :key="exam.exam_id">
-                                <div class="bg-slate-800 rounded-xl p-6 hover:bg-slate-750 transition depth-1 lift-on-hover">
+                                <div class="card hover:bg-slate-750 transition depth-1 lift-on-hover">
                                 <div class="flex items-start justify-between mb-4">
                                     <div class="flex-1">
                                         <h4 class="text-lg font-semibold mb-2" x-text="exam.exam_name"></h4>
@@ -510,7 +486,7 @@
                         <h3 class="text-xl font-semibold mb-4">Questions</h3>
                         <div class="space-y-4 animate-card-stagger">
                         <template x-for="(q, idx) in selectedExamQuestions" :key="q.question_id">
-                            <div class="bg-slate-800 rounded-xl p-6 mb-4 depth-1 lift-on-hover">
+                            <div class="card mb-4 depth-1 lift-on-hover">
                                 <div class="flex items-start justify-between mb-4">
                                     <div>
                                         <h4 class="text-lg font-semibold">
@@ -721,7 +697,7 @@
                     
                     <!-- Empty state for questions -->
                     <div x-show="selectedExamQuestions !== null && selectedExamQuestions.length === 0" class="mt-8">
-                        <div class="bg-slate-800 rounded-xl p-8 text-center">
+                        <div class="card p-8 text-center">
                             <div class="text-4xl mb-4">📝</div>
                             <h3 class="text-xl font-semibold mb-2">No Questions Found</h3>
                             <p class="text-slate-400 mb-4">
@@ -737,22 +713,14 @@
                             </p>
                         </div>
                     </div>
-                </div>
+                </section>
                 
                 <!-- STUDY VIEW -->
-                <div x-show="currentView === 'study'" 
-                     x-cloak
-                     x-transition:enter="transition ease-out duration-300"
-                     x-transition:enter-start="opacity-0 translate-x-4"
-                     x-transition:enter-end="opacity-100 translate-x-0"
-                     x-transition:leave="transition ease-in duration-200"
-                     x-transition:leave-start="opacity-100 translate-x-0"
-                     x-transition:leave-end="opacity-0 -translate-x-4"
-                     class="animate-view-in">
+                <section class="view" data-view="study" x-cloak>
                     <h2 class="text-3xl font-bold mb-6">Study Session</h2>
                     
                     <!-- Quiz Section -->
-                    <div id="quiz-section" style="display: none;" class="bg-slate-800 rounded-xl p-6">
+                    <div id="quiz-section" style="display: none;" class="card">
                         <!-- Question Header -->
                         <div class="flex items-center justify-between mb-6">
                             <div>
@@ -789,7 +757,7 @@
                     </div>
                     
                     <!-- No Quiz Active Message -->
-                    <div id="no-quiz-message" class="bg-slate-800 rounded-xl p-12 text-center">
+                    <div id="no-quiz-message" class="card p-12 text-center">
                         <div class="text-6xl mb-4">📚</div>
                         <h3 class="text-2xl font-bold mb-2">No Active Study Session</h3>
                         <p class="text-slate-400 mb-6">Upload study materials or select a topic to begin</p>
@@ -798,18 +766,10 @@
                             Go to Home
                         </button>
                     </div>
-                </div>
+                </section>
                 
                 <!-- ANALYTICS VIEW -->
-                <div x-show="currentView === 'analytics'" 
-                     x-cloak
-                     x-transition:enter="transition ease-out duration-300"
-                     x-transition:enter-start="opacity-0 translate-x-4"
-                     x-transition:enter-end="opacity-100 translate-x-0"
-                     x-transition:leave="transition ease-in duration-200"
-                     x-transition:leave-start="opacity-100 translate-x-0"
-                     x-transition:leave-end="opacity-0 -translate-x-4"
-                     class="animate-view-in">
+                <section class="view" data-view="analytics" x-cloak>
                     <h2 class="text-3xl font-bold mb-6">Learning Analytics</h2>
                     
                     <!-- Stats Grid -->
@@ -893,22 +853,14 @@
                             <!-- Generated dynamically -->
                         </div>
                     </div>
-                </div>
+                </section>
                 
                 <!-- EXAM PREP VIEW -->
-                <div x-show="currentView === 'exam-prep'" 
-                     x-cloak
-                     x-transition:enter="transition ease-out duration-300"
-                     x-transition:enter-start="opacity-0 translate-x-4"
-                     x-transition:enter-end="opacity-100 translate-x-0"
-                     x-transition:leave="transition ease-in duration-200"
-                     x-transition:leave-start="opacity-100 translate-x-0"
-                     x-transition:leave-end="opacity-0 -translate-x-4"
-                     class="animate-view-in">
+                <section class="view" data-view="exam-prep" x-cloak>
                     <h2 class="text-3xl font-bold mb-6">Exam Preparation</h2>
                     
                     <!-- Create New Exam Plan -->
-                    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+                    <div class="card mb-6">
                         <h3 class="text-xl font-semibold mb-4">Create Exam Prep Plan</h3>
                         <form id="exam-prep-form" class="space-y-4">
                             <div>
@@ -968,22 +920,14 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </section>
                 
                 <!-- LEADERBOARDS VIEW -->
-                <div x-show="currentView === 'leaderboards'" 
-                     x-cloak
-                     x-transition:enter="transition ease-out duration-300"
-                     x-transition:enter-start="opacity-0 translate-x-4"
-                     x-transition:enter-end="opacity-100 translate-x-0"
-                     x-transition:leave="transition ease-in duration-200"
-                     x-transition:leave-start="opacity-100 translate-x-0"
-                     x-transition:leave-end="opacity-0 -translate-x-4"
-                     class="animate-view-in">
+                <section class="view" data-view="leaderboards" x-cloak>
                     <h2 class="text-3xl font-bold mb-6">Leaderboards</h2>
                     
                     <!-- Leaderboard Filters -->
-                    <div class="bg-slate-800 rounded-xl p-4 mb-6 flex items-center justify-between">
+                    <div class="card p-4 mb-6 flex items-center justify-between">
                         <div class="flex gap-4">
                             <select x-model="leaderboardType" @change="loadLeaderboard()"
                                     class="px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-300">
@@ -1021,23 +965,15 @@
                     </div>
                     
                     <!-- Leaderboard Table -->
-                    <div class="bg-slate-800 rounded-xl overflow-hidden">
+                    <div class="card overflow-hidden">
                         <div id="leaderboard-list" class="divide-y divide-slate-700 animate-row-stagger">
                             <!-- Leaderboard entries will be inserted here -->
                         </div>
                     </div>
-                </div>
+                </section>
                 
                 <!-- ACHIEVEMENTS VIEW -->
-                <div x-show="currentView === 'achievements'" 
-                     x-cloak
-                     x-transition:enter="transition ease-out duration-300"
-                     x-transition:enter-start="opacity-0 translate-x-4"
-                     x-transition:enter-end="opacity-100 translate-x-0"
-                     x-transition:leave="transition ease-in duration-200"
-                     x-transition:leave-start="opacity-100 translate-x-0"
-                     x-transition:leave-end="opacity-0 -translate-x-4"
-                     class="animate-view-in">
+                <section class="view" data-view="achievements" x-cloak>
                     <h2 class="text-3xl font-bold mb-6">Achievements</h2>
                     
                     <div class="grid grid-cols-3 gap-4 animate-card-stagger">
@@ -1055,21 +991,13 @@
                             </div>
                         </template>
                     </div>
-                </div>
+                </section>
                 
                 <!-- SETTINGS VIEW -->
-                <div x-show="currentView === 'settings'" 
-                     x-cloak
-                     x-transition:enter="transition ease-out duration-300"
-                     x-transition:enter-start="opacity-0 translate-x-4"
-                     x-transition:enter-end="opacity-100 translate-x-0"
-                     x-transition:leave="transition ease-in duration-200"
-                     x-transition:leave-start="opacity-100 translate-x-0"
-                     x-transition:leave-end="opacity-0 -translate-x-4"
-                     class="animate-view-in">
+                <section class="view" data-view="settings" x-cloak>
                     <h2 class="text-3xl font-bold mb-6">Settings</h2>
                     
-                    <div class="bg-slate-800 rounded-xl p-6 space-y-6">
+                    <div class="card space-y-6">
                         <div>
                             <h3 class="text-lg font-semibold mb-4">Account Information</h3>
                             <div class="space-y-3 text-sm">
@@ -1101,7 +1029,7 @@
                             <p class="mt-2 text-xs text-slate-400">This will delete all your progress data.</p>
                         </div>
                     </div>
-                </div>
+                </section>
                 
             </div>
         </main>
