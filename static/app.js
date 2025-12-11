@@ -98,26 +98,24 @@ function app() {
                     }
                 }, 60000);
                 
+                // Trigger initial view animation on page load
+                this.$nextTick(() => {
+                    // Wait for Alpine to finish rendering
+                    setTimeout(() => {
+                        this.animateCurrentView();
+                        // Also animate any stats cards on the home view
+                        this.animateStatsCards();
+                    }, 200);
+                });
+                
                 // Watch for view changes and trigger animations
-                this.$watch('currentView', (newView) => {
-                    // Trigger view animation
+                this.$watch('currentView', (newView, oldView) => {
+                    // Trigger view animation when view changes
                     this.$nextTick(() => {
-                        const viewContainers = document.querySelectorAll('.animate-view-in');
-                        viewContainers.forEach(container => {
-                            if (container.style.display !== 'none') {
-                                // Reset animation
-                                container.style.opacity = '0';
-                                container.style.transform = 'translateX(30px)';
-                                // Trigger animation
-                                requestAnimationFrame(() => {
-                                    container.style.transition = 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
-                                    setTimeout(() => {
-                                        container.style.opacity = '1';
-                                        container.style.transform = 'translateX(0)';
-                                    }, 10);
-                                });
-                            }
-                        });
+                        // Wait a bit for Alpine to finish showing the new view
+                        setTimeout(() => {
+                            this.animateCurrentView();
+                        }, 100);
                     });
                     
                     if (newView === 'leaderboards') {
@@ -128,12 +126,79 @@ function app() {
                         this.loadDocuments();
                     } else if (newView === 'exam-questions') {
                         this.loadExams();
+                    } else if (newView === 'analytics') {
+                        // Ensure charts are initialized
+                        setTimeout(() => {
+                            this.initCharts();
+                        }, 300);
                     }
                 });
             } else {
                 // Load social proof for login screen
                 this.loadSocialProof();
             }
+        },
+        
+        // Animate the current visible view
+        animateCurrentView() {
+            // Find the currently visible view container
+            const viewContainers = document.querySelectorAll('.animate-view-in');
+            viewContainers.forEach(container => {
+                // Check if this container is visible (Alpine.js x-show makes it visible)
+                const rect = container.getBoundingClientRect();
+                const computedStyle = window.getComputedStyle(container);
+                const isVisible = rect.width > 0 && 
+                                 rect.height > 0 &&
+                                 computedStyle.display !== 'none' &&
+                                 computedStyle.visibility !== 'hidden';
+                
+                if (isVisible) {
+                    // Reset to initial state
+                    container.classList.remove('visible');
+                    container.style.opacity = '0';
+                    container.style.transform = 'translateX(30px)';
+                    
+                    // Trigger animation after a brief delay to ensure element is rendered
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            // Add visible class to trigger CSS transition
+                            container.classList.add('visible');
+                            
+                            // Also set inline styles as backup
+                            container.style.transition = 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+                            container.style.opacity = '1';
+                            container.style.transform = 'translateX(0)';
+                            
+                            // Clean up after animation
+                            setTimeout(() => {
+                                container.style.transition = '';
+                            }, 600);
+                        });
+                    });
+                    
+                    // Animate stats cards in this view
+                    setTimeout(() => {
+                        this.animateStatsCards(container);
+                    }, 200);
+                }
+            });
+        },
+        
+        // Animate stats cards
+        animateStatsCards(container = document) {
+            const statsCards = container.querySelectorAll('.animate-stats-card');
+            statsCards.forEach((card, index) => {
+                const delay = card.getAttribute('data-animate-delay') || index;
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    requestAnimationFrame(() => {
+                        card.style.transition = 'opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                        card.style.opacity = '1';
+                        card.style.transform = 'scale(1)';
+                    });
+                }, parseInt(delay) * 100);
+            });
         },
         
         async checkAuth() {
@@ -1975,12 +2040,19 @@ function app() {
             if (!container) return;
             const elements = Array.from(container.children);
             elements.forEach((el, index) => {
+                // Only animate if element is visible
+                if (el.offsetParent === null && window.getComputedStyle(el).display === 'none') {
+                    return;
+                }
+                
                 el.style.opacity = '0';
                 el.style.transform = 'translateY(20px) scale(0.95)';
                 setTimeout(() => {
-                    el.style.transition = 'opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-                    el.style.opacity = '1';
-                    el.style.transform = 'translateY(0) scale(1)';
+                    requestAnimationFrame(() => {
+                        el.style.transition = 'opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                        el.style.opacity = '1';
+                        el.style.transform = 'translateY(0) scale(1)';
+                    });
                 }, index * delay);
             });
         },
