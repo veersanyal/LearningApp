@@ -8,6 +8,9 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Load app.js first so app() function is available when Alpine.js initializes -->
+    <script src="/static/app.js"></script>
+    
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
@@ -1241,6 +1244,5 @@
         </div>
     </div>
 
-    <script src="/static/app.js" defer></script>
 </body>
 </html>
