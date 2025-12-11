@@ -17,36 +17,42 @@ sys.stdout.reconfigure(line_buffering=True) if hasattr(sys.stdout, 'reconfigure'
 sys.stderr.reconfigure(line_buffering=True) if hasattr(sys.stderr, 'reconfigure') else None
 
 
-def process_exam_incremental(file_bytes: bytes, file_type: str, exam_id: int, vision_model, 
+def process_exam_incremental(file_bytes: bytes, file_type: str, exam_id: int, text_model, 
                              callback=None) -> Dict:
     """
     Process exam incrementally - 1 page at a time, saving as we go.
+    Uses text model (2.5 flash lite) instead of vision model for better accuracy.
     
     Args:
         file_bytes: File content as bytes
         file_type: 'pdf' or image extension
         exam_id: Exam ID to save questions to
-        vision_model: Initialized Gemini vision model
+        text_model: Initialized Gemini text model (2.5 flash lite)
         callback: Optional callback function(status, progress) called after each chunk
     
     Returns:
         Dict with 'total_questions', 'total_pages', 'errors'
     """
-    if not vision_model:
-        return {"error": "Vision model not initialized"}
+    if not text_model:
+        return {"error": "Text model not initialized"}
     
     prompt = """You are an expert at extracting exam questions from academic documents. 
-Analyze this exam document and extract ALL questions in a structured format.
+Analyze this exam document and extract ONLY actual exam questions in a structured format.
 
-CRITICAL: Extract EVERY question on these pages. Do not skip ANY pages. Look at EVERY page and extract ALL questions you find, regardless of whether there are instructions or other text on the page.
-
-IMPORTANT INSTRUCTIONS:
-1. Extract ALL actual exam questions - look for numbered questions (1, 2, 3...), multiple choice options (A, B, C...), and any question text
-2. IGNORE instruction text, headers, footers, and other non-question content - but STILL extract questions from those pages if they have questions on them - not all pages need to have questions on them
-3. Preserve all mathematical notation, equations, and LaTeX formatting exactly as shown
-4. For diagrams/images: Provide a detailed description that would allow someone to recreate the diagram. Include all labels, axes, curves, shapes, and their relationships
-5. Number questions correctly (handle subparts like 1a, 1b, etc.)
-6. For multiple choice questions, extract ALL options (A, B, C, D, E, F, etc.) exactly as written
+CRITICAL RULES:
+1. Extract ONLY actual exam questions - numbered questions (1, 2, 3...), multiple choice questions, free response questions
+2. DO NOT extract instruction text, exam policies, rules, or administrative content - examples of what to SKIP:
+   - "Students may not open the exam until instructed to do so"
+   - "Students must obey the orders and requests by all proctors"
+   - "No student must leave in the first 20 min"
+   - "Books, notes, calculators, or any electronic devices are not allowed"
+   - "Any violation of these rules may result in severe penalties"
+   - Scantron instructions, exam format descriptions, time limits, etc.
+3. If a page contains BOTH instructions AND questions, extract ONLY the questions, skip the instruction text
+4. Preserve all mathematical notation, equations, and LaTeX formatting exactly as shown
+5. For diagrams/images: Provide a detailed description that would allow someone to recreate the diagram
+6. Number questions correctly (handle subparts like 1a, 1b, etc.)
+7. For multiple choice questions, extract ALL options (A, B, C, D, E, F, etc.) exactly as written
 
 Return a JSON object with this EXACT structure:
 {
@@ -81,12 +87,12 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
     try:
         print(f"[INCREMENTAL] ========== STARTING INCREMENTAL PROCESSING ==========", flush=True)
         print(f"[INCREMENTAL] Starting incremental processing for exam {exam_id}", flush=True)
-        print(f"[INCREMENTAL] Vision model available: {vision_model is not None}", flush=True)
+        print(f"[INCREMENTAL] Text model available: {text_model is not None}", flush=True)
         sys.stdout.flush()
-        if not vision_model:
-            print(f"[INCREMENTAL] ERROR: Vision model is None!", flush=True)
+        if not text_model:
+            print(f"[INCREMENTAL] ERROR: Text model is None!", flush=True)
             sys.stdout.flush()
-            return {"error": "Vision model not initialized"}
+            return {"error": "Text model not initialized"}
         
         total_questions = 0
         total_pages = 0
@@ -95,16 +101,26 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
         
         try:
             if file_type == 'pdf':
-                # Convert PDF to images
-                print("[INCREMENTAL] Converting PDF to images...", flush=True)
+                # Extract text from PDF pages using PyPDF2
+                from PyPDF2 import PdfReader
+                print("[INCREMENTAL] Extracting text from PDF pages...", flush=True)
                 try:
-                    pdf_images = convert_from_bytes(file_bytes, dpi=150)
-                    total_pages = len(pdf_images)
-                    print(f"[INCREMENTAL] Converted {total_pages} pages to images", flush=True)
-                    print(f"[INCREMENTAL] Will process ALL {total_pages} pages in chunks of 2", flush=True)
+                    reader = PdfReader(io.BytesIO(file_bytes))
+                    total_pages = len(reader.pages)
+                    print(f"[INCREMENTAL] PDF has {total_pages} pages", flush=True)
+                    
+                    # Extract text from each page
+                    page_texts = []
+                    for page_idx in range(total_pages):
+                        page = reader.pages[page_idx]
+                        page_text = page.extract_text() or ""
+                        page_texts.append(page_text)
+                        print(f"[INCREMENTAL] Page {page_idx + 1}: Extracted {len(page_text)} characters", flush=True)
                 except Exception as e:
-                    print(f"[INCREMENTAL] Error converting PDF: {e}", flush=True)
-                    return {"error": f"Failed to convert PDF: {str(e)}"}
+                    print(f"[INCREMENTAL] Error extracting text from PDF: {e}", flush=True)
+                    import traceback
+                    traceback.print_exc()
+                    return {"error": f"Failed to extract text from PDF: {str(e)}"}
                 
                 # Update exam with total pages
                 db.cursor.execute('''
@@ -116,9 +132,14 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
                 # Process one page at a time - process ALL pages
                 for page_idx in range(total_pages):
                     page_num = page_idx + 1
-                    page_image = pdf_images[page_idx]
+                    page_text = page_texts[page_idx]
                     
                     print(f"[INCREMENTAL] ========== Processing page {page_num} of {total_pages} ==========", flush=True)
+                    
+                    # Skip if page is empty or too short
+                    if not page_text or len(page_text.strip()) < 10:
+                        print(f"[INCREMENTAL] Page {page_num} is empty or too short, skipping", flush=True)
+                        continue
                     
                     # Update progress in database
                     db.cursor.execute('''
@@ -138,11 +159,11 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
                     page_questions = []
                     response_text = None
                     try:
-                        page_prompt = prompt + f"\n\nThis is page {page_num} of {total_pages}. Extract questions from this page only. Make sure to set page_number to {page_num} for all questions."
-                        print(f"[INCREMENTAL] Sending page {page_num} to Gemini...", flush=True)
-                        response = vision_model.generate_content(
-                            [page_prompt, page_image],
-                            request_options={"timeout": 20}
+                        page_prompt = prompt + f"\n\nThis is page {page_num} of {total_pages}. Extract ONLY actual exam questions from this page. SKIP any instruction text, exam rules, or administrative content. Make sure to set page_number to {page_num} for all questions.\n\nPage content:\n{page_text}"
+                        print(f"[INCREMENTAL] Sending page {page_num} text to Gemini (text model)...", flush=True)
+                        response = text_model.generate_content(
+                            page_prompt,
+                            request_options={"timeout": 30}
                         )
                         print(f"[INCREMENTAL] Received response from Gemini for page {page_num}", flush=True)
                             
@@ -164,16 +185,9 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
                         
                         # Parse JSON response with better error handling for LaTeX backslashes
                         print(f"[INCREMENTAL] Parsing JSON response from page {page_num}...", flush=True)
-                        try:
-                            page_data = json.loads(response_text)
-                        except json.JSONDecodeError as json_err:
-                            # Try to fix common JSON issues with LaTeX backslashes
-                            print(f"[INCREMENTAL] JSON parse error at position {json_err.pos}: {json_err.msg}", flush=True)
-                            print(f"[INCREMENTAL] Attempting to fix escaped backslashes in LaTeX notation...", flush=True)
-                            
-                            # Fix unescaped backslashes in LaTeX notation within string values
-                            # Strategy: Find all string values and escape backslashes that aren't part of valid JSON escape sequences
-                            def fix_json_backslashes(text):
+                        
+                        # Helper function to fix JSON backslashes
+                        def fix_json_backslashes(text):
                                 """Fix unescaped backslashes in JSON string values."""
                                 # Find all string values (between quotes)
                                 result = []
@@ -226,6 +240,13 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
                                         i += 1
                                 
                                 return ''.join(result)
+                        
+                        try:
+                            page_data = json.loads(response_text)
+                        except json.JSONDecodeError as json_err:
+                            # Try to fix common JSON issues with LaTeX backslashes
+                            print(f"[INCREMENTAL] JSON parse error at position {json_err.pos}: {json_err.msg}", flush=True)
+                            print(f"[INCREMENTAL] Attempting to fix escaped backslashes in LaTeX notation...", flush=True)
                             
                             fixed_text = fix_json_backslashes(response_text)
                             try:
@@ -323,36 +344,73 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
                         print(f"[INCREMENTAL] ⚠ No questions to save from page {page_num}", flush=True)
             
             elif file_type in ['png', 'jpg', 'jpeg', 'gif', 'webp']:
-                # Single image - process normally
-                image = Image.open(io.BytesIO(file_bytes))
-                total_pages = 1
-                
-                response = vision_model.generate_content(
-                    [prompt, image],
-                    request_options={"timeout": 20}
-                )
-                
-                response_text = response.text.strip()
-                if response_text.startswith("```"):
-                    parts = response_text.split("```")
-                    if len(parts) >= 2:
-                        response_text = parts[1]
-                        if response_text.startswith("json"):
-                            response_text = response_text[4:]
-                response_text = response_text.strip()
-                
-                page_data = json.loads(response_text)
-                
-                if page_data.get("questions"):
-                    for q in page_data["questions"]:
-                        q["page_number"] = 1
-                    saved_count = save_questions_chunk(db, exam_id, page_data["questions"])
-                    total_questions = saved_count
+                # Single image - extract text using OCR, then use text model
+                print("[INCREMENTAL] Processing single image file...", flush=True)
+                try:
+                    import pytesseract
+                    image = Image.open(io.BytesIO(file_bytes))
+                    # Extract text using OCR
+                    image_text = pytesseract.image_to_string(image)
+                    print(f"[INCREMENTAL] Extracted {len(image_text)} characters from image using OCR", flush=True)
+                    
+                    if not image_text or len(image_text.strip()) < 10:
+                        print("[INCREMENTAL] Warning: OCR extracted very little text from image", flush=True)
+                        return {"error": "Could not extract sufficient text from image"}
+                    
+                    total_pages = 1
+                    
+                    # Update progress
+                    db.cursor.execute('''
+                        UPDATE exams SET total_questions = ? WHERE exam_id = ?
+                    ''', (-1, exam_id))  # Negative indicates processing
+                    db.conn.commit()
+                    
+                    # Use text model with extracted text
+                    page_prompt = prompt + f"\n\nThis is a single image file. Extract ONLY actual exam questions from this content. SKIP any instruction text, exam rules, or administrative content.\n\nExtracted content:\n{image_text}"
+                    print("[INCREMENTAL] Sending extracted text to Gemini (text model)...", flush=True)
+                    response = text_model.generate_content(
+                        page_prompt,
+                        request_options={"timeout": 30}
+                    )
+                    
+                    response_text = response.text.strip()
+                    if response_text.startswith("```"):
+                        parts = response_text.split("```")
+                        if len(parts) >= 2:
+                            response_text = parts[1]
+                            if response_text.startswith("json"):
+                                response_text = response_text[4:]
+                    response_text = response_text.strip()
+                    
+                    # Parse JSON with backslash fixing
+                    try:
+                        page_data = json.loads(response_text)
+                    except json.JSONDecodeError as json_err:
+                        # Try to fix backslashes
+                        fixed_text = fix_json_backslashes(response_text)
+                        page_data = json.loads(fixed_text)
+                    
+                    if page_data.get("questions"):
+                        for q in page_data["questions"]:
+                            q["page_number"] = 1
+                        saved_count = save_questions_chunk(db, exam_id, page_data["questions"])
+                        total_questions = saved_count
+                    else:
+                        total_questions = 0
                     
                     db.cursor.execute('''
                         UPDATE exams SET total_pages = ?, total_questions = ? WHERE exam_id = ?
                     ''', (1, total_questions, exam_id))
                     db.conn.commit()
+                    
+                except ImportError:
+                    print("[INCREMENTAL] ERROR: pytesseract not available. Cannot process image files with text model.", flush=True)
+                    return {"error": "Image processing requires pytesseract. Please install it or use PDF format."}
+                except Exception as e:
+                    print(f"[INCREMENTAL] Error processing image: {e}", flush=True)
+                    import traceback
+                    traceback.print_exc()
+                    return {"error": f"Failed to process image: {str(e)}"}
             
             # Final summary
             print(f"[INCREMENTAL] ========== EXTRACTION COMPLETE ==========", flush=True)

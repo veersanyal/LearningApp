@@ -1475,7 +1475,7 @@ function app() {
         },
         
         async analyzeExam(examId) {
-            if (!confirm('This will analyze all questions using AI. This may take a few minutes. Continue?')) {
+            if (!confirm('This will analyze all questions using AI. This may take a while. Continue?')) {
                 return;
             }
             
@@ -1486,8 +1486,10 @@ function app() {
                 const data = await response.json();
                 
                 if (response.ok && data.success) {
-                    alert(`Analysis complete! Analyzed ${data.analyzed} out of ${data.total} questions.`);
+                    alert(data.message || `Analysis started for ${data.total} questions. This may take a while.`);
                     this.loadExams();
+                    // Start polling for progress
+                    this.pollExamProgress(examId);
                     if (this.selectedExamQuestions.length > 0) {
                         // Refresh questions if viewing
                         this.viewExamQuestions(examId);
@@ -1533,7 +1535,7 @@ function app() {
                                     } else if (exam.current_page) {
                                         statusDiv.textContent = `Extracting page ${exam.current_page} of ${exam.total_pages}... ${exam.total_questions} questions extracted so far.`;
                                     } else {
-                                        statusDiv.textContent = `Processing... ${exam.total_questions} questions extracted so far from ${exam.total_pages} pages.`;
+                                    statusDiv.textContent = `Processing... ${exam.total_questions} questions extracted so far from ${exam.total_pages} pages.`;
                                     }
                                     statusDiv.className = 'text-sm mt-2 text-center text-blue-400';
                                 } else {

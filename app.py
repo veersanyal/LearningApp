@@ -1065,7 +1065,7 @@ def upload_exam():
                         file_bytes, 
                         file_type, 
                         exam_id, 
-                        vision_model,
+                        text_model,  # Use text model instead of vision model
                         callback=None  # Could add progress callback here
                     )
                     
@@ -1085,9 +1085,9 @@ def upload_exam():
                         if result.get('errors'):
                             print(f"[EXAM_UPLOAD_BG] Warnings: {len(result['errors'])} errors occurred during processing")
                         
-                        # Automatically start analysis after extraction completes
+                        # Don't automatically analyze - user must click "Analyze Questions" button
                         if result.get('extraction_complete') and result['total_questions'] > 0:
-                            print(f"[EXAM_UPLOAD_BG] Starting automatic analysis of {result['total_questions']} questions...", flush=True)
+                            print(f"[EXAM_UPLOAD_BG] Extraction complete: {result['total_questions']} questions extracted. Waiting for user to click 'Analyze Questions'.", flush=True)
                             try:
                                 # Analyze questions in background
                                 db = get_db()
@@ -1330,7 +1330,7 @@ Question text:
 @app.route('/exam/<int:exam_id>/analyze', methods=['POST'])
 @login_required
 def analyze_exam(exam_id):
-    """Analyze all questions in an exam using Gemini."""
+    """Start analysis of all questions in an exam using Gemini (runs in background)."""
     try:
         db = get_db()
         try:
@@ -1354,80 +1354,110 @@ def analyze_exam(exam_id):
             if not questions:
                 return jsonify({"error": "No questions found for this exam"}), 404
             
-            print(f"[EXAM_ANALYZE] Analyzing {len(questions)} questions for exam {exam_id}")
+            total_questions = len(questions)
+            print(f"[EXAM_ANALYZE] Starting background analysis of {total_questions} questions for exam {exam_id}")
             
-            analyzed_count = 0
-            errors = []
-            
-            # Analyze each question
-            for question in questions:
-                question_id = question['question_id']
-                question_text = question['raw_text']
-                image_path = question['image_path']
-                
-                # Skip if already analyzed
-                if question['solved_json']:
-                    continue
-                
+            # Start analysis in background thread
+            import threading
+            def analyze_in_background():
+                db_bg = get_db()
                 try:
-                    print(f"[EXAM_ANALYZE] Analyzing question {question_id}...")
-                    analysis = analyze_question_with_gemini(question_text, image_path)
+                    analyzed_count = 0
+                    errors = []
                     
-                    if 'error' in analysis:
-                        errors.append(f"Question {question_id}: {analysis['error']}")
-                        continue
+                    # Analyze each question
+                    for idx, question in enumerate(questions, 1):
+                        question_id = question['question_id']
+                        question_text = question['raw_text']
+                        image_path = question['image_path']
+                        
+                        # Skip if already analyzed
+                        if question['solved_json']:
+                            analyzed_count += 1
+                            continue
+                        
+                        # Update progress: use 1000 + question_id to indicate analysis phase
+                        db_bg.cursor.execute('''
+                            UPDATE exams SET total_questions = ? WHERE exam_id = ?
+                        ''', (1000 + question_id, exam_id))
+                        db_bg.conn.commit()
+                        
+                        try:
+                            print(f"[EXAM_ANALYZE_BG] Analyzing question {idx}/{total_questions} (ID: {question_id})...", flush=True)
+                            analysis = analyze_question_with_gemini(question_text, image_path)
+                            
+                            if 'error' in analysis:
+                                errors.append(f"Question {question_id}: {analysis['error']}")
+                                continue
+                            
+                            # Extract skills and store
+                            required_skills = analysis.get('required_skills', [])
+                            prerequisite_skills = analysis.get('prerequisite_skills', [])
+                            subskills = analysis.get('subskills', [])
+                            all_skills = list(set(required_skills + prerequisite_skills + subskills))
+                            
+                            difficulty = analysis.get('difficulty', 3)
+                            topics_json = json.dumps({
+                                'required_skills': required_skills,
+                                'prerequisite_skills': prerequisite_skills,
+                                'subskills': subskills,
+                                'question_type': analysis.get('question_type', ''),
+                                'subtopics': analysis.get('subtopics', []),
+                                'topics_tested': analysis.get('topics_tested', [])
+                            })
+                            
+                            # Update question with analysis
+                            db_bg.cursor.execute('''
+                                UPDATE exam_questions
+                                SET solved_json = ?, difficulty = ?, topics_json = ?
+                                WHERE question_id = ?
+                            ''', (
+                                json.dumps(analysis),
+                                difficulty,
+                                topics_json,
+                                question_id
+                            ))
+                            
+                            # Store skills in exam_question_skills table
+                            for skill_name in all_skills:
+                                is_prereq = skill_name in prerequisite_skills
+                                db_bg.cursor.execute('''
+                                    INSERT OR IGNORE INTO exam_question_skills
+                                    (question_id, skill_name, is_prerequisite)
+                                    VALUES (?, ?, ?)
+                                ''', (question_id, skill_name, is_prereq))
+                            
+                            db_bg.conn.commit()
+                            analyzed_count += 1
+                            print(f"[EXAM_ANALYZE_BG] ✓ Question {question_id} analyzed ({analyzed_count}/{total_questions})", flush=True)
+                            
+                        except Exception as e:
+                            print(f"[EXAM_ANALYZE_BG] ✗ Error analyzing question {question_id}: {e}", flush=True)
+                            import traceback
+                            traceback.print_exc()
+                            errors.append(f"Question {question_id}: {str(e)}")
                     
-                    # Extract skills and store
-                    required_skills = analysis.get('required_skills', [])
-                    prerequisite_skills = analysis.get('prerequisite_skills', [])
-                    subskills = analysis.get('subskills', [])
-                    all_skills = list(set(required_skills + prerequisite_skills + subskills))
+                    # Mark analysis as complete
+                    db_bg.cursor.execute('''
+                        UPDATE exams SET total_questions = ? WHERE exam_id = ?
+                    ''', (total_questions, exam_id))
+                    db_bg.conn.commit()
+                    print(f"[EXAM_ANALYZE_BG] Analysis complete: {analyzed_count}/{total_questions} questions analyzed", flush=True)
                     
-                    difficulty = analysis.get('difficulty', 3)
-                    topics_json = json.dumps({
-                        'required_skills': required_skills,
-                        'prerequisite_skills': prerequisite_skills,
-                        'subskills': subskills,
-                        'question_type': analysis.get('question_type', '')
-                    })
-                    
-                    # Update question with analysis
-                    db.cursor.execute('''
-                        UPDATE exam_questions
-                        SET solved_json = ?, difficulty = ?, topics_json = ?
-                        WHERE question_id = ?
-                    ''', (
-                        json.dumps(analysis),
-                        difficulty,
-                        topics_json,
-                        question_id
-                    ))
-                    
-                    # Store skills in exam_question_skills table
-                    for skill_name in all_skills:
-                        is_prereq = skill_name in prerequisite_skills
-                        db.cursor.execute('''
-                            INSERT OR IGNORE INTO exam_question_skills
-                            (question_id, skill_name, is_prerequisite)
-                            VALUES (?, ?, ?)
-                        ''', (question_id, skill_name, is_prereq))
-                    
-                    db.conn.commit()
-                    analyzed_count += 1
-                    
-                except Exception as e:
-                    print(f"[EXAM_ANALYZE] Error analyzing question {question_id}: {e}")
-                    errors.append(f"Question {question_id}: {str(e)}")
+                finally:
+                    db_bg.conn.close()
+            
+            thread = threading.Thread(target=analyze_in_background, daemon=True)
+            thread.start()
             
             return jsonify({
                 "success": True,
-                "analyzed": analyzed_count,
-                "total": len(questions),
-                "errors": errors if errors else None
+                "message": f"Analysis started for {total_questions} questions. This may take a while.",
+                "total": total_questions
             })
         
         finally:
-            db.disconnect()
+            db.conn.close()
     
     except Exception as e:
         print(f"[EXAM_ANALYZE] Error: {e}")
