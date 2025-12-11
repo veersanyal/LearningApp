@@ -1088,99 +1088,6 @@ def upload_exam():
                         # Don't automatically analyze - user must click "Analyze Questions" button
                         if result.get('extraction_complete') and result['total_questions'] > 0:
                             print(f"[EXAM_UPLOAD_BG] Extraction complete: {result['total_questions']} questions extracted. Waiting for user to click 'Analyze Questions'.", flush=True)
-                            try:
-                                # Analyze questions in background
-                                db = get_db()
-                                try:
-                                    questions = db.cursor.execute('''
-                                        SELECT question_id, raw_text, image_path, solved_json
-                                        FROM exam_questions
-                                        WHERE exam_id = ? AND solved_json IS NULL
-                                        ORDER BY page_number, question_number
-                                    ''', (exam_id,)).fetchall()
-                                    
-                                    total_to_analyze = len(questions)
-                                    analyzed_count = 0
-                                    
-                                    print(f"[EXAM_UPLOAD_BG] Starting analysis of {total_to_analyze} questions...", flush=True)
-                                    
-                                    for idx, question in enumerate(questions, 1):
-                                        question_id = question['question_id']
-                                        question_text = question['raw_text']
-                                        
-                                        # Update progress: negative with question number indicates analyzing
-                                        db.cursor.execute('''
-                                            UPDATE exams SET total_questions = ? WHERE exam_id = ?
-                                        ''', (-(1000 + question_id), exam_id))  # Use 1000+ to indicate analysis phase
-                                        db.conn.commit()
-                                        
-                                        print(f"[EXAM_UPLOAD_BG] Analyzing question {idx}/{total_to_analyze} (ID: {question_id})...", flush=True)
-                                        
-                                        try:
-                                            analysis = analyze_question_with_gemini(question_text, None)  # Don't use image
-                                            
-                                            if 'error' not in analysis:
-                                                required_skills = analysis.get('required_skills', [])
-                                                prerequisite_skills = analysis.get('prerequisite_skills', [])
-                                                subskills = analysis.get('subskills', [])
-                                                all_skills = list(set(required_skills + prerequisite_skills + subskills))
-                                                
-                                                difficulty = analysis.get('difficulty', 3)
-                                                topics_json = json.dumps({
-                                                    'required_skills': required_skills,
-                                                    'prerequisite_skills': prerequisite_skills,
-                                                    'subskills': subskills,
-                                                    'question_type': analysis.get('question_type', ''),
-                                                    'subtopics': analysis.get('subtopics', []),
-                                                    'topics_tested': analysis.get('topics_tested', [])
-                                                })
-                                                
-                                                db.cursor.execute('''
-                                                    UPDATE exam_questions
-                                                    SET solved_json = ?, difficulty = ?, topics_json = ?
-                                                    WHERE question_id = ?
-                                                ''', (
-                                                    json.dumps(analysis),
-                                                    difficulty,
-                                                    topics_json,
-                                                    question_id
-                                                ))
-                                                
-                                                for skill_name in all_skills:
-                                                    is_prereq = skill_name in prerequisite_skills
-                                                    db.cursor.execute('''
-                                                        INSERT OR IGNORE INTO exam_question_skills
-                                                        (question_id, skill_name, is_prerequisite)
-                                                        VALUES (?, ?, ?)
-                                                    ''', (question_id, skill_name, is_prereq))
-                                                
-                                                db.conn.commit()
-                                                analyzed_count += 1
-                                                print(f"[EXAM_UPLOAD_BG] ✓ Question {question_id} analyzed ({analyzed_count}/{total_to_analyze})", flush=True)
-                                            else:
-                                                print(f"[EXAM_UPLOAD_BG] ✗ Error analyzing question {question_id}: {analysis.get('error')}", flush=True)
-                                        except Exception as q_err:
-                                            print(f"[EXAM_UPLOAD_BG] ✗ Exception analyzing question {question_id}: {q_err}", flush=True)
-                                            import traceback
-                                            traceback.print_exc()
-                                    
-                                    # Update exam with final question count (positive = complete)
-                                    db.cursor.execute('''
-                                        SELECT COUNT(*) FROM exam_questions WHERE exam_id = ?
-                                    ''', (exam_id,))
-                                    final_count = db.cursor.fetchone()[0]
-                                    db.cursor.execute('''
-                                        UPDATE exams SET total_questions = ? WHERE exam_id = ?
-                                    ''', (final_count, exam_id))
-                                    db.conn.commit()
-                                    
-                                    print(f"[EXAM_UPLOAD_BG] Analysis complete: {analyzed_count}/{total_to_analyze} questions analyzed", flush=True)
-                                finally:
-                                    db.disconnect()
-                            except Exception as analyze_err:
-                                print(f"[EXAM_UPLOAD_BG] Error during automatic analysis: {analyze_err}", flush=True)
-                                import traceback
-                                traceback.print_exc()
                 except Exception as e:
                     print(f"[EXAM_UPLOAD_BG] CRITICAL EXCEPTION: {e}")
                     import traceback
@@ -1512,19 +1419,30 @@ def get_exam_questions(exam_id):
                     'diagram_note': q['diagram_note']  # Diagram description from database
                 }
                 
+                # Parse solved_json - it may contain either question metadata (from extraction) or analysis data
                 if q['solved_json']:
-                    solved_data = json.loads(q['solved_json'])
-                    question_data['solution'] = solved_data.get('solution')
-                    question_data['answer'] = solved_data.get('answer')
-                    question_data['correct_answer'] = solved_data.get('correct_answer')  # New field for correct answer
-                    question_data['difficulty_reasoning'] = solved_data.get('difficulty_reasoning')
-                    question_data['options'] = solved_data.get('options')  # Multiple choice options
-                    question_data['question_type'] = solved_data.get('question_type')
-                    question_data['has_diagram'] = solved_data.get('has_diagram', False)
-                    question_data['diagram_description'] = solved_data.get('diagram_description')
-                    question_data['subparts'] = solved_data.get('subparts')
-                    question_data['subtopics'] = solved_data.get('subtopics', [])  # New field for subtopics
-                    question_data['topics_tested'] = solved_data.get('topics_tested', [])  # New field for topics at difficulty
+                    try:
+                        solved_data = json.loads(q['solved_json'])
+                        
+                        # Check if this is analysis data (has 'solution' or 'answer')
+                        if 'solution' in solved_data or 'answer' in solved_data:
+                            # This is analysis data
+                            question_data['solution'] = solved_data.get('solution')
+                            question_data['answer'] = solved_data.get('answer')
+                            question_data['correct_answer'] = solved_data.get('correct_answer')
+                            question_data['difficulty_reasoning'] = solved_data.get('difficulty_reasoning')
+                            question_data['subtopics'] = solved_data.get('subtopics', [])
+                            question_data['topics_tested'] = solved_data.get('topics_tested', [])
+                        
+                        # Get question metadata (options, question_type, etc.) - may be in analysis data or question metadata
+                        question_data['options'] = solved_data.get('options')
+                        question_data['question_type'] = solved_data.get('question_type')
+                        question_data['has_diagram'] = solved_data.get('has_diagram', False)
+                        question_data['diagram_description'] = solved_data.get('diagram_description')
+                        question_data['subparts'] = solved_data.get('subparts')
+                    except json.JSONDecodeError as e:
+                        print(f"[GET_EXAM_QUESTIONS] Error parsing solved_json for question {q['question_id']}: {e}")
+                        # Continue without parsed data
                 
                 if q['topics_json']:
                     topics_data = json.loads(q['topics_json'])

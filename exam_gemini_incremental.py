@@ -54,18 +54,26 @@ CRITICAL RULES:
 6. Number questions correctly (handle subparts like 1a, 1b, etc.)
 7. For multiple choice questions, extract ALL options (A, B, C, D, E, F, etc.) exactly as written
 
+CRITICAL JSON FORMATTING RULES:
+- Return ONLY valid JSON - no markdown code blocks, no explanations, no extra text
+- All backslashes in LaTeX MUST be escaped as \\\\ (double backslash) in JSON strings
+- For example: $\\\\vec{F}$ not $\\vec{F}$ (in JSON string, this becomes $\\vec{F}$ when parsed)
+- Use proper JSON escaping: quotes inside strings must be \\"
+- All string values must be properly quoted
+- Arrays and objects must be properly formatted
+
 Return a JSON object with this EXACT structure:
 {
   "questions": [
     {
       "question_number": "1",
-      "question_text": "Full question text with all details, preserving LaTeX notation like $\\int_0^1 x^2 dx$ or $$\\frac{d}{dx}\\left(\\sin(x)\\right) = \\cos(x)$$",
+      "question_text": "Full question text. For LaTeX: use $\\\\int_0^1 x^2 dx$ for inline math or $$\\\\frac{d}{dx}\\\\left(\\\\sin(x)\\\\right) = \\\\cos(x)$$ for display math. ALL backslashes must be doubled: \\\\vec{F}, \\\\cdot, \\\\int, etc.",
       "question_type": "multiple_choice|free_response|true_false|short_answer",
       "options": ["Option A", "Option B", ...] or null if not multiple choice,
       "page_number": 2,
       "has_diagram": true/false,
-      "diagram_description": "Description of any diagrams or images",
-      "topics": ["topic1", "topic2", ...],
+      "diagram_description": "Description of any diagrams or images" or null,
+      "topics": ["topic1", "topic2", ...] or [],
       "subparts": [
         {
           "subpart_number": "1a",
@@ -77,12 +85,13 @@ Return a JSON object with this EXACT structure:
   ]
 }
 
-For LaTeX/math notation:
-- Use $...$ for inline math: $x^2 + y^2 = r^2$
-- Use $$...$$ for display math: $$\\int_0^{\\infty} e^{-x} dx = 1$$
-- Preserve all mathematical symbols exactly as they appear
+For LaTeX/math notation in JSON strings:
+- Inline math: $\\\\int_0^1 x^2 dx$ (becomes $\\int_0^1 x^2 dx$ when parsed)
+- Display math: $$\\\\vec{F} = \\\\langle x, y, z \\\\rangle$$ (becomes $$\\vec{F} = \\langle x, y, z \\rangle$$ when parsed)
+- Common LaTeX: \\\\vec{F}, \\\\cdot, \\\\int, \\\\sum, \\\\frac{a}{b}, \\\\sqrt{x}, \\\\partial, \\\\nabla, etc.
+- ALL backslashes in LaTeX commands MUST be doubled in the JSON string
 
-Return ONLY the JSON, no markdown formatting, no explanations."""
+Return ONLY the JSON object, nothing else. No markdown, no code blocks, no explanations."""
 
     try:
         print(f"[INCREMENTAL] ========== STARTING INCREMENTAL PROCESSING ==========", flush=True)

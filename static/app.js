@@ -1596,11 +1596,40 @@ function app() {
                 console.log('[VIEW_QUESTIONS] Response:', data);
                 
                 if (response.ok) {
-                    this.selectedExamQuestions = (data.questions || []).map(q => ({
-                        ...q,
-                        activeTab: 'question'  // Initialize tab state for each question
-                    }));
+                    // Process questions with error handling
+                    this.selectedExamQuestions = (data.questions || []).map(q => {
+                        try {
+                            // Ensure all required fields exist
+                            const processed = {
+                                ...q,
+                                activeTab: 'question',  // Initialize tab state
+                                text: q.text || q.question_text || '',
+                                options: q.options || [],
+                                analyzed: q.analyzed || false
+                            };
+                            return processed;
+                        } catch (err) {
+                            console.error('[VIEW_QUESTIONS] Error processing question:', err, q);
+                            return {
+                                question_id: q.question_id || 0,
+                                text: 'Error loading question',
+                                activeTab: 'question',
+                                options: [],
+                                analyzed: false
+                            };
+                        }
+                    });
+                    
                     console.log('[VIEW_QUESTIONS] Loaded', this.selectedExamQuestions.length, 'questions');
+                    
+                    // Trigger MathJax rendering after a short delay
+                    setTimeout(() => {
+                        if (window.MathJax && window.MathJax.typesetPromise) {
+                            MathJax.typesetPromise().catch((err) => {
+                                console.log('MathJax rendering error:', err);
+                            });
+                        }
+                    }, 200);
                     
                     // Scroll to questions section (whether empty or not)
                     setTimeout(() => {
@@ -1676,26 +1705,32 @@ function app() {
         renderMath(text) {
             if (!text) return '';
             
-            // Escape HTML but preserve LaTeX delimiters
-            let processed = text
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;');
-            
-            // Convert newlines to <br>
-            processed = processed.replace(/\n/g, '<br>');
-            
-            // MathJax will automatically detect and render $...$ and $$...$$ blocks
-            // Trigger MathJax rendering after DOM update
-            this.$nextTick(() => {
-                if (window.MathJax && window.MathJax.typesetPromise) {
-                    MathJax.typesetPromise().catch((err) => {
-                        console.log('MathJax rendering error:', err);
-                    });
-                }
-            });
-            
-            return processed;
+            try {
+                // Escape HTML but preserve LaTeX delimiters
+                let processed = String(text)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
+                
+                // Convert newlines to <br>
+                processed = processed.replace(/\n/g, '<br>');
+                
+                // Fix common LaTeX issues - ensure backslashes are preserved
+                // MathJax will automatically detect and render $...$ and $$...$$ blocks
+                // Trigger MathJax rendering after DOM update
+                this.$nextTick(() => {
+                    if (window.MathJax && window.MathJax.typesetPromise) {
+                        MathJax.typesetPromise().catch((err) => {
+                            console.log('MathJax rendering error:', err);
+                        });
+                    }
+                });
+                
+                return processed;
+            } catch (err) {
+                console.error('Error in renderMath:', err);
+                return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            }
         },
         
         async loadAchievements() {
