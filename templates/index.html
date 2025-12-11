@@ -461,10 +461,10 @@
                                     </div>
                                     <div class="flex space-x-2">
                                         <button @click="analyzeExam(exam.exam_id)" 
-                                                :disabled="exam.analyzed_questions >= exam.total_questions"
-                                                :class="exam.analyzed_questions >= exam.total_questions ? 'bg-slate-600' : 'bg-blue-600 hover:bg-blue-500'"
+                                                :disabled="exam.analyzed_questions >= exam.total_questions && exam.total_questions > 0"
+                                                :class="exam.analyzed_questions >= exam.total_questions && exam.total_questions > 0 ? 'bg-slate-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500'"
                                                 class="px-4 py-2 rounded-lg font-medium transition text-sm">
-                                            <span x-text="exam.analyzed_questions >= exam.total_questions ? 'Analyzed' : 'Analyze Questions'"></span>
+                                            <span x-text="exam.analyzed_questions >= exam.total_questions && exam.total_questions > 0 ? 'Analyzed' : 'Analyze Questions'"></span>
                                         </button>
                                         <button @click="viewExamQuestions(exam.exam_id)" 
                                                 class="px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg font-medium transition text-sm">
@@ -526,7 +526,9 @@
                                         <h5 class="font-semibold mb-2">Options:</h5>
                                         <ol class="list-decimal list-inside space-y-2">
                                             <template x-for="(option, optIdx) in q.options" :key="optIdx">
-                                                <li class="text-slate-300 mathjax-process" x-html="renderMath(option)"></li>
+                                                <li class="text-slate-300">
+                                                    <span class="mathjax-process" x-html="renderMath(option)"></span>
+                                                </li>
                                             </template>
                                         </ol>
                                     </div>

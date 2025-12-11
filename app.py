@@ -1415,7 +1415,8 @@ def get_exam_questions(exam_id):
                     'ocr_confidence': q['ocr_confidence'],
                     'image_path': q['image_path'],
                     'difficulty': q['difficulty'],
-                    'analyzed': q['solved_json'] is not None,
+                    # Check if actually analyzed (has analysis data, not just extraction metadata)
+                    'analyzed': False,  # Will be set below if analysis data exists
                     'diagram_note': q['diagram_note']  # Diagram description from database
                 }
                 
@@ -1427,6 +1428,7 @@ def get_exam_questions(exam_id):
                         # Check if this is analysis data (has 'solution' or 'answer')
                         if 'solution' in solved_data or 'answer' in solved_data:
                             # This is analysis data
+                            question_data['analyzed'] = True
                             question_data['solution'] = solved_data.get('solution')
                             question_data['answer'] = solved_data.get('answer')
                             question_data['correct_answer'] = solved_data.get('correct_answer')
@@ -1547,10 +1549,11 @@ def list_exams():
             
             result = []
             for exam in exams:
-                # Count analyzed questions
+                # Count analyzed questions - check if solved_json contains analysis data (has 'solution' or 'answer')
                 analyzed = db.cursor.execute('''
                     SELECT COUNT(*) FROM exam_questions
-                    WHERE exam_id = ? AND solved_json IS NOT NULL
+                    WHERE exam_id = ? AND solved_json IS NOT NULL 
+                    AND (solved_json LIKE '%"solution"%' OR solved_json LIKE '%"answer"%')
                 ''', (exam['exam_id'],)).fetchone()[0]
                 
                 # Count actual questions in database (for debugging)

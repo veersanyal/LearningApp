@@ -1629,6 +1629,10 @@ function app() {
                     this.$nextTick(() => {
                         setTimeout(() => {
                             this.initMathJaxLazyLoading();
+                            // Re-initialize after a longer delay to catch all dynamically added content
+                            setTimeout(() => {
+                                this.initMathJaxLazyLoading();
+                            }, 500);
                         }, 100);
                     });
                     
@@ -1829,6 +1833,18 @@ function app() {
                         mathObserver.observe(el);
                     }
                 });
+                
+                // Also observe any new elements that might be added dynamically
+                // Re-run observer setup when questions are loaded
+                if (this.selectedExamQuestions && this.selectedExamQuestions.length > 0) {
+                    // Re-observe after a short delay to catch dynamically added content
+                    setTimeout(() => {
+                        const newMathElements = document.querySelectorAll('.mathjax-process:not([data-mathjax-processed])');
+                        newMathElements.forEach(el => {
+                            mathObserver.observe(el);
+                        });
+                    }, 500);
+                }
             }, 200);
             
             // Store observer for cleanup
