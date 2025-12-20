@@ -82,22 +82,37 @@
 
 <body class="bg-slate-900 text-slate-100 font-sans antialiased" x-data="app()" x-init="init(); $watch('currentView', value => showView(value))">
     
-    <!-- Login/Register Modal -->
+    <!-- Login/Register Modal (BoilerBuddy Style) -->
     <div x-show="!isAuthenticated" x-cloak 
-         class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
-        <div class="bg-slate-800 rounded-xl p-8 max-w-md w-full mx-4">
-            <h2 class="text-3xl font-bold mb-6 text-center">StudyBoiler</h2>
+         class="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900/20 to-amber-900/20 flex items-center justify-center z-50">
+        <!-- Background decoration -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute top-20 right-20 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-20 left-20 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
+        </div>
+        
+        <div class="relative z-10 bg-slate-800 rounded-3xl p-8 max-w-md w-full mx-4 border border-slate-700 shadow-2xl">
+            <!-- Logo and branding -->
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-black rounded-3xl shadow-lg mb-4">
+                    <span class="text-3xl">🎓</span>
+                </div>
+                <h2 class="text-4xl font-bold mb-2">
+                    <span class="text-[#CEB888]">Boiler</span><span class="text-white">Buddy</span>
+                </h2>
+                <p class="text-slate-400 text-sm">Your AI-powered study companion for acing exams at Purdue</p>
+            </div>
             
             <!-- Toggle between Login and Register -->
-            <div class="flex mb-6 bg-slate-700 rounded-lg p-1">
+            <div class="flex mb-6 bg-slate-700 rounded-2xl p-1">
                 <button @click="authMode = 'login'" 
-                        :class="authMode === 'login' ? 'bg-blue-600' : 'bg-transparent'"
-                        class="flex-1 py-2 rounded-lg transition">
+                        :class="authMode === 'login' ? 'bg-[#9B72CF] text-white' : 'bg-transparent text-slate-400'"
+                        class="flex-1 py-2.5 rounded-xl transition-all font-medium">
                     Login
                 </button>
                 <button @click="authMode = 'register'"
-                        :class="authMode === 'register' ? 'bg-blue-600' : 'bg-transparent'"
-                        class="flex-1 py-2 rounded-lg transition">
+                        :class="authMode === 'register' ? 'bg-[#9B72CF] text-white' : 'bg-transparent text-slate-400'"
+                        class="flex-1 py-2.5 rounded-xl transition-all font-medium">
                     Register
                 </button>
             </div>
@@ -121,8 +136,8 @@
                         Remember me on this device
                     </label>
             </div>
-                <div x-show="authError" class="text-red-400 text-sm" x-text="authError"></div>
-                <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition">
+                <div x-show="authError" class="text-red-400 text-sm mb-2" x-text="authError"></div>
+                <button type="submit" class="w-full py-3.5 bg-[#9B72CF] hover:opacity-90 rounded-2xl font-medium transition-all text-white shadow-lg">
                     Login
                 </button>
                 
@@ -180,8 +195,8 @@
                         Remember me on this device
                     </label>
                 </div>
-                <div x-show="authError" class="text-red-400 text-sm" x-text="authError"></div>
-                <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition">
+                <div x-show="authError" class="text-red-400 text-sm mb-2" x-text="authError"></div>
+                <button type="submit" class="w-full py-3.5 bg-[#9B72CF] hover:opacity-90 rounded-2xl font-medium transition-all text-white shadow-lg">
                     Register
                 </button>
                 
@@ -210,11 +225,14 @@
                 </div>
             </form>
             
-            <p class="mt-4 text-center text-sm text-slate-400">
+            <p class="mt-6 text-center text-xs text-slate-400">
                 <span x-show="!usersOnline">Join Purdue students</span>
                 <span x-show="usersOnline" x-text="`Join ${usersOnline} Purdue students online now`"></span>
             </p>
-            </div>
+            <p class="mt-4 text-center text-xs text-slate-500">
+                Made with 💛 for Purdue students
+            </p>
+        </div>
     </div>
 
     <!-- Main Layout: Header + Main Content -->
@@ -225,7 +243,9 @@
             <div class="app-header-content">
                 <!-- Left: Logo -->
                 <div class="app-header-left">
-                    <h1 class="text-xl font-bold text-white">StudyBoiler</h1>
+                    <h1 class="text-xl font-bold">
+                        <span class="brand-bold">Boiler</span>Buddy
+                    </h1>
                 </div>
                 
                 <!-- Mobile Nav Toggle -->
@@ -441,50 +461,128 @@
                 <!-- HOME VIEW -->
                 <section class="view is-active" data-view="home">
                     <div class="page">
-                        <div>
-                            <h1 class="text-3xl font-bold mb-2">Welcome Back!</h1>
-                            <p class="text-slate-400 mb-6">Upload study materials and track your progress</p>
+                        <!-- Welcome Section (BoilerBuddy Style) -->
+                        <div class="mb-8">
+                            <h1 class="text-3xl font-bold mb-2">
+                                Welcome back<span x-show="currentUser.username" x-text="`, ${currentUser.username || 'Student'}!`"></span><span x-show="!currentUser.username">!</span> 👋
+                            </h1>
+                            <p class="text-slate-400 mb-6">You're crushing it! Keep up the momentum.</p>
                         </div>
                     
-                    <!-- Upload Section -->
-                    <div class="card mb-6">
-                        <h2 class="text-xl font-semibold mb-4">Upload Study Material</h2>
-                        <p class="text-slate-400 mb-4">Upload a PDF, image, or text file to extract topics</p>
-                        <form id="upload-form" class="flex gap-4">
-                            <input type="file" id="file-input" accept=".pdf,.txt,.png,.jpg,.jpeg,.gif,.webp"
-                                   class="flex-1 px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-500">
-                            <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition btn-animate">
-                                Upload & Extract Topics
-                            </button>
-                        </form>
-                        <div id="upload-status" class="mt-3 text-sm text-slate-400"></div>
+                    <!-- Main Content Grid (BoilerBuddy Style) -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                        <!-- Left Column - Next Review & Upload -->
+                        <div class="lg:col-span-2 space-y-6">
+                            <!-- Next Review Card (BoilerBuddy Style) -->
+                            <div class="card" x-show="allTopics.length > 0">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-xl font-semibold">Next Review</h3>
+                                    <span class="text-sm text-[#9B72CF] bg-[#9B72CF]/10 px-3 py-1 rounded-full" x-text="currentQuestion ? currentQuestion.difficulty : 'Medium'"></span>
+                                </div>
+                                <div class="mb-4" x-show="currentQuestion">
+                                    <p class="text-sm text-slate-400 mb-2" x-text="currentQuestion.topic_name || 'General'"></p>
+                                    <p class="text-xl mb-4" x-text="currentQuestion.question || 'No question available'"></p>
+                                    <div class="h-2 bg-slate-700 rounded-full overflow-hidden">
+                                        <div class="h-full w-3/5 bg-[#9B72CF] rounded-full"></div>
+                                    </div>
+                                    <p class="text-xs text-slate-400 mt-2">Performance: Good • Due for review</p>
+                                </div>
+                                <button @click="currentView = 'study'; loadNextQuestion()" 
+                                        class="w-full bg-[#9B72CF] text-white py-3 rounded-2xl hover:opacity-90 transition-opacity font-medium">
+                                    Start Review Session
+                                </button>
+                            </div>
+                            
+                            <!-- Upload Section -->
+                            <div class="card">
+                                <h2 class="text-xl font-semibold mb-4">Upload Study Material</h2>
+                                <p class="text-slate-400 mb-4">Upload a PDF, image, or text file to extract topics</p>
+                                <form id="upload-form" class="space-y-4">
+                                    <input type="file" id="file-input" accept=".pdf,.txt,.png,.jpg,.jpeg,.gif,.webp"
+                                           class="w-full px-4 py-2.5 bg-slate-700 border-2 border-slate-600 rounded-2xl text-slate-300 focus:border-[#9B72CF] focus:outline-none focus:ring-2 focus:ring-[#9B72CF]/20 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-[#9B72CF] file:text-white hover:file:opacity-90">
+                                    <button type="submit" class="w-full px-6 py-3 bg-[#9B72CF] hover:opacity-90 rounded-2xl font-medium transition text-white shadow-lg">
+                                        Upload & Extract Topics
+                                    </button>
+                                </form>
+                                <div id="upload-status" class="mt-3 text-sm text-slate-400"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Right Column - Brain Map & CTA -->
+                        <div class="space-y-6">
+                            <!-- Brain Map Card (BoilerBuddy Style) -->
+                            <div class="card" x-show="allTopics.length > 0">
+                                <h3 class="text-xl font-semibold mb-4">Brain Map</h3>
+                                <div class="space-y-3">
+                                    <template x-for="(topic, idx) in allTopics.slice(0, 6)" :key="topic.topic_id">
+                                        <div>
+                                            <div class="flex justify-between items-center mb-1">
+                                                <span class="text-sm" x-text="topic.name"></span>
+                                                <span class="text-xs" 
+                                                      :class="(topic.mastery || 0) > 0.8 ? 'text-green-400' : 'text-amber-400'"
+                                                      x-text="Math.round((topic.mastery || 0) * 100) + '%'"></span>
+                                            </div>
+                                            <div class="h-2 bg-slate-700 rounded-full overflow-hidden">
+                                                <div class="h-full rounded-full transition-all"
+                                                     :class="(topic.mastery || 0) > 0.8 ? 'bg-green-500' : 'bg-amber-400'"
+                                                     :style="'width: ' + Math.min((topic.mastery || 0) * 100, 100) + '%'"></div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                            
+                            <!-- Group Study CTA (BoilerBuddy Style) -->
+                            <div class="bg-gradient-to-br from-[#9B72CF]/20 to-[#9B72CF]/10 rounded-3xl p-6 border border-[#9B72CF]/30 card">
+                                <div class="text-4xl mb-3">👥</div>
+                                <h3 class="text-xl font-semibold mb-2">Study Together</h3>
+                                <p class="text-sm text-slate-400 mb-4">Join a group session and learn with your peers</p>
+                                <button @click="currentView = 'leaderboards'" 
+                                        class="w-full bg-[#9B72CF] text-white py-3 rounded-2xl hover:opacity-90 transition-opacity font-medium">
+                                    View Leaderboard
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- Topics Section -->
                     <div id="topics-section" style="display: none;" class="card mb-6">
                         <h2 class="text-xl font-semibold mb-4">Extracted Topics</h2>
                         <ul id="topics-list" class="space-y-2 mb-4"></ul>
-                        <button id="start-quiz-btn" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-lg font-medium transition">
+                        <button id="start-quiz-btn" class="w-full px-6 py-3 bg-gradient-to-r from-[#9B72CF] to-[#CEB888] hover:opacity-90 rounded-2xl font-medium transition text-white shadow-lg">
                             Start Adaptive Quiz
                         </button>
                     </div>
                     
-                    <!-- Quick Stats -->
-                    <div class="grid grid-cols-3 gap-4">
-                        <div class="stat-card animate-stats-card" data-animate-delay="0">
-                            <div class="stat-card-icon" aria-hidden="true">📊</div>
-                            <div class="stat-card-value" x-text="totalQuestions"></div>
-                            <div class="stat-card-label">Total Questions</div>
+                    <!-- Quick Stats (BoilerBuddy Style) -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                        <div class="bg-gradient-to-br from-orange-50/10 to-orange-100/5 rounded-2xl p-6 border border-orange-200/20 stat-card animate-stats-card" data-animate-delay="0">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="text-2xl">🔥</span>
+                                <span class="text-sm text-orange-300">Study Streak</span>
+                            </div>
+                            <p class="text-3xl text-orange-200 font-bold" x-text="studyStreak + ' days'"></p>
                         </div>
-                        <div class="stat-card animate-stats-card" data-animate-delay="1">
-                            <div class="stat-card-icon" aria-hidden="true">🎯</div>
-                            <div class="stat-card-value" x-text="accuracy + '%'"></div>
-                            <div class="stat-card-label">Accuracy</div>
+                        <div class="bg-gradient-to-br from-purple-50/10 to-purple-100/5 rounded-2xl p-6 border border-purple-200/20 stat-card animate-stats-card" data-animate-delay="1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="text-2xl">🎯</span>
+                                <span class="text-sm text-purple-300">Accuracy</span>
+                            </div>
+                            <p class="text-3xl text-purple-200 font-bold" x-text="accuracy + '%'"></p>
                         </div>
-                        <div class="stat-card animate-stats-card" data-animate-delay="2">
-                            <div class="stat-card-icon" aria-hidden="true">📈</div>
-                            <div class="stat-card-value" x-text="topicsStudied"></div>
-                            <div class="stat-card-label">Topics Studied</div>
+                        <div class="bg-gradient-to-br from-amber-50/10 to-amber-100/5 rounded-2xl p-6 border border-amber-200/20 stat-card animate-stats-card" data-animate-delay="2">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="text-2xl">🏆</span>
+                                <span class="text-sm text-amber-300">Topics Mastered</span>
+                            </div>
+                            <p class="text-3xl text-amber-200 font-bold" x-text="masteredTopics + '/' + topicsStudied"></p>
+                        </div>
+                        <div class="bg-gradient-to-br from-blue-50/10 to-blue-100/5 rounded-2xl p-6 border border-blue-200/20 stat-card animate-stats-card" data-animate-delay="3">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="text-2xl">📊</span>
+                                <span class="text-sm text-blue-300">Total Questions</span>
+                            </div>
+                            <p class="text-3xl text-blue-200 font-bold" x-text="totalQuestions"></p>
                         </div>
                     </div>
                     </div>
@@ -857,61 +955,101 @@
                     </div>
                 </section>
                 
-                <!-- STUDY VIEW -->
+                <!-- STUDY VIEW (BoilerBuddy Style) -->
                 <section class="view" data-view="study">
                     <div class="page">
-                        <div>
-                            <h1 class="text-3xl font-bold mb-2">Study Session</h1>
-                            <p class="text-slate-400 mb-6">Practice questions and improve your understanding</p>
+                        <!-- Progress Header (BoilerBuddy Style) -->
+                        <div class="card mb-6" id="study-progress-header" style="display: none;">
+                            <div class="flex items-center justify-between">
+                                <button @click="currentView = 'home'" 
+                                        class="p-2 hover:bg-slate-700 rounded-xl transition-colors">
+                                    <span class="text-xl">✕</span>
+                                </button>
+                                <div class="flex-1 mx-4">
+                                    <div class="h-2 bg-slate-700 rounded-full overflow-hidden">
+                                        <div id="study-progress-bar" class="h-full bg-[#9B72CF] rounded-full transition-all" style="width: 40%"></div>
+                                    </div>
+                                </div>
+                                <span class="text-sm text-slate-400" id="study-progress-text">2/5</span>
+                            </div>
                         </div>
                     
-                    <!-- Quiz Section -->
+                    <!-- Step-by-step Stepper (BoilerBuddy Style) -->
+                    <div class="card mb-6" id="step-stepper" style="display: none;">
+                        <h4 class="mb-4 text-slate-400 text-sm">Problem-solving steps</h4>
+                        <div class="space-y-3" id="steps-container">
+                            <!-- Steps will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <!-- Quiz Section (BoilerBuddy Style) -->
                     <div id="quiz-section" style="display: none;" class="card">
-                        <!-- Question Header -->
-                        <div class="flex items-center justify-between mb-6">
-                            <div>
-                                <span id="topic-name" class="text-lg font-semibold text-blue-400"></span>
+                        <div class="flex items-start justify-between mb-6">
+                            <div class="flex-1">
+                                <span id="topic-name" class="inline-block text-xs text-[#9B72CF] bg-[#9B72CF]/10 px-3 py-1 rounded-full mb-3"></span>
+                                <h2 id="question-text" class="text-2xl mb-4 leading-relaxed"></h2>
+                                <p class="text-slate-400 text-sm" id="question-hint"></p>
                             </div>
-                            <span id="difficulty-badge" class="px-4 py-1 rounded-full text-sm font-medium"></span>
                         </div>
                         
-                        <!-- Question -->
-                        <div id="question-container" class="mb-6">
-                            <p id="question-text" class="text-xl mb-6 leading-relaxed"></p>
-                            <div id="options-container" class="space-y-3"></div>
+                        <!-- AI Hint (shown when hint is requested) -->
+                        <div id="hint-container" style="display: none;" class="mb-6 bg-blue-900/30 border border-blue-700 rounded-2xl p-4">
+                            <div class="flex gap-3">
+                                <span class="text-2xl">💡</span>
+                                <div>
+                                    <h4 class="text-blue-300 font-semibold mb-1">Hint</h4>
+                                    <p class="text-sm text-blue-200" id="hint-text"></p>
+                                </div>
+                            </div>
                         </div>
                         
-                        <!-- Guide Me Button -->
-                        <div id="guide-me-container" class="mb-6">
-                            <button @click="openGuideMeModal()" 
-                                    class="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-lg font-medium transition flex items-center space-x-2 btn-animate">
-                                <span>💡</span>
-                                <span>Guide Me Through This</span>
+                        <!-- Multiple Choice Options (BoilerBuddy Style) -->
+                        <div id="options-container" class="space-y-3 mb-6"></div>
+                        
+                        <!-- Action Buttons (BoilerBuddy Style) -->
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <button @click="showHint()" id="show-hint-btn"
+                                    class="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border-2 border-slate-600 hover:bg-slate-700 transition-colors">
+                                <span>❓</span>
+                                <span>Show Hint</span>
+                            </button>
+                            <button @click="checkAnswer()" id="check-answer-btn"
+                                    disabled
+                                    class="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-[#9B72CF] text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
+                                Check Answer
+                                <span>→</span>
                             </button>
                         </div>
                         
-                        <!-- Feedback -->
-                        <div id="feedback" style="display: none;" class="bg-slate-700 rounded-lg p-6 mb-6">
-                            <p id="feedback-text" class="text-lg font-semibold mb-3"></p>
-                            <p id="explanation" class="text-slate-300"></p>
+                        <!-- Feedback (BoilerBuddy Style) -->
+                        <div id="feedback" style="display: none;" class="mt-6">
+                            <div id="feedback-content" class="rounded-2xl p-6 mb-4"></div>
+                            <button id="next-btn" style="display: none;" 
+                                    class="w-full px-6 py-3 bg-[#9B72CF] hover:opacity-90 rounded-2xl font-medium transition text-white">
+                                Next Question
+                            </button>
                         </div>
-                        
-                        <button id="next-btn" style="display: none;" 
-                                class="w-full px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition">
-                            Next Question
-                        </button>
                     </div>
                     
-                    <!-- No Quiz Active Message -->
+                    <!-- No Quiz Active Message (BoilerBuddy Style) -->
                     <div id="no-quiz-message" class="card empty-state-card">
                         <div class="empty-state-icon" aria-hidden="true">📚</div>
                         <h2 class="empty-state-title">No Active Study Session</h2>
                         <p class="empty-state-description">Upload study materials or select a topic to begin practicing.</p>
                         <button @click="currentView = 'home'" 
-                                class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition btn-animate">
+                                class="px-6 py-3 bg-[#9B72CF] hover:opacity-90 rounded-2xl font-medium transition text-white shadow-lg">
                             Go to Home
                         </button>
                     </div>
+                    
+                    <!-- Floating "I feel stuck" Button (BoilerBuddy Style) -->
+                    <button @click="openGuideMeModal()" 
+                            id="stuck-button"
+                            style="display: none;"
+                            class="fixed bottom-24 lg:bottom-8 right-8 bg-[#d4183d] text-white px-6 py-4 rounded-full shadow-lg hover:opacity-90 transition-opacity flex items-center gap-2 z-40">
+                        <span>⚠️</span>
+                        <span>I feel stuck</span>
+                    </button>
                     </div>
                 </section>
                 
@@ -1101,56 +1239,73 @@
                     </div>
                 </section>
                 
-                <!-- LEADERBOARDS VIEW -->
+                <!-- LEADERBOARDS VIEW (BoilerBuddy Style) -->
                 <section class="view" data-view="leaderboards">
                     <div class="page">
-                        <div>
-                            <h1 class="text-3xl font-bold mb-2">Leaderboards</h1>
-                            <p class="text-slate-400 mb-6">See how you rank among other students</p>
+                        <div class="mb-6">
+                            <h1 class="text-3xl font-bold mb-2">Leaderboard</h1>
+                            <p class="text-slate-400">Compete with Purdue students</p>
                         </div>
                     
-                    <!-- Leaderboard Filters -->
-                    <div class="card p-4 mb-6 flex items-center justify-between">
-                        <div class="flex gap-4">
-                            <select x-model="leaderboardType" @change="loadLeaderboard()"
-                                    class="px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-300">
-                                <option value="global">Global</option>
-                                <option value="course">By Course</option>
-                                <option value="major">By Major</option>
-                            </select>
-                            
-                            <select x-model="leaderboardPeriod" @change="loadLeaderboard()"
-                                    class="px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-300">
-                                <option value="alltime">All Time</option>
-                                <option value="week">This Week</option>
-                                <option value="month">This Month</option>
-                            </select>
+                    <!-- Leaderboard Filters (BoilerBuddy Style) -->
+                    <div class="mb-6 flex flex-col sm:flex-row gap-3">
+                        <div class="flex gap-2 bg-slate-700 p-1 rounded-2xl">
+                            <button @click="leaderboardPeriod = 'week'; loadLeaderboard()"
+                                    :class="leaderboardPeriod === 'week' ? 'bg-slate-800 shadow-sm text-white' : 'text-slate-400 hover:text-white'"
+                                    class="px-4 py-2 rounded-xl text-sm transition-all">
+                                This Week
+                            </button>
+                            <button @click="leaderboardPeriod = 'alltime'; loadLeaderboard()"
+                                    :class="leaderboardPeriod === 'alltime' ? 'bg-slate-800 shadow-sm text-white' : 'text-slate-400 hover:text-white'"
+                                    class="px-4 py-2 rounded-xl text-sm transition-all">
+                                All Time
+                            </button>
                         </div>
                         
-                        <button @click="loadLeaderboard()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg">
-                            🔄 Refresh
-                        </button>
+                        <select x-model="leaderboardType" @change="loadLeaderboard()"
+                                class="px-4 py-2 rounded-2xl border-2 border-slate-600 bg-slate-800 text-slate-300 focus:border-[#9B72CF] focus:outline-none focus:ring-2 focus:ring-[#9B72CF]/20">
+                            <option value="global">All Courses</option>
+                            <option value="course">By Course</option>
+                            <option value="major">By Major</option>
+                        </select>
                     </div>
                     
-                    <!-- My Rank Card -->
-                    <div id="my-rank-card" class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 mb-6">
-                        <h2 class="text-xl font-semibold mb-4">Your Rank</h2>
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <div class="text-4xl font-bold" x-text="'#' + (myRank || '-')"></div>
-                                <div class="text-sm opacity-90">out of <span x-text="totalUsers"></span> users</div>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-2xl font-bold" x-text="currentUser.total_xp || 0"></div>
-                                <div class="text-sm opacity-90">Total XP</div>
-                            </div>
+                    <!-- Top 3 Podium (BoilerBuddy Style) -->
+                    <div class="mb-8 grid grid-cols-3 gap-4 items-end" id="podium-container">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                    
+                    <!-- Full Leaderboard (BoilerBuddy Style) -->
+                    <div class="card overflow-hidden mb-6">
+                        <div class="p-6 border-b border-slate-700">
+                            <h3 class="text-xl font-semibold">Full Rankings</h3>
+                        </div>
+                        <div id="leaderboard-list" class="divide-y divide-slate-700 animate-row-stagger">
+                            <!-- Leaderboard entries will be inserted here -->
                         </div>
                     </div>
                     
-                    <!-- Leaderboard Table -->
-                    <div class="card overflow-hidden">
-                        <div id="leaderboard-list" class="divide-y divide-slate-700 animate-row-stagger">
-                            <!-- Leaderboard entries will be inserted here -->
+                    <!-- Your Stats (BoilerBuddy Style) -->
+                    <div class="bg-gradient-to-br from-[#9B72CF]/20 to-[#9B72CF]/10 rounded-3xl p-6 border border-[#9B72CF]/30">
+                        <h4 class="text-xl font-semibold mb-3">Your Progress</h4>
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <p class="text-2xl text-[#9B72CF] font-bold" x-text="currentUser.total_xp || 0"></p>
+                                <p class="text-sm text-slate-400">Total XP</p>
+                            </div>
+                            <div>
+                                <p class="text-2xl text-[#9B72CF] font-bold" x-text="'#' + (myRank || '-')"></p>
+                                <p class="text-sm text-slate-400">Your Rank</p>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <div class="flex justify-between text-sm mb-2">
+                                <span class="text-slate-400">Next rank progress</span>
+                                <span class="text-[#9B72CF]" x-text="'82%'"></span>
+                            </div>
+                            <div class="h-2 bg-slate-700 rounded-full overflow-hidden">
+                                <div class="h-full w-4/5 bg-[#9B72CF] rounded-full"></div>
+                            </div>
                         </div>
                     </div>
                     </div>
@@ -1229,13 +1384,18 @@
         
     </div>
     
-    <!-- Guide Me Modal -->
+    <!-- Guide Me Modal (BoilerBuddy Style) -->
     <div x-show="showGuideMeModal" x-cloak 
-         class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 modal-backdrop">
-        <div class="bg-slate-800 rounded-xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto modal-content depth-3">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">💡 Guided Learning</h2>
-                <button @click="closeGuideMeModal()" class="text-slate-400 hover:text-white text-2xl">&times;</button>
+         class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 modal-backdrop">
+        <div class="bg-slate-800 rounded-3xl shadow-2xl p-8 max-w-2xl w-full max-h-[80vh] overflow-y-auto modal-content depth-3">
+            <div class="flex items-start justify-between mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold mb-2">Step-by-step walkthrough</h2>
+                    <p class="text-slate-400">Let's break this down together!</p>
+                </div>
+                <button @click="closeGuideMeModal()" class="p-2 hover:bg-slate-700 rounded-xl transition-colors">
+                    <span class="text-2xl text-slate-400">✕</span>
+                </button>
             </div>
             
             <div id="guide-me-content">
@@ -1246,3 +1406,4 @@
 
 </body>
 </html>
+

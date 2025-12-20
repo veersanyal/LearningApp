@@ -62,6 +62,7 @@ function app() {
         guideMeSteps: [],
         currentGuideMeStep: 0,
         showGuideMeModal: false,
+        selectedAnswerIndex: null,
         
         // Leaderboards
         leaderboardType: 'global',
@@ -1006,55 +1007,169 @@ function app() {
         },
         
         displayQuestion(question) {
-            document.getElementById('topic-name').textContent = question.topic_name;
-            const badge = document.getElementById('difficulty-badge');
-            badge.textContent = question.difficulty.toUpperCase();
-            badge.className = `px-4 py-1 rounded-full text-sm font-medium ${question.difficulty}`;
+            // Update topic name badge
+            const topicNameEl = document.getElementById('topic-name');
+            if (topicNameEl) topicNameEl.textContent = question.topic_name || 'General';
             
-            document.getElementById('question-text').innerHTML = question.question;
+            // Update question text
+            const questionTextEl = document.getElementById('question-text');
+            if (questionTextEl) questionTextEl.innerHTML = question.question || '';
             
+            // Show progress header and stepper
+            const progressHeader = document.getElementById('study-progress-header');
+            const stepStepper = document.getElementById('step-stepper');
+            const stuckButton = document.getElementById('stuck-button');
+            if (progressHeader) progressHeader.style.display = 'block';
+            if (stepStepper) stepStepper.style.display = 'block';
+            if (stuckButton) stuckButton.style.display = 'block';
+            
+            // Initialize steps (placeholder for now)
+            this.initializeSteps();
+            
+            // Clear previous state
+            const hintContainer = document.getElementById('hint-container');
+            if (hintContainer) hintContainer.style.display = 'none';
+            const feedback = document.getElementById('feedback');
+            if (feedback) feedback.style.display = 'none';
+            const nextBtn = document.getElementById('next-btn');
+            if (nextBtn) nextBtn.style.display = 'none';
+            const checkBtn = document.getElementById('check-answer-btn');
+            if (checkBtn) {
+                checkBtn.disabled = true;
+                this.selectedAnswerIndex = null;
+            }
+            
+            // Render options (BoilerBuddy style)
             const optionsContainer = document.getElementById('options-container');
-            optionsContainer.innerHTML = '';
-            
-            question.options.forEach((option, index) => {
-                const btn = document.createElement('button');
-                btn.className = 'option-btn';
-                btn.innerHTML = option;
-                btn.addEventListener('click', () => this.selectAnswer(index));
-                optionsContainer.appendChild(btn);
-            });
+            if (optionsContainer) {
+                optionsContainer.innerHTML = '';
+                
+                question.options.forEach((option, index) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'w-full text-left p-4 rounded-2xl border-2 border-slate-600 hover:border-[#9B72CF]/50 hover:bg-[#9B72CF]/5 transition-all';
+                    btn.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-sm">${String.fromCharCode(65 + index)}</span>
+                            <span class="mathjax-process">${option}</span>
+                        </div>
+                    `;
+                    btn.addEventListener('click', () => {
+                        // Remove previous selection
+                        optionsContainer.querySelectorAll('button').forEach(b => {
+                            b.classList.remove('border-[#9B72CF]', 'bg-[#9B72CF]/10');
+                        });
+                        // Add selection
+                        btn.classList.add('border-[#9B72CF]', 'bg-[#9B72CF]/10');
+                        this.selectedAnswerIndex = index;
+                        if (checkBtn) checkBtn.disabled = false;
+                    });
+                    optionsContainer.appendChild(btn);
+                });
+            }
             
             if (window.MathJax) {
-                MathJax.typesetPromise();
+                setTimeout(() => {
+                    MathJax.typesetPromise();
+                }, 100);
             }
+        },
+        
+        initializeSteps() {
+            // Create placeholder steps (can be enhanced with actual step data)
+            const stepsContainer = document.getElementById('steps-container');
+            if (!stepsContainer) return;
+            
+            const steps = [
+                { id: 1, title: 'Understand the problem', completed: false },
+                { id: 2, title: 'Identify the rule', completed: false },
+                { id: 3, title: 'Apply the formula', completed: false },
+                { id: 4, title: 'Simplify the result', completed: false }
+            ];
+            
+            stepsContainer.innerHTML = steps.map((step, idx) => `
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center ${
+                        step.completed
+                            ? 'bg-green-500 text-white'
+                            : idx === 0
+                            ? 'bg-[#9B72CF] text-white'
+                            : 'bg-slate-700 text-slate-400'
+                    }">
+                        ${step.completed ? '✓' : step.id}
+                    </div>
+                    <span class="${
+                        step.completed
+                            ? 'text-green-400'
+                            : idx === 0
+                            ? 'text-white'
+                            : 'text-slate-400'
+                    }">${step.title}</span>
+                </div>
+            `).join('');
+        },
+        
+        showHint() {
+            const hintContainer = document.getElementById('hint-container');
+            const hintText = document.getElementById('hint-text');
+            if (hintContainer && hintText) {
+                hintText.textContent = 'Remember: Break down the problem into smaller steps. Look for patterns and apply the relevant rules.';
+                hintContainer.style.display = 'block';
+            }
+        },
+        
+        checkAnswer() {
+            if (this.selectedAnswerIndex === null || this.selectedAnswerIndex === undefined) return;
+            this.selectAnswer(this.selectedAnswerIndex);
         },
         
         async selectAnswer(selectedIndex) {
             const isCorrect = selectedIndex === this.currentQuestion.correct_answer;
             
-            const options = document.querySelectorAll('.option-btn');
-            options.forEach((btn, index) => {
-                btn.disabled = true;
-                if (index === this.currentQuestion.correct_answer) {
-                    btn.classList.add('correct');
-                } else if (index === selectedIndex && !isCorrect) {
-                    btn.classList.add('wrong');
-                }
-            });
+            // Disable all options
+            const optionsContainer = document.getElementById('options-container');
+            if (optionsContainer) {
+                optionsContainer.querySelectorAll('button').forEach((btn, index) => {
+                    btn.disabled = true;
+                    if (index === this.currentQuestion.correct_answer) {
+                        btn.classList.remove('border-slate-600', 'bg-[#9B72CF]/10');
+                        btn.classList.add('border-green-500', 'bg-green-500/20');
+                        // Add checkmark
+                        const checkmark = document.createElement('span');
+                        checkmark.className = 'ml-auto text-green-500 text-xl';
+                        checkmark.textContent = '✓';
+                        btn.querySelector('.flex').appendChild(checkmark);
+                    } else if (index === selectedIndex && !isCorrect) {
+                        btn.classList.remove('border-[#9B72CF]', 'bg-[#9B72CF]/10');
+                        btn.classList.add('border-red-500', 'bg-red-500/20');
+                    }
+                });
+            }
             
+            // Show feedback (BoilerBuddy style)
             const feedbackDiv = document.getElementById('feedback');
-            const feedbackText = document.getElementById('feedback-text');
-            const explanationText = document.getElementById('explanation');
+            const feedbackContent = document.getElementById('feedback-content');
+            const nextBtn = document.getElementById('next-btn');
+            const checkBtn = document.getElementById('check-answer-btn');
             
-            feedbackText.textContent = isCorrect ? '✓ Correct!' : '✗ Incorrect';
-            feedbackText.className = isCorrect ? 'correct-text' : 'wrong-text';
-            explanationText.innerHTML = this.currentQuestion.explanation;
-            feedbackDiv.style.display = 'block';
-            document.getElementById('next-btn').style.display = 'block';
-            document.getElementById('guide-me-container').style.display = 'none';
+            if (feedbackDiv && feedbackContent) {
+                feedbackContent.innerHTML = `
+                    <div class="${isCorrect ? 'bg-green-900/30 border border-green-500' : 'bg-red-900/30 border border-red-500'} rounded-2xl p-4">
+                        <p class="${isCorrect ? 'text-green-400' : 'text-red-400'} font-semibold mb-2 text-lg">
+                            ${isCorrect ? '✓ Correct!' : '✗ Incorrect'}
+                        </p>
+                        <p class="text-slate-300 text-sm mathjax-process">${this.currentQuestion.explanation || ''}</p>
+                    </div>
+                `;
+                feedbackDiv.style.display = 'block';
+            }
+            
+            if (nextBtn) nextBtn.style.display = 'block';
+            if (checkBtn) checkBtn.disabled = true;
             
             if (window.MathJax) {
-                MathJax.typesetPromise();
+                setTimeout(() => {
+                    MathJax.typesetPromise();
+                }, 100);
             }
             
             try {
@@ -1137,31 +1252,31 @@ function app() {
             const totalSteps = this.guideMeSteps.length;
             
             content.innerHTML = `
-                <div class="mb-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <span class="text-sm font-medium text-slate-400">Step ${stepNum} of ${totalSteps}</span>
-                        <div class="flex space-x-1">
-                            ${Array.from({ length: totalSteps }, (_, i) => `
-                                <div class="w-8 h-1 rounded ${i < stepNum ? 'bg-blue-500' : 'bg-slate-600'}"></div>
-                            `).join('')}
+                <div class="space-y-6">
+                    ${this.guideMeSteps.map((s, idx) => `
+                        <div class="bg-[#9B72CF]/10 rounded-2xl p-4 border border-[#9B72CF]/30">
+                            <h4 class="mb-2 font-semibold">Step ${idx + 1}: ${s.title || 'Step'}</h4>
+                            <p class="text-sm text-slate-300">${s.question || s.explanation || ''}</p>
+                            ${s.hint ? `
+                                <div class="mt-3 bg-blue-900/30 border border-blue-700 rounded-xl p-3 text-sm">
+                                    <span class="font-semibold text-blue-400">💡 Hint:</span>
+                                    <span class="text-blue-200"> ${s.hint}</span>
+                                </div>
+                            ` : ''}
+                            ${s.explanation && idx === this.currentGuideMeStep ? `
+                                <div class="mt-3 bg-green-900/30 border border-green-700 rounded-xl p-3 text-sm">
+                                    <span class="text-green-400">${s.explanation}</span>
+                                </div>
+                            ` : ''}
                         </div>
-                    </div>
+                    `).join('')}
                     
-                    <p class="text-lg mb-4">${step.question}</p>
-                    
-                    ${step.hint ? `<div class="bg-slate-700 rounded-lg p-3 mb-4 text-sm">
-                        <span class="font-semibold">💡 Hint:</span> ${step.hint}
-                    </div>` : ''}
-                    
-                    <div class="space-y-2">
-                        ${step.options?.map((opt, idx) => `
-                            <button class="option-btn" onclick="window.checkGuideMeAnswer(${idx})">
-                                ${opt}
-                            </button>
-                        `).join('') || ''}
-                    </div>
-                    
-                    <div id="guide-me-step-feedback" class="mt-4"></div>
+                    <button
+                        onclick="window.nextGuideMeStep()"
+                        class="w-full bg-[#9B72CF] text-white py-3 rounded-2xl hover:opacity-90 transition-opacity font-medium"
+                    >
+                        ${this.currentGuideMeStep < this.guideMeSteps.length - 1 ? 'Next Step →' : 'Got it, thanks!'}
+                    </button>
                 </div>
             `;
             
@@ -1392,43 +1507,93 @@ function app() {
         
         renderLeaderboard(leaderboard) {
             const container = document.getElementById('leaderboard-list');
+            const podiumContainer = document.getElementById('podium-container');
             if (!container) return;
             
             if (leaderboard.length === 0) {
                 container.innerHTML = '<div class="p-6 text-center text-slate-400">No data available</div>';
+                if (podiumContainer) podiumContainer.innerHTML = '';
                 return;
             }
             
-            container.innerHTML = leaderboard.map(user => {
+            // Render top 3 podium (BoilerBuddy style)
+            if (podiumContainer && leaderboard.length >= 3) {
+                const top3 = leaderboard.slice(0, 3);
+                podiumContainer.innerHTML = `
+                    <!-- 2nd place -->
+                    <div class="text-center">
+                        <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-3xl p-6 shadow-lg border-2 border-slate-600 mb-3">
+                            <div class="w-20 h-20 mx-auto rounded-full bg-slate-600 flex items-center justify-center text-white text-xl mb-3">
+                                ${top3[1].username ? top3[1].username.substring(0, 2).toUpperCase() : '2'}
+                            </div>
+                            <span class="text-3xl mb-2 block">🥈</span>
+                            <p class="text-sm mb-1 font-medium">${top3[1].username || 'User'}</p>
+                            <p class="text-2xl text-slate-300 font-bold">${top3[1].total_xp || 0}</p>
+                            <p class="text-xs text-slate-400">XP</p>
+                        </div>
+                    </div>
+                    <!-- 1st place -->
+                    <div class="text-center">
+                        <div class="bg-gradient-to-br from-amber-600/30 to-amber-700/20 rounded-3xl p-6 shadow-xl border-2 border-amber-500/50 mb-3 transform scale-105">
+                            <div class="w-24 h-24 mx-auto rounded-full bg-amber-500 flex items-center justify-center text-white text-2xl mb-3">
+                                ${top3[0].username ? top3[0].username.substring(0, 2).toUpperCase() : '1'}
+                            </div>
+                            <span class="text-4xl mb-2 block">🥇</span>
+                            <p class="text-sm mb-1 font-medium">${top3[0].username || 'User'}</p>
+                            <p class="text-3xl text-amber-300 font-bold">${top3[0].total_xp || 0}</p>
+                            <p class="text-xs text-slate-400">XP</p>
+                        </div>
+                    </div>
+                    <!-- 3rd place -->
+                    <div class="text-center">
+                        <div class="bg-gradient-to-br from-amber-700/20 to-amber-800/10 rounded-3xl p-6 shadow-lg border-2 border-amber-600/30 mb-3">
+                            <div class="w-20 h-20 mx-auto rounded-full bg-amber-700 flex items-center justify-center text-white text-xl mb-3">
+                                ${top3[2].username ? top3[2].username.substring(0, 2).toUpperCase() : '3'}
+                            </div>
+                            <span class="text-3xl mb-2 block">🥉</span>
+                            <p class="text-sm mb-1 font-medium">${top3[2].username || 'User'}</p>
+                            <p class="text-2xl text-amber-200 font-bold">${top3[2].total_xp || 0}</p>
+                            <p class="text-xs text-slate-400">XP</p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Render full leaderboard (skip top 3 if podium is shown)
+            const leaderboardToShow = leaderboard.length >= 3 ? leaderboard.slice(3) : leaderboard;
+            
+            container.innerHTML = leaderboardToShow.map(user => {
                 const isCurrentUser = user.user_id === this.currentUser.user_id;
-                const medal = user.rank === 1 ? '🥇' : user.rank === 2 ? '🥈' : user.rank === 3 ? '🥉' : '';
                 
                 return `
-                    <div class="p-4 flex items-center justify-between depth-1 lift-on-hover ${isCurrentUser ? 'bg-blue-900/30' : 'hover:bg-slate-700'}">
-                        <div class="flex items-center space-x-4">
-                            <span class="text-2xl font-bold text-slate-400 w-12">${medal || '#' + user.rank}</span>
-                            <div>
-                                <div class="font-medium ${isCurrentUser ? 'text-blue-400' : ''}">
-                                    ${user.username} ${isCurrentUser ? '(You)' : ''}
-                                </div>
-                                <div class="text-xs text-slate-400">${user.major || 'No major'}</div>
-                            </div>
+                    <div class="px-6 py-4 flex items-center gap-4 transition-colors ${
+                        isCurrentUser ? 'bg-[#9B72CF]/10 border-l-4 border-[#9B72CF]' : 'hover:bg-slate-700/50'
+                    }">
+                        <div class="w-12 flex items-center justify-center">
+                            <span class="text-lg text-slate-400">#${user.rank}</span>
                         </div>
-                        <div class="flex items-center space-x-6">
-                            <div class="text-right">
-                                <div class="font-bold text-lg">${user.total_xp}</div>
-                                <div class="text-xs text-slate-400">XP</div>
+                        <div class="w-12 h-12 rounded-full bg-[#9B72CF] flex items-center justify-center text-white font-semibold">
+                            ${user.username ? user.username.substring(0, 2).toUpperCase() : 'U'}
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <p class="font-medium ${isCurrentUser ? 'text-[#9B72CF]' : ''}">${user.username || 'User'}</p>
+                                ${isCurrentUser ? '<span class="text-xs bg-[#9B72CF]/20 text-[#9B72CF] px-2 py-0.5 rounded-full">You</span>' : ''}
                             </div>
-                            <div class="text-right">
-                                <div class="font-bold">${user.study_streak || 0}🔥</div>
-                                <div class="text-xs text-slate-400">Streak</div>
+                            <p class="text-sm text-slate-400">${user.major || 'No major'}</p>
+                        </div>
+                        <div class="text-right">
+                            <div class="flex items-center gap-2 justify-end mb-1">
+                                <span class="text-green-400">↑</span>
+                                <p class="text-lg font-bold">${user.total_xp || 0}</p>
                             </div>
+                            <p class="text-xs text-slate-400">${user.study_streak || 0} day streak</p>
                         </div>
                     </div>
                 `;
             }).join('');
             
-            // Trigger staggered animations for leaderboard entries
+            // Trigger staggered animations
             this.$nextTick(() => {
                 this.animateStaggeredElements(container);
             });
