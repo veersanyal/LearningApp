@@ -4,7 +4,7 @@ import json
 import re
 import base64
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional, Dict
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_from_directory
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
@@ -2165,6 +2165,59 @@ def get_milestone_notifications_route():
     try:
         notifications = get_milestone_notifications(current_user.id)
         return jsonify({"notifications": notifications})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/heatmap', methods=['GET'])
+def get_heatmap_data():
+    """Get heatmap data (active study sessions)."""
+    try:
+        time_filter = request.args.get('filter', 'now') # now, 24h, week
+        
+        db = get_db()
+        
+        # Determine time threshold
+        if time_filter == 'now':
+            # Last 2 hours
+            threshold = datetime.now() - timedelta(hours=2)
+        elif time_filter == '24h':
+            threshold = datetime.now() - timedelta(hours=24)
+        elif time_filter == 'week':
+            threshold = datetime.now() - timedelta(days=7)
+        else:
+            threshold = datetime.now() - timedelta(hours=2)
+            
+        # Query active sessions per location
+        query = '''
+            SELECT 
+                cl.location_id, cl.location_name, cl.building_code, 
+                cl.latitude, cl.longitude,
+                COUNT(ss.session_id) as student_count
+            FROM campus_locations cl
+            LEFT JOIN study_sessions ss ON cl.location_id = ss.location_id 
+                AND ss.start_time > ?
+            GROUP BY cl.location_id
+        '''
+        
+        cursor = db.cursor.execute(query, (threshold,))
+        results = cursor.fetchall()
+        
+        locations = []
+        for row in results:
+            count = row['student_count']
+            locations.append({
+                "id": row['location_id'],
+                "name": row['location_name'],
+                "x": 50, # Placeholder coordinates for map visualization
+                "y": 50,
+                "students": count,
+                "hot": count > 5 # Simple threshold for "hot"
+            })
+            
+        db.disconnect()
+        
+        return jsonify({"locations": locations})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

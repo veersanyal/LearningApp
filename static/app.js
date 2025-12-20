@@ -27,7 +27,7 @@ function app() {
         authError: '',
         currentUser: {},
         usersOnline: 0,
-        
+
         // Login/Register Forms
         loginForm: {
             username: '',
@@ -41,19 +41,19 @@ function app() {
             graduation_year: null,
             remember: true  // Default to true for better UX
         },
-        
+
         // View State
         currentView: 'home',
         mobileNavOpen: false,
         showUserMenu: false,
-        
+
         // Onboarding State
         onboardingStep: 'checking', // 'checking' = checking auth, null = complete, 'course' = course selection, 'exam-date' = exam date setup
         selectedCourse: '',
         examDate: '',
         topicStrengths: {},
         daysUntilExam: 0,
-        
+
         // Group Study State
         sessionCode: 'ABC-123',
         activeMembers: [
@@ -69,19 +69,11 @@ function app() {
             { id: 4, user: 'Taylor R.', message: 'Is it 6x + 2?', time: '2:08 PM', isSystem: false }
         ],
         chatMessage: '',
-        
+
         // Heatmap State
         heatmapTimeFilter: 'now',
-        studyLocations: [
-            { id: 1, name: 'Hicks Undergraduate Library', x: 35, y: 45, students: 24, hot: true },
-            { id: 2, name: 'PMU Study Rooms', x: 55, y: 30, students: 18, hot: true },
-            { id: 3, name: 'WALC', x: 70, y: 55, students: 32, hot: true },
-            { id: 4, name: 'MATH Building', x: 25, y: 65, students: 15, hot: false },
-            { id: 5, name: 'Engineering Fountain', x: 45, y: 70, students: 8, hot: false },
-            { id: 6, name: 'Krannert', x: 60, y: 50, students: 12, hot: false },
-            { id: 7, name: 'LILY Hall', x: 40, y: 35, students: 6, hot: false }
-        ],
-        
+        studyLocations: [],
+
         // User Stats
         studyStreak: 0,
         totalQuestions: 0,
@@ -91,7 +83,7 @@ function app() {
         masteredTopics: 0,
         dailyProgress: 0,
         xpProgress: {},
-        
+
         // Quiz State
         currentQuestion: null,
         allTopics: [],
@@ -99,42 +91,42 @@ function app() {
         currentGuideMeStep: 0,
         showGuideMeModal: false,
         selectedAnswerIndex: null,
-        
+
         // Leaderboards
         leaderboardType: 'global',
         leaderboardPeriod: 'alltime',
         leaderboardData: [],
         myRank: null,
         totalUsers: 0,
-        
+
         // Achievements
         allAchievements: [],
-        
+
         // Documents
         documents: [],
-        
+
         // Exam Questions
         exams: [],
         selectedExamQuestions: null, // null = not loaded, [] = loaded but empty
         examUploadForm: {
             examName: ''
         },
-        
+
         // Charts
         forgettingCurveChart: null,
         masteryProgressChart: null,
         timeOfDayChart: null,
         topicDistributionChart: null,
         retentionChart: null,
-        
+
         // Initialize app
         async init() {
             // Check authentication
             await this.checkAuth();
-            
+
             // Initialize MathJax lazy loading
             this.initMathJaxLazyLoading();
-            
+
             // Set initial active view
             if (this.isAuthenticated) {
                 // Ensure initial view is visible after Alpine loads
@@ -147,7 +139,7 @@ function app() {
                     }
                 });
             }
-            
+
             if (this.isAuthenticated) {
                 this.loadStats();
                 this.initCharts();
@@ -156,10 +148,10 @@ function app() {
                 this.loadAchievements();
                 this.loadDocuments();
                 this.loadExams();
-                
+
                 // Load activity feed
                 this.loadActivityFeed();
-                
+
                 // Poll for updates every 60 seconds
                 setInterval(() => {
                     this.loadSocialProof();
@@ -168,7 +160,7 @@ function app() {
                         this.loadLeaderboard();
                     }
                 }, 60000);
-                
+
                 // Trigger initial animations on page load
                 this.$nextTick(() => {
                     // Wait for Alpine to finish rendering
@@ -179,7 +171,7 @@ function app() {
                         this.animateCardLists();
                     }, 300);
                 });
-                
+
                 // Watch for view changes - showView() is called via x-init on body
                 this.$watch('currentView', (newView, oldView) => {
                     // showView() is called automatically via x-init="$watch('currentView', value => showView(value))"
@@ -192,7 +184,7 @@ function app() {
                             this.animateCardLists();
                         }, 250); // Reduced delay since CSS handles transition
                     });
-                    
+
                     if (newView === 'leaderboards') {
                         this.loadLeaderboard();
                     } else if (newView === 'achievements') {
@@ -201,7 +193,7 @@ function app() {
                         this.loadDocuments();
                     } else if (newView === 'exam-questions') {
                         this.loadExams();
-                    } else                     if (newView === 'analytics') {
+                    } else if (newView === 'analytics') {
                         // Lazy-load charts only when Analytics view is active
                         setTimeout(() => {
                             this.initCharts();
@@ -212,7 +204,7 @@ function app() {
                             this.initRetentionChart();
                         }, 100);
                     }
-                    
+
                     // Close mobile nav when switching views
                     this.mobileNavOpen = false;
                 });
@@ -220,8 +212,18 @@ function app() {
                 // Load social proof for login screen
                 this.loadSocialProof();
             }
+
+            // Watch for heatmap filter changes
+            this.$watch('heatmapTimeFilter', () => {
+                this.loadHeatmapData();
+            });
+
+            // Initial load if authenticated
+            if (this.isAuthenticated) {
+                this.loadHeatmapData();
+            }
         },
-        
+
         // Animate card lists (documents, exams, questions, etc.)
         animateCardLists() {
             // Animate document cards
@@ -229,7 +231,7 @@ function app() {
             if (docContainer) {
                 this.animateStaggeredElements(docContainer);
             }
-            
+
             // Animate question cards
             const questionContainers = document.querySelectorAll('.animate-card-stagger');
             questionContainers.forEach(container => {
@@ -237,14 +239,14 @@ function app() {
                     this.animateStaggeredElements(container);
                 }
             });
-            
+
             // Animate leaderboard rows
             const leaderboardContainer = document.querySelector('.animate-row-stagger');
             if (leaderboardContainer && leaderboardContainer.offsetParent !== null) {
                 this.animateStaggeredElements(leaderboardContainer, 30);
             }
         },
-        
+
         // Animate stats cards
         animateStatsCards(container = document) {
             const statsCards = Array.from(container.querySelectorAll('.animate-stats-card')).filter(card => {
@@ -252,13 +254,13 @@ function app() {
                 const rect = card.getBoundingClientRect();
                 return rect.width > 0 && rect.height > 0;
             });
-            
+
             statsCards.forEach((card, index) => {
                 const delay = card.getAttribute('data-animate-delay') || index;
                 // Reset to initial state
                 card.style.opacity = '0';
                 card.style.transform = 'scale(0.95)';
-                
+
                 setTimeout(() => {
                     requestAnimationFrame(() => {
                         requestAnimationFrame(() => {
@@ -270,7 +272,7 @@ function app() {
                 }, parseInt(delay) * 100);
             });
         },
-        
+
         async checkAuth() {
             try {
                 const response = await fetch('/auth/me');
@@ -281,7 +283,7 @@ function app() {
                     this.usersOnline = data.users_online;
                     this.xpProgress = data.xp_progress || {};
                     this.studyStreak = data.user.study_streak || 0;
-                    
+
                     // Check if onboarding is needed
                     if (!this.currentUser.course_code) {
                         this.onboardingStep = 'course';
@@ -289,7 +291,7 @@ function app() {
                     } else {
                         this.onboardingStep = null;
                     }
-                    
+
                     // Initialize lucide icons after auth check
                     this.$nextTick(() => {
                         if (window.lucide) {
@@ -303,17 +305,17 @@ function app() {
                 this.isAuthenticated = false;
             }
         },
-        
+
         async login() {
             this.authError = '';
             try {
                 const response = await fetch('/auth/login', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(this.loginForm)
                 });
                 const data = await response.json();
-                
+
                 if (response.ok) {
                     this.isAuthenticated = true;
                     this.currentUser = data.user;
@@ -326,17 +328,17 @@ function app() {
                 this.authError = 'Connection error';
             }
         },
-        
+
         async register() {
             this.authError = '';
             try {
                 const response = await fetch('/auth/register', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(this.registerForm)
                 });
                 const data = await response.json();
-                
+
                 if (response.ok) {
                     this.isAuthenticated = true;
                     this.currentUser = data.user;
@@ -349,10 +351,10 @@ function app() {
                 this.authError = 'Connection error';
             }
         },
-        
+
         async logout() {
             try {
-                await fetch('/auth/logout', {method: 'POST'});
+                await fetch('/auth/logout', { method: 'POST' });
                 this.isAuthenticated = false;
                 this.currentUser = {};
                 this.currentView = 'home';
@@ -361,18 +363,18 @@ function app() {
                 console.error('Logout error:', err);
             }
         },
-        
+
         // Onboarding functions
         async saveCourse() {
             if (!this.selectedCourse) return;
-            
+
             try {
                 const response = await fetch('/api/save-course', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ course_code: this.selectedCourse })
                 });
-                
+
                 if (response.ok) {
                     const data = await response.json();
                     this.currentUser.course_code = this.selectedCourse;
@@ -393,10 +395,10 @@ function app() {
                 alert('Failed to save course. Please try again.');
             }
         },
-        
+
         async saveExamDate() {
             if (!this.examDate) return;
-            
+
             try {
                 const response = await fetch('/api/save-exam-plan', {
                     method: 'POST',
@@ -406,7 +408,7 @@ function app() {
                         topic_confidence: this.topicStrengths
                     })
                 });
-                
+
                 if (response.ok) {
                     // Move to topic confidence step
                     this.onboardingStep = 'topic-confidence';
@@ -425,7 +427,7 @@ function app() {
                 alert('Failed to save exam date. Please try again.');
             }
         },
-        
+
         async skipExamDate() {
             // Skip exam date and move to topic confidence
             this.onboardingStep = 'topic-confidence';
@@ -435,12 +437,12 @@ function app() {
                 }
             });
         },
-        
+
         async skipTopicConfidence() {
             // Skip topic confidence and complete onboarding
             await this.completeOnboarding();
         },
-        
+
         async completeOnboarding() {
             try {
                 // Save topic confidence if provided
@@ -457,7 +459,7 @@ function app() {
                         console.warn('Failed to save topic confidence, continuing anyway');
                     }
                 }
-                
+
                 // Complete onboarding and redirect to dashboard
                 this.onboardingStep = null;
                 window.location.href = '/dashboard';
@@ -468,12 +470,12 @@ function app() {
                 window.location.href = '/dashboard';
             }
         },
-        
+
         // Quick date picker for exam date
         setQuickDate(type) {
             const today = new Date();
             let targetDate = new Date();
-            
+
             if (type === 'tomorrow') {
                 targetDate.setDate(today.getDate() + 1);
             } else if (type === 'nextweek') {
@@ -481,13 +483,13 @@ function app() {
             } else if (type === 'twoweeks') {
                 targetDate.setDate(today.getDate() + 14);
             }
-            
+
             // Format as YYYY-MM-DD for date input
             const year = targetDate.getFullYear();
             const month = String(targetDate.getMonth() + 1).padStart(2, '0');
             const day = String(targetDate.getDate()).padStart(2, '0');
             this.examDate = `${year}-${month}-${day}`;
-            
+
             // Re-initialize icons
             this.$nextTick(() => {
                 if (window.lucide) {
@@ -495,11 +497,11 @@ function app() {
                 }
             });
         },
-        
+
         // Group Study functions
         sendChatMessage() {
             if (!this.chatMessage || !this.chatMessage.trim()) return;
-            
+
             const newMessage = {
                 id: this.chatMessages.length + 1,
                 user: this.currentUser.username || 'You',
@@ -507,10 +509,10 @@ function app() {
                 time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                 isSystem: false
             };
-            
+
             this.chatMessages.push(newMessage);
             this.chatMessage = '';
-            
+
             // Re-initialize icons
             this.$nextTick(() => {
                 if (window.lucide) {
@@ -518,11 +520,11 @@ function app() {
                 }
             });
         },
-        
+
         async loginWithGoogle() {
             // Clear any previous errors
             this.authError = '';
-            
+
             try {
                 // Wait for Google Identity Services to load
                 await new Promise((resolve) => {
@@ -535,7 +537,7 @@ function app() {
                                 resolve();
                             }
                         }, 100);
-                        
+
                         // Timeout after 5 seconds
                         setTimeout(() => {
                             clearInterval(checkInterval);
@@ -543,20 +545,20 @@ function app() {
                         }, 5000);
                     }
                 });
-                
+
                 if (typeof google === 'undefined' || !google.accounts) {
                     this.authError = 'Google Sign In not loaded. Please refresh the page.';
                     return;
                 }
-                
+
                 // Get Google Client ID from environment or use a placeholder
                 const clientId = await this.getGoogleClientId();
-                
+
                 if (!clientId || clientId === 'YOUR_GOOGLE_CLIENT_ID') {
                     this.authError = 'Google Sign In not configured. Please contact support or use username/password.';
                     return;
                 }
-                
+
                 // Initialize Google Sign In
                 google.accounts.id.initialize({
                     client_id: clientId,
@@ -565,14 +567,14 @@ function app() {
                             // Send credential to backend
                             const authResponse = await fetch('/auth/google', {
                                 method: 'POST',
-                                headers: {'Content-Type': 'application/json'},
+                                headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
                                     credential: response.credential
                                 })
                             });
-                            
+
                             const data = await authResponse.json();
-                            
+
                             if (authResponse.ok) {
                                 this.isAuthenticated = true;
                                 this.currentUser = data.user;
@@ -590,7 +592,7 @@ function app() {
                         }
                     }
                 });
-                
+
                 // Trigger sign in popup
                 google.accounts.id.prompt((notification) => {
                     if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
@@ -601,13 +603,13 @@ function app() {
                         );
                     }
                 });
-                
+
             } catch (err) {
                 console.error('Google OAuth error:', err);
                 this.authError = 'Google Sign In error. Please try again or use username/password.';
             }
         },
-        
+
         async getGoogleClientId() {
             // Try to get from backend config
             try {
@@ -619,8 +621,8 @@ function app() {
                 return null;
             }
         },
-        
-        
+
+
         async loadSocialProof() {
             try {
                 const response = await fetch('/social-proof');
@@ -630,7 +632,7 @@ function app() {
                 console.error('Error loading social proof:', err);
             }
         },
-        
+
         loadStats() {
             fetch('/stats')
                 .then(response => response.json())
@@ -638,36 +640,36 @@ function app() {
                     this.updateStatsFromData(data);
                 })
                 .catch(err => console.error('Error loading stats:', err));
-            
+
             // Load analytics
             this.loadAnalytics();
         },
-        
+
         updateStatsFromData(data) {
             if (!data.user_state) return;
-            
+
             const userState = data.user_state;
             let totalAttempts = 0;
             let totalCorrect = 0;
             let topicsCount = 0;
             let mastered = 0;
-            
+
             for (const [topicId, stats] of Object.entries(userState)) {
                 totalAttempts += stats.attempts || 0;
                 totalCorrect += stats.correct || 0;
                 topicsCount++;
                 if (stats.mastery > 0.8) mastered++;
             }
-            
+
             this.totalQuestions = totalAttempts;
             this.accuracy = totalAttempts > 0 ? Math.round((totalCorrect / totalAttempts) * 100) : 0;
             this.topicsStudied = topicsCount;
             this.masteredTopics = mastered;
-            
+
             // Update right panel stats
             this.updateRightPanelStats(userState);
         },
-        
+
         loadAnalytics() {
             fetch('/analytics')
                 .then(response => response.json())
@@ -680,11 +682,11 @@ function app() {
                 })
                 .catch(err => console.error('Error loading analytics:', err));
         },
-        
+
         updatePerformanceInsights(data) {
             const container = document.getElementById('performance-insights');
             if (!container) return;
-            
+
             container.innerHTML = `
                 <p class="flex items-start space-x-2">
                     <span>🔥</span>
@@ -700,16 +702,16 @@ function app() {
                 </p>
             `;
         },
-        
+
         updateWeakTopics(weakTopics) {
             const container = document.getElementById('weak-topics-list');
             if (!container) return;
-            
+
             if (weakTopics.length === 0) {
                 container.innerHTML = '<p class="text-slate-400 text-xs">Great job! No weak topics.</p>';
                 return;
             }
-            
+
             container.innerHTML = weakTopics.slice(0, 3).map(topic => `
                 <div class="flex justify-between items-center p-2 bg-slate-600 rounded">
                     <span class="text-xs truncate flex-1">${topic.topic_id}</span>
@@ -717,14 +719,14 @@ function app() {
                 </div>
             `).join('');
         },
-        
+
         updateRightPanelStats(userState) {
             // Update upcoming reviews
             const reviewsContainer = document.getElementById('upcoming-reviews-list');
             if (reviewsContainer) {
                 const reviewsNeeded = [];
                 const now = new Date();
-                
+
                 for (const [topicId, stats] of Object.entries(userState)) {
                     if (stats.next_review) {
                         const nextReview = new Date(stats.next_review);
@@ -733,7 +735,7 @@ function app() {
                         }
                     }
                 }
-                
+
                 if (reviewsNeeded.length === 0) {
                     reviewsContainer.innerHTML = '<p class="text-slate-400 text-xs">No reviews due soon!</p>';
                 } else {
@@ -746,14 +748,14 @@ function app() {
                 }
             }
         },
-        
+
         initCharts() {
             // Lazy-load charts only when Analytics view is active
             // This prevents unnecessary chart initialization on page load
             if (this.currentView !== 'analytics') {
                 return;
             }
-            
+
             // TODO: Consider using Intersection Observer for even better lazy loading
             // For now, load charts when Analytics view becomes active
             setTimeout(() => {
@@ -766,16 +768,16 @@ function app() {
                 }
             }, 300);
         },
-        
+
         initRetentionChart() {
             const canvas = document.getElementById('retention-chart');
             if (!canvas || !window.Chart) return;
-            
+
             const ctx = canvas.getContext('2d');
             if (this.retentionChart) {
                 this.retentionChart.destroy();
             }
-            
+
             // Sample retention data (would come from backend)
             const retentionData = {
                 labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
@@ -789,7 +791,7 @@ function app() {
                     fill: true
                 }]
             };
-            
+
             this.retentionChart = new Chart(ctx, {
                 type: 'line',
                 data: retentionData,
@@ -806,7 +808,7 @@ function app() {
                             beginAtZero: true,
                             max: 100,
                             ticks: {
-                                callback: function(value) {
+                                callback: function (value) {
                                     return value + '%';
                                 }
                             }
@@ -815,7 +817,7 @@ function app() {
                 }
             });
         },
-        
+
         loadForgettingCurveData() {
             fetch('/forgetting-curve-data')
                 .then(response => response.json())
@@ -824,19 +826,19 @@ function app() {
                 })
                 .catch(err => console.error('Error loading forgetting curve:', err));
         },
-        
+
         renderForgettingCurveChart(data) {
             const ctx = document.getElementById('forgettingCurveChart');
             if (!ctx) return;
-            
+
             if (this.forgettingCurveChart) {
                 this.forgettingCurveChart.destroy();
             }
-            
+
             const datasets = data.topics?.map((topic, idx) => {
                 const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
                 const color = colors[idx % colors.length];
-                
+
                 return {
                     label: topic.name,
                     data: topic.retention_data,
@@ -846,7 +848,7 @@ function app() {
                     fill: false
                 };
             }) || [];
-            
+
             this.forgettingCurveChart = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -884,7 +886,7 @@ function app() {
                 }
             });
         },
-        
+
         loadMasteryProgressData() {
             fetch('/performance-dashboard')
                 .then(response => response.json())
@@ -893,15 +895,15 @@ function app() {
                 })
                 .catch(err => console.error('Error loading mastery progress:', err));
         },
-        
+
         renderMasteryProgressChart(data) {
             const ctx = document.getElementById('masteryProgressChart');
             if (!ctx) return;
-            
+
             if (this.masteryProgressChart) {
                 this.masteryProgressChart.destroy();
             }
-            
+
             // Sample data if none provided
             const labels = data.labels || ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
             const datasets = data.datasets || [{
@@ -912,7 +914,7 @@ function app() {
                 tension: 0.4,
                 fill: true
             }];
-            
+
             this.masteryProgressChart = new Chart(ctx, {
                 type: 'line',
                 data: { labels, datasets },
@@ -942,7 +944,7 @@ function app() {
                 }
             });
         },
-        
+
         loadTimeOfDayData() {
             fetch('/time-of-day-stats')
                 .then(response => response.json())
@@ -951,18 +953,18 @@ function app() {
                 })
                 .catch(err => console.error('Error loading time of day stats:', err));
         },
-        
+
         renderTimeOfDayChart(data) {
             const ctx = document.getElementById('timeOfDayChart');
             if (!ctx) return;
-            
+
             if (this.timeOfDayChart) {
                 this.timeOfDayChart.destroy();
             }
-            
+
             const labels = data.labels || ['6-9 AM', '9-12 PM', '12-3 PM', '3-6 PM', '6-9 PM', '9 PM+'];
             const accuracyData = data.accuracy || [0, 0, 0, 0, 0, 0];
-            
+
             this.timeOfDayChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -998,7 +1000,7 @@ function app() {
                 }
             });
         },
-        
+
         loadTopicDistributionData() {
             fetch('/performance-dashboard')
                 .then(response => response.json())
@@ -1007,18 +1009,18 @@ function app() {
                 })
                 .catch(err => console.error('Error loading topic distribution:', err));
         },
-        
+
         renderTopicDistributionChart(data) {
             const ctx = document.getElementById('topicDistributionChart');
             if (!ctx) return;
-            
+
             if (this.topicDistributionChart) {
                 this.topicDistributionChart.destroy();
             }
-            
+
             const labels = data.labels || [];
             const values = data.values || [];
-            
+
             this.topicDistributionChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
@@ -1043,16 +1045,16 @@ function app() {
                 }
             });
         },
-        
+
         generateStudyHeatmap() {
             const container = document.getElementById('studyHeatmap');
             if (!container) return;
-            
+
             // Generate 8 weeks of data
             const weeks = 8;
             const days = 7;
             let html = '<div class="flex space-x-1">';
-            
+
             for (let week = 0; week < weeks; week++) {
                 html += '<div class="flex flex-col space-y-1">';
                 for (let day = 0; day < days; day++) {
@@ -1062,10 +1064,10 @@ function app() {
                 html += '</div>';
             }
             html += '</div>';
-            
+
             container.innerHTML = html;
         },
-        
+
         setupEventListeners() {
             this.setupUploadForm();
             this.setupQuizButtons();
@@ -1073,47 +1075,47 @@ function app() {
             this.setupExamPrepForm();
             this.setupSettingsButtons();
         },
-        
+
         setupUploadForm() {
             const form = document.getElementById('upload-form');
             if (!form) return;
-            
+
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const fileInput = document.getElementById('file-input');
                 const statusDiv = document.getElementById('upload-status');
-                
+
                 if (!fileInput.files.length) {
                     statusDiv.textContent = 'Please select a file';
                     return;
                 }
-                
+
                 const formData = new FormData();
                 formData.append('file', fileInput.files[0]);
-                
+
                 statusDiv.textContent = 'Uploading and extracting topics...';
-                
+
                 try {
                     const response = await fetch('/upload', {
                         method: 'POST',
                         body: formData
                     });
-                    
+
                     if (!response.ok) {
                         const errorData = await response.json().catch(() => ({ error: 'Unknown error occurred' }));
                         statusDiv.textContent = 'Error: ' + (errorData.error || `Server error: ${response.status}`);
                         console.error('Upload error:', errorData);
                         return;
                     }
-                    
+
                     const data = await response.json();
                     console.log('Upload response:', data); // Debug log
-                    
+
                     if (data.error) {
                         statusDiv.textContent = 'Error: ' + data.error;
                         return;
                     }
-                    
+
                     if (!data.topics || !Array.isArray(data.topics)) {
                         statusDiv.textContent = 'Error: Invalid response from server. Topics not found.';
                         console.error('Invalid topics data:', data);
@@ -1121,7 +1123,7 @@ function app() {
                         console.error('Full response:', await response.clone().json());
                         return;
                     }
-                    
+
                     statusDiv.textContent = 'Topics extracted successfully!';
                     this.allTopics = data.topics;
                     this.displayTopics(data.topics);
@@ -1133,34 +1135,34 @@ function app() {
                 }
             });
         },
-        
+
         displayTopics(topics) {
             const topicsList = document.getElementById('topics-list');
             const section = document.getElementById('topics-section');
-            
+
             if (!topicsList || !section) return;
-            
+
             // Safety check
             if (!topics || !Array.isArray(topics) || topics.length === 0) {
                 topicsList.innerHTML = '<li class="text-slate-400">No topics found</li>';
                 section.style.display = 'block';
                 return;
             }
-            
+
             topicsList.innerHTML = '';
-            
+
             topics.forEach((topic, index) => {
                 const li = document.createElement('li');
                 li.className = 'topic-item';
-                
+
                 const header = document.createElement('div');
                 header.className = 'topic-header';
-                
+
                 const nameSpan = document.createElement('span');
                 nameSpan.className = 'topic-name';
                 nameSpan.textContent = topic.name;
                 nameSpan.addEventListener('click', () => this.toggleExplanation(index));
-                
+
                 const testBtn = document.createElement('button');
                 testBtn.className = 'test-topic-btn';
                 testBtn.innerHTML = '📝 Practice';
@@ -1168,31 +1170,31 @@ function app() {
                     e.stopPropagation();
                     this.generateQuestionForTopic(topic.topic_id);
                 });
-                
+
                 header.appendChild(nameSpan);
                 header.appendChild(testBtn);
-                
+
                 const explanation = document.createElement('div');
                 explanation.className = 'topic-explanation';
                 explanation.id = `explanation-${index}`;
                 explanation.textContent = topic.explanation || 'No explanation available.';
                 explanation.style.display = 'none';
-                
+
                 li.appendChild(header);
                 li.appendChild(explanation);
                 topicsList.appendChild(li);
             });
-            
+
             section.style.display = 'block';
         },
-        
+
         toggleExplanation(index) {
             const explanation = document.getElementById(`explanation-${index}`);
             if (explanation) {
                 explanation.style.display = explanation.style.display === 'none' ? 'block' : 'none';
             }
         },
-        
+
         setupQuizButtons() {
             const startBtn = document.getElementById('start-quiz-btn');
             if (startBtn) {
@@ -1201,29 +1203,29 @@ function app() {
                     this.loadNextQuestion();
                 });
             }
-            
+
             const nextBtn = document.getElementById('next-btn');
             if (nextBtn) {
                 nextBtn.addEventListener('click', () => this.loadNextQuestion());
             }
         },
-        
+
         async generateQuestionForTopic(topicId) {
             this.currentView = 'study';
             await this.$nextTick();
-            
+
             const quizSection = document.getElementById('quiz-section');
             const noQuizMessage = document.getElementById('no-quiz-message');
-            
+
             if (quizSection) quizSection.style.display = 'block';
             if (noQuizMessage) noQuizMessage.style.display = 'none';
-            
+
             document.getElementById('question-text').textContent = 'Loading question...';
             document.getElementById('options-container').innerHTML = '';
             document.getElementById('feedback').style.display = 'none';
             document.getElementById('next-btn').style.display = 'none';
             document.getElementById('guide-me-container').style.display = 'block';
-            
+
             try {
                 const response = await fetch('/generate-question', {
                     method: 'POST',
@@ -1231,32 +1233,32 @@ function app() {
                     body: JSON.stringify({ topic_id: topicId })
                 });
                 const data = await response.json();
-                
+
                 if (data.error) {
                     document.getElementById('question-text').textContent = 'Error: ' + data.error;
                     return;
                 }
-                
+
                 this.currentQuestion = data;
                 this.displayQuestion(data);
             } catch (err) {
                 document.getElementById('question-text').textContent = 'Error: ' + err.message;
             }
         },
-        
+
         async loadNextQuestion() {
             const quizSection = document.getElementById('quiz-section');
             const noQuizMessage = document.getElementById('no-quiz-message');
-            
+
             if (quizSection) quizSection.style.display = 'block';
             if (noQuizMessage) noQuizMessage.style.display = 'none';
-            
+
             document.getElementById('question-text').textContent = 'Loading question...';
             document.getElementById('options-container').innerHTML = '';
             document.getElementById('feedback').style.display = 'none';
             document.getElementById('next-btn').style.display = 'none';
             document.getElementById('guide-me-container').style.display = 'block';
-            
+
             try {
                 const response = await fetch('/generate-question', {
                     method: 'POST',
@@ -1264,28 +1266,28 @@ function app() {
                     body: JSON.stringify({})
                 });
                 const data = await response.json();
-                
+
                 if (data.error) {
                     document.getElementById('question-text').textContent = 'Error: ' + data.error;
                     return;
                 }
-                
+
                 this.currentQuestion = data;
                 this.displayQuestion(data);
             } catch (err) {
                 document.getElementById('question-text').textContent = 'Error: ' + err.message;
             }
         },
-        
+
         displayQuestion(question) {
             // Update topic name badge
             const topicNameEl = document.getElementById('topic-name');
             if (topicNameEl) topicNameEl.textContent = question.topic_name || 'General';
-            
+
             // Update question text
             const questionTextEl = document.getElementById('question-text');
             if (questionTextEl) questionTextEl.innerHTML = question.question || '';
-            
+
             // Show progress header and stepper
             const progressHeader = document.getElementById('study-progress-header');
             const stepStepper = document.getElementById('step-stepper');
@@ -1293,10 +1295,10 @@ function app() {
             if (progressHeader) progressHeader.style.display = 'block';
             if (stepStepper) stepStepper.style.display = 'block';
             if (stuckButton) stuckButton.style.display = 'block';
-            
+
             // Initialize steps (placeholder for now)
             this.initializeSteps();
-            
+
             // Clear previous state
             const hintContainer = document.getElementById('hint-container');
             if (hintContainer) hintContainer.style.display = 'none';
@@ -1309,12 +1311,12 @@ function app() {
                 checkBtn.disabled = true;
                 this.selectedAnswerIndex = null;
             }
-            
+
             // Render options (BoilerBuddy style)
             const optionsContainer = document.getElementById('options-container');
             if (optionsContainer) {
                 optionsContainer.innerHTML = '';
-                
+
                 question.options.forEach((option, index) => {
                     const btn = document.createElement('button');
                     btn.className = 'w-full text-left p-4 rounded-2xl border-2 border-slate-600 hover:border-[#9B72CF]/50 hover:bg-[#9B72CF]/5 transition-all';
@@ -1337,48 +1339,46 @@ function app() {
                     optionsContainer.appendChild(btn);
                 });
             }
-            
+
             if (window.MathJax) {
                 setTimeout(() => {
                     MathJax.typesetPromise();
                 }, 100);
             }
         },
-        
+
         initializeSteps() {
             // Create placeholder steps (can be enhanced with actual step data)
             const stepsContainer = document.getElementById('steps-container');
             if (!stepsContainer) return;
-            
+
             const steps = [
                 { id: 1, title: 'Understand the problem', completed: false },
                 { id: 2, title: 'Identify the rule', completed: false },
                 { id: 3, title: 'Apply the formula', completed: false },
                 { id: 4, title: 'Simplify the result', completed: false }
             ];
-            
+
             stepsContainer.innerHTML = steps.map((step, idx) => `
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center ${
-                        step.completed
-                            ? 'bg-green-500 text-white'
-                            : idx === 0
-                            ? 'bg-[#9B72CF] text-white'
-                            : 'bg-slate-700 text-slate-400'
-                    }">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center ${step.completed
+                    ? 'bg-green-500 text-white'
+                    : idx === 0
+                        ? 'bg-[#9B72CF] text-white'
+                        : 'bg-slate-700 text-slate-400'
+                }">
                         ${step.completed ? '✓' : step.id}
                     </div>
-                    <span class="${
-                        step.completed
-                            ? 'text-green-400'
-                            : idx === 0
-                            ? 'text-white'
-                            : 'text-slate-400'
-                    }">${step.title}</span>
+                    <span class="${step.completed
+                    ? 'text-green-400'
+                    : idx === 0
+                        ? 'text-white'
+                        : 'text-slate-400'
+                }">${step.title}</span>
                 </div>
             `).join('');
         },
-        
+
         showHint() {
             const hintContainer = document.getElementById('hint-container');
             const hintText = document.getElementById('hint-text');
@@ -1387,15 +1387,15 @@ function app() {
                 hintContainer.style.display = 'block';
             }
         },
-        
+
         checkAnswer() {
             if (this.selectedAnswerIndex === null || this.selectedAnswerIndex === undefined) return;
             this.selectAnswer(this.selectedAnswerIndex);
         },
-        
+
         async selectAnswer(selectedIndex) {
             const isCorrect = selectedIndex === this.currentQuestion.correct_answer;
-            
+
             // Disable all options
             const optionsContainer = document.getElementById('options-container');
             if (optionsContainer) {
@@ -1415,13 +1415,13 @@ function app() {
                     }
                 });
             }
-            
+
             // Show feedback (BoilerBuddy style)
             const feedbackDiv = document.getElementById('feedback');
             const feedbackContent = document.getElementById('feedback-content');
             const nextBtn = document.getElementById('next-btn');
             const checkBtn = document.getElementById('check-answer-btn');
-            
+
             if (feedbackDiv && feedbackContent) {
                 feedbackContent.innerHTML = `
                     <div class="${isCorrect ? 'bg-green-900/30 border border-green-500' : 'bg-red-900/30 border border-red-500'} rounded-2xl p-4">
@@ -1433,16 +1433,16 @@ function app() {
                 `;
                 feedbackDiv.style.display = 'block';
             }
-            
+
             if (nextBtn) nextBtn.style.display = 'block';
             if (checkBtn) checkBtn.disabled = true;
-            
+
             if (window.MathJax) {
                 setTimeout(() => {
                     MathJax.typesetPromise();
                 }, 100);
             }
-            
+
             try {
                 const response = await fetch('/submit-answer', {
                     method: 'POST',
@@ -1452,18 +1452,18 @@ function app() {
                         is_correct: isCorrect
                     })
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (data.success && data.user_state) {
                     // Update stats directly from response
                     this.updateStatsFromData({ user_state: data.user_state });
-                    
+
                     // Update XP if provided
                     if (data.xp_progress) {
                         this.xpProgress = data.xp_progress;
                     }
-                    
+
                     // Show achievements if any
                     if (data.new_achievements && data.new_achievements.length > 0) {
                         const achievementNames = data.new_achievements.map(a => a.achievement_name || a.name || 'Achievement').join(', ');
@@ -1481,14 +1481,14 @@ function app() {
         },
         async openGuideMeModal() {
             if (!this.currentQuestion) return;
-            
+
             this.showGuideMeModal = true;
             const content = document.getElementById('guide-me-content');
-            
+
             if (content) {
                 content.innerHTML = '<div class="spinner mx-auto"></div>';
             }
-            
+
             try {
                 const response = await fetch('/guide-me', {
                     method: 'POST',
@@ -1500,12 +1500,12 @@ function app() {
                     })
                 });
                 const data = await response.json();
-                
+
                 if (data.error) {
                     if (content) content.innerHTML = `<p class="text-red-400">Error: ${data.error}</p>`;
                     return;
                 }
-                
+
                 this.guideMeSteps = data.sub_questions || [];
                 this.currentGuideMeStep = 0;
                 this.renderGuideMeStep();
@@ -1513,15 +1513,15 @@ function app() {
                 if (content) content.innerHTML = `<p class="text-red-400">Error: ${err.message}</p>`;
             }
         },
-        
+
         renderGuideMeStep() {
             const content = document.getElementById('guide-me-content');
             if (!content || !this.guideMeSteps.length) return;
-            
+
             const step = this.guideMeSteps[this.currentGuideMeStep];
             const stepNum = this.currentGuideMeStep + 1;
             const totalSteps = this.guideMeSteps.length;
-            
+
             content.innerHTML = `
                 <div class="space-y-6">
                     ${this.guideMeSteps.map((s, idx) => `
@@ -1550,17 +1550,17 @@ function app() {
                     </button>
                 </div>
             `;
-            
+
             if (window.MathJax) {
                 MathJax.typesetPromise();
             }
         },
-        
+
         checkGuideMeAnswer(selectedIdx) {
             const step = this.guideMeSteps[this.currentGuideMeStep];
             const isCorrect = selectedIdx === step.correct_answer;
             const feedback = document.getElementById('guide-me-step-feedback');
-            
+
             if (isCorrect) {
                 feedback.innerHTML = `
                     <div class="bg-green-900/50 border border-green-500 rounded-lg p-4">
@@ -1580,7 +1580,7 @@ function app() {
                 `;
             }
         },
-        
+
         nextGuideMeStep() {
             this.currentGuideMeStep++;
             if (this.currentGuideMeStep >= this.guideMeSteps.length) {
@@ -1591,13 +1591,13 @@ function app() {
                 this.renderGuideMeStep();
             }
         },
-        
+
         closeGuideMeModal() {
             this.showGuideMeModal = false;
             this.guideMeSteps = [];
             this.currentGuideMeStep = 0;
         },
-        
+
         setupExamPrepForm() {
             const form = document.getElementById('exam-prep-form');
             if (form) {
@@ -1607,11 +1607,11 @@ function app() {
                 });
             }
         },
-        
+
         populateExamTopics(topics) {
             const container = document.getElementById('exam-topics-selector');
             if (!container) return;
-            
+
             container.innerHTML = topics.map((topic, idx) => `
                 <label class="flex items-center space-x-2 p-2 hover:bg-slate-600 rounded cursor-pointer">
                     <input type="checkbox" value="${topic.topic_id}" 
@@ -1620,18 +1620,18 @@ function app() {
                 </label>
             `).join('');
         },
-        
+
         async createExamPlan() {
             const examName = document.getElementById('exam-name').value;
             const examDate = document.getElementById('exam-date').value;
             const selectedTopics = Array.from(document.querySelectorAll('.exam-topic-checkbox:checked'))
                 .map(cb => cb.value);
-            
+
             if (!examName || !examDate || selectedTopics.length === 0) {
                 alert('Please fill in all fields and select at least one topic');
                 return;
             }
-            
+
             try {
                 const response = await fetch('/exam-prep/create', {
                     method: 'POST',
@@ -1643,24 +1643,24 @@ function app() {
                     })
                 });
                 const data = await response.json();
-                
+
                 if (data.error) {
                     alert('Error: ' + data.error);
                     return;
                 }
-                
+
                 this.displayExamReadiness(data);
             } catch (err) {
                 alert('Error: ' + err.message);
             }
         },
-        
+
         displayExamReadiness(data) {
             document.getElementById('exam-readiness-dashboard').style.display = 'block';
             document.getElementById('overall-readiness').textContent = Math.round(data.overall_readiness || 0) + '%';
             document.getElementById('days-until-exam').textContent = data.days_until_exam || 0;
             document.getElementById('predicted-score').textContent = Math.round(data.predicted_score || 0) + '%';
-            
+
             const topicsList = document.getElementById('topic-readiness-list');
             topicsList.innerHTML = (data.topic_readiness || []).map(topic => `
                 <div>
@@ -1673,7 +1673,7 @@ function app() {
                     </div>
                 </div>
             `).join('');
-            
+
             const goalsList = document.getElementById('daily-goals-list');
             goalsList.innerHTML = (data.daily_goals || []).map(goal => `
                 <div class="flex justify-between items-center p-3 bg-slate-700 rounded-lg">
@@ -1682,24 +1682,24 @@ function app() {
                 </div>
             `).join('');
         },
-        
+
         setupSettingsButtons() {
             const saveBtn = document.getElementById('save-progress-btn');
             if (saveBtn) {
                 saveBtn.addEventListener('click', () => this.saveProgress());
             }
-            
+
             const loadBtn = document.getElementById('load-progress-btn');
             if (loadBtn) {
                 loadBtn.addEventListener('click', () => this.loadProgress());
             }
-            
+
             const exportBtn = document.getElementById('export-report-btn');
             if (exportBtn) {
                 exportBtn.addEventListener('click', () => this.exportReport());
             }
         },
-        
+
         async saveProgress() {
             const status = document.getElementById('settings-status');
             try {
@@ -1712,7 +1712,7 @@ function app() {
                 status.className = 'mt-3 text-sm text-red-400';
             }
         },
-        
+
         async loadProgress() {
             const status = document.getElementById('settings-status');
             try {
@@ -1726,7 +1726,7 @@ function app() {
                 status.className = 'mt-3 text-sm text-red-400';
             }
         },
-        
+
         async exportReport() {
             const status = document.getElementById('settings-status');
             try {
@@ -1739,34 +1739,34 @@ function app() {
                 status.className = 'mt-3 text-sm text-red-400';
             }
         },
-        
+
         async clearUserData() {
             if (!confirm('Are you sure you want to delete all your progress? This cannot be undone.')) {
                 return;
             }
-            
+
             // In production, this would call a backend endpoint
             alert('Feature not yet implemented in this demo');
         },
-        
+
         async loadLeaderboard() {
             try {
                 const response = await fetch(
                     `/leaderboard/${this.leaderboardType}?period=${this.leaderboardPeriod}`
                 );
                 const data = await response.json();
-                
+
                 if (data.leaderboard) {
                     this.leaderboardData = data.leaderboard;
                     this.renderLeaderboard(data.leaderboard);
                 }
-                
+
                 // Get my rank
                 const rankResponse = await fetch(
                     `/leaderboard/my-rank?type=${this.leaderboardType}&period=${this.leaderboardPeriod}`
                 );
                 const rankData = await rankResponse.json();
-                
+
                 if (rankData.user_rank) {
                     this.myRank = rankData.user_rank.rank;
                     this.totalUsers = rankData.total_users;
@@ -1775,18 +1775,31 @@ function app() {
                 console.error('Error loading leaderboard:', err);
             }
         },
-        
+
+        async loadHeatmapData() {
+            try {
+                const response = await fetch(`/api/heatmap?filter=${this.heatmapTimeFilter}`);
+                const data = await response.json();
+
+                if (data.locations) {
+                    this.studyLocations = data.locations;
+                }
+            } catch (err) {
+                console.error('Error loading heatmap:', err);
+            }
+        },
+
         renderLeaderboard(leaderboard) {
             const container = document.getElementById('leaderboard-list');
             const podiumContainer = document.getElementById('podium-container');
             if (!container) return;
-            
+
             if (leaderboard.length === 0) {
                 container.innerHTML = '<div class="p-6 text-center text-slate-400">No data available</div>';
                 if (podiumContainer) podiumContainer.innerHTML = '';
                 return;
             }
-            
+
             // Render top 3 podium (BoilerBuddy style)
             if (podiumContainer && leaderboard.length >= 3) {
                 const top3 = leaderboard.slice(0, 3);
@@ -1829,16 +1842,15 @@ function app() {
                     </div>
                 `;
             }
-            
+
             // Render full leaderboard (skip top 3 if podium is shown)
             const leaderboardToShow = leaderboard.length >= 3 ? leaderboard.slice(3) : leaderboard;
-            
+
             container.innerHTML = leaderboardToShow.map(user => {
                 const isCurrentUser = user.user_id === this.currentUser.user_id;
-                
+
                 return `
-                    <div class="px-6 py-4 flex items-center gap-4 transition-colors ${
-                        isCurrentUser ? 'bg-[#9B72CF]/10 border-l-4 border-[#9B72CF]' : 'hover:bg-slate-700/50'
+                    <div class="px-6 py-4 flex items-center gap-4 transition-colors ${isCurrentUser ? 'bg-[#9B72CF]/10 border-l-4 border-[#9B72CF]' : 'hover:bg-slate-700/50'
                     }">
                         <div class="w-12 flex items-center justify-center">
                             <span class="text-lg text-slate-400">#${user.rank}</span>
@@ -1863,13 +1875,13 @@ function app() {
                     </div>
                 `;
             }).join('');
-            
+
             // Trigger staggered animations
             this.$nextTick(() => {
                 this.animateStaggeredElements(container);
             });
         },
-        
+
         async loadDocuments() {
             try {
                 const response = await fetch('/documents');
@@ -1888,14 +1900,14 @@ function app() {
                 console.error('Error loading documents:', err);
             }
         },
-        
+
         async loadDocument(documentId) {
             try {
                 const response = await fetch(`/documents/${documentId}/load`, {
                     method: 'POST'
                 });
                 const data = await response.json();
-                
+
                 if (response.ok) {
                     alert('Document loaded successfully! Topics are now available for study.');
                     this.allTopics = data.topics || [];
@@ -1912,18 +1924,18 @@ function app() {
                 alert('Error loading document');
             }
         },
-        
+
         async deleteDocument(documentId) {
             if (!confirm('Are you sure you want to delete this document?')) {
                 return;
             }
-            
+
             try {
                 const response = await fetch(`/documents/${documentId}/delete`, {
                     method: 'DELETE'
                 });
                 const data = await response.json();
-                
+
                 if (response.ok) {
                     // Remove from list
                     this.documents = this.documents.filter(d => d.document_id !== documentId);
@@ -1936,7 +1948,7 @@ function app() {
                 alert('Error deleting document');
             }
         },
-        
+
         formatFileSize(bytes) {
             if (!bytes) return '0 B';
             const k = 1024;
@@ -1944,19 +1956,19 @@ function app() {
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
         },
-        
+
         formatDate(dateString) {
             if (!dateString) return '';
             const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'short', 
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit'
             });
         },
-        
+
         // Exam Questions Functions
         async loadExams() {
             try {
@@ -1978,37 +1990,37 @@ function app() {
                 console.error('Error loading exams:', err);
             }
         },
-        
+
         async uploadExam() {
             const form = document.getElementById('exam-upload-form');
             const fileInput = document.getElementById('exam-file-input');
             const statusDiv = document.getElementById('exam-upload-status');
-            
+
             if (!fileInput.files.length) {
                 statusDiv.textContent = 'Please select a file';
                 return;
             }
-            
+
             if (!this.examUploadForm.examName) {
                 statusDiv.textContent = 'Please enter an exam name';
                 return;
             }
-            
+
             const formData = new FormData();
             formData.append('file', fileInput.files[0]);
             formData.append('exam_name', this.examUploadForm.examName);
-            
+
             statusDiv.textContent = 'Uploading and extracting questions...';
-            
+
             try {
                 statusDiv.textContent = 'Uploading and extracting questions...';
                 statusDiv.className = 'text-sm mt-2 text-center text-slate-400';
-                
+
                 const response = await fetch('/exam/upload', {
                     method: 'POST',
                     body: formData
                 });
-                
+
                 let data;
                 try {
                     data = await response.json();
@@ -2018,7 +2030,7 @@ function app() {
                     statusDiv.className = 'text-sm mt-2 text-center text-red-400';
                     return;
                 }
-                
+
                 if (response.ok && data.success) {
                     if (data.status === 'processing') {
                         // Incremental processing started
@@ -2027,7 +2039,7 @@ function app() {
                         this.examUploadForm.examName = '';
                         fileInput.value = '';
                         this.loadExams();
-                        
+
                         // Poll for progress
                         this.pollExamProgress(data.exam_id);
                     } else {
@@ -2050,18 +2062,18 @@ function app() {
                 console.error('Upload error:', err);
             }
         },
-        
+
         async analyzeExam(examId) {
             if (!confirm('This will analyze all questions using AI. This may take a while. Continue?')) {
                 return;
             }
-            
+
             try {
                 const response = await fetch(`/exam/${examId}/analyze`, {
                     method: 'POST'
                 });
                 const data = await response.json();
-                
+
                 if (response.ok && data.success) {
                     alert(data.message || `Analysis started for ${data.total} questions. This may take a while.`);
                     this.loadExams();
@@ -2079,12 +2091,12 @@ function app() {
                 alert('Error analyzing exam');
             }
         },
-        
+
         pollExamProgress(examId) {
             // Poll every 3 seconds for progress updates
             const maxPolls = 200; // Poll for up to 10 minutes (for analysis)
             let pollCount = 0;
-            
+
             const pollInterval = setInterval(async () => {
                 pollCount++;
                 if (pollCount > maxPolls) {
@@ -2096,7 +2108,7 @@ function app() {
                     }
                     return;
                 }
-                
+
                 try {
                     const response = await fetch('/exam/list');
                     const data = await response.json();
@@ -2112,7 +2124,7 @@ function app() {
                                     } else if (exam.current_page) {
                                         statusDiv.textContent = `Extracting page ${exam.current_page} of ${exam.total_pages}... ${exam.total_questions} questions extracted so far.`;
                                     } else {
-                                    statusDiv.textContent = `Processing... ${exam.total_questions} questions extracted so far from ${exam.total_pages} pages.`;
+                                        statusDiv.textContent = `Processing... ${exam.total_questions} questions extracted so far from ${exam.total_pages} pages.`;
                                     }
                                     statusDiv.className = 'text-sm mt-2 text-center text-blue-400';
                                 } else {
@@ -2122,15 +2134,15 @@ function app() {
                                     clearInterval(pollInterval);
                                 }
                             }
-                            
+
                             // Refresh exam list to update analyzed count
                             this.loadExams();
-                            
+
                             // Refresh questions if viewing them
                             if (this.selectedExamQuestions && this.selectedExamQuestions.length > 0) {
                                 this.viewExamQuestions(examId);
                             }
-                            
+
                             // Stop polling if not processing
                             if (!exam.is_processing) {
                                 clearInterval(pollInterval);
@@ -2142,7 +2154,7 @@ function app() {
                 }
             }, 3000); // Poll every 3 seconds
         },
-        
+
         async retryExamProcessing(examId) {
             if (!confirm('This will re-process the exam file. Continue?')) {
                 return;
@@ -2164,19 +2176,19 @@ function app() {
                 alert('Error retrying exam processing');
             }
         },
-        
+
         async viewExamQuestions(examId) {
             try {
                 console.log('[VIEW_QUESTIONS] Loading questions for exam:', examId);
-                
+
                 // Set to empty array first to show loading state
                 this.selectedExamQuestions = [];
-                
+
                 const response = await fetch(`/exam/${examId}/questions`);
                 const data = await response.json();
-                
+
                 console.log('[VIEW_QUESTIONS] Response:', data);
-                
+
                 if (response.ok) {
                     // Process questions with error handling
                     this.selectedExamQuestions = (data.questions || []).map(q => {
@@ -2201,9 +2213,9 @@ function app() {
                             };
                         }
                     });
-                    
+
                     console.log('[VIEW_QUESTIONS] Loaded', this.selectedExamQuestions.length, 'questions');
-                    
+
                     // Trigger card animations for newly loaded questions
                     this.$nextTick(() => {
                         // Animate cards in
@@ -2211,7 +2223,7 @@ function app() {
                         if (questionContainer) {
                             this.animateStaggeredElements(questionContainer);
                         }
-                        
+
                         // Initialize lazy loading for MathJax after DOM updates
                         setTimeout(() => {
                             this.initMathJaxLazyLoading();
@@ -2221,7 +2233,7 @@ function app() {
                             }, 500);
                         }, 100);
                     });
-                    
+
                     // Scroll to questions section (whether empty or not)
                     setTimeout(() => {
                         // Try to find the questions section or empty state
@@ -2247,18 +2259,18 @@ function app() {
                 alert('Error loading questions: ' + err.message);
             }
         },
-        
+
         async deleteExam(examId) {
             if (!confirm('Are you sure you want to delete this exam? This will delete all questions and associated data.')) {
                 return;
             }
-            
+
             try {
                 const response = await fetch(`/exam/${examId}/delete`, {
                     method: 'DELETE'
                 });
                 const data = await response.json();
-                
+
                 if (response.ok) {
                     // Remove from list
                     this.exams = this.exams.filter(e => e.exam_id !== examId);
@@ -2279,7 +2291,7 @@ function app() {
                 alert('Error deleting exam');
             }
         },
-        
+
         formatQuestionText(text) {
             if (!text) return '';
             // Escape HTML and preserve line breaks
@@ -2288,24 +2300,24 @@ function app() {
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;')
                 .replace(/\n/g, '<br>');
-            
+
             // MathJax will handle LaTeX rendering automatically
             return formatted;
         },
-        
+
         renderMath(text) {
             if (!text) return '';
-            
+
             try {
                 // Escape HTML but preserve LaTeX delimiters
                 let processed = String(text)
                     .replace(/&/g, '&amp;')
                     .replace(/</g, '&lt;')
                     .replace(/>/g, '&gt;');
-                
+
                 // Convert newlines to <br>
                 processed = processed.replace(/\n/g, '<br>');
-                
+
                 // Add class to mark for MathJax processing (lazy loading)
                 // MathJax will be triggered by Intersection Observer for visible elements
                 return processed;
@@ -2314,27 +2326,27 @@ function app() {
                 return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             }
         },
-        
+
         // Debounced MathJax rendering function
         mathJaxRenderQueue: [],
         mathJaxRenderTimer: null,
-        
+
         queueMathJaxRender(element) {
             // Add element to queue if not already queued
             if (!this.mathJaxRenderQueue.includes(element)) {
                 this.mathJaxRenderQueue.push(element);
             }
-            
+
             // Debounce: wait 100ms before rendering to batch multiple calls
             clearTimeout(this.mathJaxRenderTimer);
             this.mathJaxRenderTimer = setTimeout(() => {
                 this.processMathJaxQueue();
             }, 100);
         },
-        
+
         async processMathJaxQueue() {
             if (this.mathJaxRenderQueue.length === 0) return;
-            
+
             // Wait for MathJax to be ready
             if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
                 try {
@@ -2343,28 +2355,28 @@ function app() {
                     console.log('MathJax startup error:', e);
                 }
             }
-            
+
             if (!window.MathJax || !window.MathJax.typesetPromise) {
                 console.log('MathJax not ready yet');
                 return;
             }
-            
+
             // Filter to only visible elements
             const visibleElements = this.mathJaxRenderQueue.filter(el => {
                 if (!el || !document.contains(el)) return false;
                 const rect = el.getBoundingClientRect();
                 return rect.top < window.innerHeight + 500 && rect.bottom > -500; // 500px buffer
             });
-            
+
             if (visibleElements.length === 0) {
                 this.mathJaxRenderQueue = [];
                 return;
             }
-            
+
             try {
                 // Render only visible elements
                 await window.MathJax.typesetPromise(visibleElements);
-                
+
                 // Remove rendered elements from queue
                 this.mathJaxRenderQueue = this.mathJaxRenderQueue.filter(
                     el => !visibleElements.includes(el)
@@ -2375,7 +2387,7 @@ function app() {
                 this.mathJaxRenderQueue = [];
             }
         },
-        
+
         // Initialize lazy loading for MathJax
         initMathJaxLazyLoading() {
             // Wait for MathJax to load
@@ -2383,19 +2395,19 @@ function app() {
                 setTimeout(() => this.initMathJaxLazyLoading(), 100);
                 return;
             }
-            
+
             // Clean up existing observer if any
             if (this.mathJaxObserver) {
                 this.mathJaxObserver.disconnect();
             }
-            
+
             // Create Intersection Observer for lazy loading
             const observerOptions = {
                 root: null,
                 rootMargin: '200px', // Start rendering 200px before element is visible
                 threshold: 0.01
             };
-            
+
             const self = this;
             const mathObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
@@ -2410,7 +2422,7 @@ function app() {
                     }
                 });
             }, observerOptions);
-            
+
             // Observe all elements with math content
             setTimeout(() => {
                 const mathElements = document.querySelectorAll('.mathjax-process');
@@ -2419,7 +2431,7 @@ function app() {
                         mathObserver.observe(el);
                     }
                 });
-                
+
                 // Also observe any new elements that might be added dynamically
                 // Re-run observer setup when questions are loaded
                 if (this.selectedExamQuestions && this.selectedExamQuestions.length > 0) {
@@ -2432,16 +2444,16 @@ function app() {
                     }, 500);
                 }
             }, 200);
-            
+
             // Store observer for cleanup
             this.mathJaxObserver = mathObserver;
         },
-        
+
         async loadAchievements() {
             try {
                 const response = await fetch('/achievements');
                 const data = await response.json();
-                
+
                 if (data.achievements) {
                     this.allAchievements = data.achievements;
                     // Trigger animations for achievement cards
@@ -2456,12 +2468,12 @@ function app() {
                 console.error('Error loading achievements:', err);
             }
         },
-        
+
         async loadActivityFeed() {
             try {
                 const response = await fetch('/activity/recent?limit=10');
                 const data = await response.json();
-                
+
                 if (data.activities) {
                     this.renderActivityFeed(data.activities);
                 }
@@ -2469,19 +2481,19 @@ function app() {
                 console.error('Error loading activity feed:', err);
             }
         },
-        
+
         renderActivityFeed(activities) {
             const container = document.getElementById('activity-feed');
             if (!container) return;
-            
+
             if (activities.length === 0) {
                 container.innerHTML = '<div class="text-xs text-slate-400">No recent activity</div>';
                 return;
             }
-            
+
             container.innerHTML = activities.map(activity => {
                 const timeAgo = this.formatTimeAgo(activity.timestamp);
-                
+
                 return `
                     <div class="flex items-start space-x-2 text-xs">
                         <span class="text-lg">${activity.icon}</span>
@@ -2493,18 +2505,18 @@ function app() {
                 `;
             }).join('');
         },
-        
+
         formatTimeAgo(timestamp) {
             const now = new Date();
             const past = new Date(timestamp);
             const seconds = Math.floor((now - past) / 1000);
-            
+
             if (seconds < 60) return 'Just now';
             if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
             if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
             return `${Math.floor(seconds / 86400)}d ago`;
         },
-        
+
         // Animation helper: Animate staggered elements
         animateStaggeredElements(container, delay = 50) {
             if (!container) return;
@@ -2514,7 +2526,7 @@ function app() {
                 if (el.offsetParent === null && window.getComputedStyle(el).display === 'none') {
                     return;
                 }
-                
+
                 el.style.opacity = '0';
                 el.style.transform = 'translateY(20px) scale(0.95)';
                 setTimeout(() => {
@@ -2526,7 +2538,7 @@ function app() {
                 }, index * delay);
             });
         },
-        
+
         // Animation helper: Animate single element with fade-in-up
         animateElement(element, delay = 0) {
             if (!element) return;
@@ -2542,14 +2554,14 @@ function app() {
 }
 
 // Global functions for Guide Me
-window.checkGuideMeAnswer = function(idx) {
+window.checkGuideMeAnswer = function (idx) {
     const appEl = document.querySelector('[x-data]');
     if (appEl && appEl.__x) {
         appEl.__x.$data.checkGuideMeAnswer(idx);
     }
 };
 
-window.nextGuideMeStep = function() {
+window.nextGuideMeStep = function () {
     const appEl = document.querySelector('[x-data]');
     if (appEl && appEl.__x) {
         appEl.__x.$data.nextGuideMeStep();
