@@ -1796,8 +1796,13 @@ function app() {
 
             if (leaderboard.length === 0) {
                 container.innerHTML = '<div class="p-6 text-center text-slate-400">No data available</div>';
-                if (podiumContainer) podiumContainer.innerHTML = '';
+                if (podiumContainer) podiumContainer.innerHTML = '<div class="col-span-3 text-center text-slate-500 py-8">Not enough data for podium</div>';
                 return;
+            }
+
+            // Clear podium if fewer than 3 users to remove "Loading..." or old content
+            if (podiumContainer && leaderboard.length < 3) {
+                podiumContainer.innerHTML = '<div class="col-span-3 text-center text-slate-500 text-sm py-4">Podium requires at least 3 participants. Check the list below!</div>';
             }
 
             // Render top 3 podium (BoilerBuddy style)

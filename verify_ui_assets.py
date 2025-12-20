@@ -8,10 +8,21 @@ def verify_assets():
         response = client.get('/static/style.css')
         if response.status_code == 200:
             content = response.data.decode('utf-8')
-            if "Brand Mesh" in content:
-                print("SUCCESS: style.css contains 'Brand Mesh'")
+            # Check for new UI polish elements
+            expected_styles = [
+                "Brand Mesh", # Keep checking for this
+                "linear-gradient(rgba(15, 23, 42, 0.4)", # Dark overlay check
+                ".sparkline-placeholder", # KPI sparklines
+                "border-radius: var(--card-radius)" # Standardized radius
+            ]
+            
+            missing = [s for s in expected_styles if s not in content]
+            
+            if not missing:
+                print("SUCCESS: style.css contains all new UI polish elements!")
             else:
-                print("FAILED: style.css does not contain 'Brand Mesh'")
+                print(f"FAILURE: Missing styles: {missing}")
+                exit(1)
         else:
             print(f"FAILED: style.css returned {response.status_code}")
 
