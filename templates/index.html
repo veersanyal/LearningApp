@@ -260,131 +260,71 @@
     </div>
 
     <!-- Onboarding Views -->
-    <div x-show="isAuthenticated && onboardingStep !== null && onboardingStep !== 'checking'" x-cloak class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <!-- Course Selection View -->
-        <div x-show="onboardingStep === 'course'" class="w-full max-w-2xl">
+    <div x-show="isAuthenticated && onboardingStep !== null && onboardingStep !== 'checking'" x-cloak class="min-h-screen bg-gradient-to-br from-white via-purple-50/20 to-amber-50/30 flex items-center justify-center p-4">
+        <div class="w-full max-w-2xl">
             <!-- Progress indicator -->
             <div class="flex items-center justify-center gap-2 mb-8">
-                <div class="h-2 w-12 rounded-full bg-[#9B72CF] transition-all"></div>
-                <div class="h-2 w-8 rounded-full bg-gray-300 transition-all"></div>
-                <div class="h-2 w-8 rounded-full bg-gray-300 transition-all"></div>
+                <template x-for="s in [1, 2, 3]" :key="s">
+                    <div class="h-2 rounded-full transition-all"
+                         :class="{
+                             'w-12 bg-[#9B72CF]': (onboardingStep === 'course' && s === 1) || (onboardingStep === 'exam-date' && s === 2) || (onboardingStep === 'topic-confidence' && s === 3),
+                             'w-8 bg-[#CEB888]': (onboardingStep === 'exam-date' && s === 1) || (onboardingStep === 'topic-confidence' && s <= 2),
+                             'w-8 bg-gray-300': (onboardingStep === 'course' && s > 1) || (onboardingStep === 'exam-date' && s === 3)
+                         }">
+                    </div>
+                </template>
             </div>
 
             <!-- Main card -->
             <div class="bg-white rounded-3xl shadow-xl p-8 md:p-12 border border-gray-200">
                 <div class="mb-8">
                     <div class="flex items-center gap-3 mb-4">
-                        <i data-lucide="book-open" class="w-8 h-8 text-[#9B72CF]"></i>
-                        <h2 class="text-2xl font-semibold text-gray-400">Pick your course</h2>
+                        <i x-show="onboardingStep === 'course'" data-lucide="book-open" class="w-8 h-8 text-[#9B72CF]"></i>
+                        <i x-show="onboardingStep === 'exam-date'" data-lucide="calendar" class="w-8 h-8 text-[#9B72CF]"></i>
+                        <i x-show="onboardingStep === 'topic-confidence'" data-lucide="brain" class="w-8 h-8 text-[#9B72CF]"></i>
+                        <h2 class="text-2xl font-semibold">
+                            <span x-show="onboardingStep === 'course'">Pick your course</span>
+                            <span x-show="onboardingStep === 'exam-date'">Set your exam date</span>
+                            <span x-show="onboardingStep === 'topic-confidence'">Rate your topic strengths</span>
+                        </h2>
                     </div>
-                    <p class="text-gray-900">Which math course are you studying for?</p>
+                    <p class="text-gray-600">
+                        <span x-show="onboardingStep === 'course'">Which math course are you studying for?</span>
+                        <span x-show="onboardingStep === 'exam-date'">When's your next exam? We'll build a study plan for you.</span>
+                        <span x-show="onboardingStep === 'topic-confidence'">Help us understand where you are so we can personalize your learning.</span>
+                    </p>
                 </div>
 
-                <!-- Course selection -->
-                <div class="space-y-3">
+                <!-- Step 1: Course selection -->
+                <div x-show="onboardingStep === 'course'" class="space-y-3">
                     <template x-for="course in ['MA 161 – Calculus I', 'MA 162 – Calculus II', 'MA 165 – Analytic Geometry & Calculus I', 'MA 166 – Analytic Geometry & Calculus II', 'MA 261 – Multivariate Calculus', 'MA 265 – Linear Algebra']" :key="course">
                         <button
                             @click="selectedCourse = course"
-                            :class="selectedCourse === course ? 'border-[#9B72CF] bg-[#9B72CF]/10 text-gray-900' : 'border-gray-200 bg-white text-gray-900 hover:border-[#9B72CF]/50 hover:bg-[#9B72CF]/5'"
-                            class="w-full text-left p-4 rounded-2xl border-2 transition-all font-normal">
+                            :class="selectedCourse === course ? 'border-[#9B72CF] bg-[#9B72CF]/10' : 'border-gray-200 hover:border-[#9B72CF]/50 hover:bg-[#9B72CF]/5'"
+                            class="w-full text-left p-4 rounded-2xl border-2 transition-all">
                             <span x-text="course"></span>
                         </button>
                     </template>
                 </div>
 
-                <!-- Navigation buttons -->
-                <div class="flex gap-3 mt-8">
-                    <button
-                        @click="saveCourse()"
-                        :disabled="!selectedCourse"
-                        class="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-[#9B72CF] text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
-                        Next
-                        <i data-lucide="chevron-right" class="w-5 h-5"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Exam Date Setup View (Optional) -->
-        <div x-show="onboardingStep === 'exam-date'" class="w-full max-w-2xl">
-            <!-- Progress indicator -->
-            <div class="flex items-center justify-center gap-2 mb-8">
-                <div class="h-2 w-8 rounded-full bg-[#CEB888] transition-all"></div>
-                <div class="h-2 w-12 rounded-full bg-[#9B72CF] transition-all"></div>
-                <div class="h-2 w-8 rounded-full bg-gray-300 transition-all"></div>
-            </div>
-
-            <!-- Main card -->
-            <div class="bg-white rounded-3xl shadow-lg p-8 md:p-12 border border-gray-200">
-                <div class="mb-8">
-                    <div class="flex items-center gap-3 mb-4">
-                        <i data-lucide="calendar" class="w-8 h-8 text-[#9B72CF]"></i>
-                        <h2 class="text-2xl font-semibold text-gray-900">Set your exam date</h2>
-                    </div>
-                    <p class="text-gray-600">When's your next exam? We'll build a study plan for you.</p>
-                </div>
-
-                <!-- Exam date input -->
-                <div>
+                <!-- Step 2: Exam date -->
+                <div x-show="onboardingStep === 'exam-date'">
                     <input
                         type="date"
                         x-model="examDate"
-                        class="w-full p-4 rounded-2xl border-2 border-gray-200 bg-gray-50 text-gray-900 placeholder:text-gray-500 focus:border-[#9B72CF] focus:outline-none focus:ring-2 focus:ring-[#9B72CF]/20"
+                        class="w-full p-4 rounded-2xl border-2 border-gray-200 bg-gray-50 focus:border-[#9B72CF] focus:outline-none focus:ring-2 focus:ring-[#9B72CF]/20"
                     />
                     <p class="text-sm text-gray-500 mt-4">
                         💡 Tip: We recommend starting at least 2 weeks before your exam for optimal results!
                     </p>
                 </div>
 
-                <!-- Navigation buttons -->
-                <div class="flex gap-3 mt-8">
-                    <button
-                        @click="onboardingStep = 'course'"
-                        class="flex items-center gap-2 px-6 py-3 rounded-2xl border-2 border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors font-medium">
-                        <i data-lucide="chevron-left" class="w-5 h-5"></i>
-                        Back
-                    </button>
-                    <button
-                        @click="skipExamDate()"
-                        class="px-6 py-3 rounded-2xl border-2 border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors font-medium">
-                        Skip for now
-                    </button>
-                    <button
-                        @click="saveExamDate()"
-                        :disabled="!examDate"
-                        class="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-[#9B72CF] text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
-                        Next
-                        <i data-lucide="chevron-right" class="w-5 h-5"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Topic Confidence Setup View (Optional) -->
-        <div x-show="onboardingStep === 'topic-confidence'" class="w-full max-w-2xl">
-            <!-- Progress indicator -->
-            <div class="flex items-center justify-center gap-2 mb-8">
-                <div class="h-2 w-8 rounded-full bg-[#CEB888] transition-all"></div>
-                <div class="h-2 w-8 rounded-full bg-[#CEB888] transition-all"></div>
-                <div class="h-2 w-12 rounded-full bg-[#9B72CF] transition-all"></div>
-            </div>
-
-            <!-- Main card -->
-            <div class="bg-white rounded-3xl shadow-lg p-8 md:p-12 border border-gray-200">
-                <div class="mb-8">
-                    <div class="flex items-center gap-3 mb-4">
-                        <i data-lucide="brain" class="w-8 h-8 text-[#9B72CF]"></i>
-                        <h2 class="text-2xl font-semibold text-gray-900">Rate your topic strengths</h2>
-                    </div>
-                    <p class="text-gray-600">Help us understand where you are so we can personalize your learning.</p>
-                </div>
-
-                <!-- Topic sliders -->
-                <div class="space-y-6">
+                <!-- Step 3: Topic strengths -->
+                <div x-show="onboardingStep === 'topic-confidence'" class="space-y-6">
                     <template x-for="topic in [{id: 'limits', name: 'Limits'}, {id: 'derivatives', name: 'Derivatives'}, {id: 'integrals', name: 'Integrals'}, {id: 'series', name: 'Series'}, {id: 'vectorcalc', name: 'Vector Calculus'}, {id: 'diffeq', name: 'Differential Equations'}]" :key="topic.id">
                         <div>
                             <div class="flex justify-between items-center mb-2">
-                                <label class="text-sm font-medium" x-text="topic.name"></label>
+                                <label class="text-sm" x-text="topic.name"></label>
                                 <span class="text-sm text-gray-500" x-text="(topicStrengths[topic.id] || 3) + '/5'"></span>
                             </div>
                             <input
@@ -406,20 +346,31 @@
                 <!-- Navigation buttons -->
                 <div class="flex gap-3 mt-8">
                     <button
-                        @click="onboardingStep = 'exam-date'"
+                        x-show="onboardingStep === 'exam-date' || onboardingStep === 'topic-confidence'"
+                        @click="onboardingStep === 'exam-date' ? onboardingStep = 'course' : onboardingStep = 'exam-date'"
                         class="flex items-center gap-2 px-6 py-3 rounded-2xl border-2 border-gray-200 hover:bg-gray-50 transition-colors">
                         <i data-lucide="chevron-left" class="w-5 h-5"></i>
                         Back
                     </button>
                     <button
+                        x-show="onboardingStep === 'exam-date'"
+                        @click="skipExamDate()"
+                        class="px-6 py-3 rounded-2xl border-2 border-gray-200 hover:bg-gray-50 transition-colors">
+                        Skip for now
+                    </button>
+                    <button
+                        x-show="onboardingStep === 'topic-confidence'"
                         @click="skipTopicConfidence()"
                         class="px-6 py-3 rounded-2xl border-2 border-gray-200 hover:bg-gray-50 transition-colors">
                         Skip for now
                     </button>
                     <button
-                        @click="completeOnboarding()"
-                        class="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-[#9B72CF] text-white hover:opacity-90 transition-opacity">
-                        Let's go!
+                        @click="onboardingStep === 'course' ? saveCourse() : (onboardingStep === 'exam-date' ? saveExamDate() : completeOnboarding())"
+                        :disabled="(onboardingStep === 'course' && !selectedCourse) || (onboardingStep === 'exam-date' && !examDate)"
+                        class="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-[#9B72CF] text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span x-show="onboardingStep === 'course' || onboardingStep === 'exam-date'">Next</span>
+                        <span x-show="onboardingStep === 'topic-confidence'">Let's go!</span>
+                        <i x-show="onboardingStep === 'course' || onboardingStep === 'exam-date'" data-lucide="chevron-right" class="w-5 h-5"></i>
                     </button>
                 </div>
             </div>
