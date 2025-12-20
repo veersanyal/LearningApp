@@ -32,6 +32,25 @@
   background: radial-gradient(circle, var(--tw-gradient-stops));
 }
 
+/* Onboarding background with math grid pattern */
+.onboarding-bg {
+  background:
+    radial-gradient(900px 600px at 50% 40%, rgba(168, 120, 255, 0.16), transparent 60%),
+    linear-gradient(180deg, #fbfbfe 0%, #f2f4fb 100%);
+  position: relative;
+}
+
+.onboarding-bg::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(rgba(130, 140, 170, 0.14) 1px, transparent 1px);
+  background-size: 22px 22px;
+  opacity: 0.25;
+  pointer-events: none;
+  z-index: 0;
+}
+
 /* Main View Transitions */
 .view {
   opacity: 0;

@@ -260,9 +260,7 @@
     </div>
 
     <!-- Onboarding Views -->
-    <div x-show="isAuthenticated && onboardingStep !== null && onboardingStep !== 'checking'" x-cloak class="min-h-screen bg-gradient-to-br from-white via-purple-50/20 to-amber-50/30 flex items-center justify-center p-4 relative">
-        <!-- Background polish: subtle radial glow behind card -->
-        <div class="absolute inset-0 bg-gradient-radial from-white/40 via-transparent to-transparent pointer-events-none"></div>
+    <div x-show="isAuthenticated && onboardingStep !== null && onboardingStep !== 'checking'" x-cloak class="onboarding-bg min-h-screen flex items-center justify-center p-4 relative">
         
         <div class="w-full max-w-2xl relative z-10">
             <!-- Main card -->
