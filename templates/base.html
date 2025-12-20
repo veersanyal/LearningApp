@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}StudyBoiler - Advanced Learning Platform{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Load app.js first so app() function is available when Alpine.js initializes -->
+    <script src="/static/app.js"></script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Lucide Icons (lucide-react) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <!-- Initialize Lucide Icons -->
+    <script>
+        // Initialize lucide icons after page load
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        });
+        
+        // Re-initialize icons when Alpine updates DOM
+        document.addEventListener('alpine:init', () => {
+            Alpine.effect(() => {
+                setTimeout(() => {
+                    if (window.lucide) {
+                        lucide.createIcons();
+                    }
+                }, 100);
+            });
+        });
+    </script>
+    
+    <!-- MathJax for rendering mathematical equations -->
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            options: {
+                // Use CommonHTML for faster rendering
+                output: 'chtml',
+                // Skip menu for better performance
+                menuOptions: {
+                    settings: {
+                        zoom: 'None'
+                    }
+                },
+                // Process only visible elements (lazy loading)
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+                ignoreHtmlClass: 'no-mathjax',
+                processHtmlClass: 'mathjax-process'
+            },
+            chtml: {
+                fontCache: 'global',
+                // Disable line breaks for better performance
+                linebreaks: { automatic: false }
+            },
+            startup: {
+                // Don't typeset on page load - we'll do it manually for visible elements
+                typeset: false
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+    
+    <!-- Custom Tailwind Config -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'purdue-gold': '#CFB991',
+                        'purdue-black': '#000000',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="/static/style.css">
+    
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body class="bg-slate-900 text-slate-100 font-sans antialiased" x-data="app()" x-init="init();">
+    
+    {% block content %}{% endblock %}
+    
+</body>
+</html>
+

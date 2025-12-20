@@ -458,23 +458,14 @@ function app() {
                     }
                 }
                 
-                // Complete onboarding
+                // Complete onboarding and redirect to dashboard
                 this.onboardingStep = null;
-                this.currentView = 'home';
-                // Reload user data
-                await this.checkAuth();
-                this.loadStats();
-                // Re-initialize icons
-                this.$nextTick(() => {
-                    if (window.lucide) {
-                        lucide.createIcons();
-                    }
-                });
+                window.location.href = '/dashboard';
             } catch (err) {
                 console.error('Error completing onboarding:', err);
-                // Still complete onboarding even if save fails
+                // Still redirect even if save fails
                 this.onboardingStep = null;
-                this.currentView = 'home';
+                window.location.href = '/dashboard';
             }
         },
         

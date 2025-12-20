@@ -379,6 +379,46 @@ Return ONLY valid JSON, no markdown, no explanation."""
 def index():
     return render_template('index.html')
 
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    return render_template('dashboard.html')
+
+@app.route('/study')
+@login_required
+def study():
+    return render_template('study.html')
+
+@app.route('/group-study')
+@login_required
+def group_study():
+    return render_template('group-study.html')
+
+@app.route('/leaderboard')
+@login_required
+def leaderboard():
+    return render_template('leaderboard.html')
+
+@app.route('/heatmap')
+@login_required
+def heatmap():
+    return render_template('heatmap.html')
+
+@app.route('/documents')
+@login_required
+def documents():
+    return render_template('documents.html')
+
+@app.route('/achievements')
+@login_required
+def achievements():
+    return render_template('achievements.html')
+
+@app.route('/settings')
+@login_required
+def settings():
+    return render_template('settings.html')
+
 
 # Authentication Routes
 @app.route('/auth/register', methods=['POST'])
