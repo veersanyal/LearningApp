@@ -69,6 +69,12 @@ class Database:
         except sqlite3.OperationalError:
             pass  # Column already exists
         
+        # Add course_code column if it doesn't exist
+        try:
+            self.cursor.execute('ALTER TABLE users ADD COLUMN course_code TEXT')
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+        
         # User progress table (replaces JSON file)
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS user_progress (
@@ -257,6 +263,20 @@ class Database:
                 exam_date DATE NOT NULL,
                 target_mastery REAL DEFAULT 0.80,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+            )
+        ''')
+        
+        # User exam plans (for onboarding)
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS user_exam_plans (
+                plan_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                course_code TEXT,
+                exam_date DATE,
+                topic_confidence TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
             )
         ''')

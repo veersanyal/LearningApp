@@ -21,7 +21,7 @@ class User(UserMixin):
     """User class for flask-login."""
     
     def __init__(self, user_id, username, email, full_name, major, graduation_year, 
-                 study_streak, total_xp, created_at, last_login):
+                 study_streak, total_xp, created_at, last_login, course_code=None):
         self.id = user_id
         self.username = username
         self.email = email
@@ -32,6 +32,7 @@ class User(UserMixin):
         self.total_xp = total_xp
         self.created_at = created_at
         self.last_login = last_login
+        self.course_code = course_code
     
     @staticmethod
     def get(user_id):
@@ -53,7 +54,8 @@ class User(UserMixin):
                     study_streak=user_data['study_streak'],
                     total_xp=user_data['total_xp'],
                     created_at=user_data['created_at'],
-                    last_login=user_data['last_login']
+                    last_login=user_data['last_login'],
+                    course_code=user_data.get('course_code')
                 )
             return None
         finally:
@@ -71,7 +73,8 @@ class User(UserMixin):
             'study_streak': self.study_streak,
             'total_xp': self.total_xp,
             'created_at': self.created_at,
-            'last_login': self.last_login
+            'last_login': self.last_login,
+            'course_code': self.course_code
         }
 
 

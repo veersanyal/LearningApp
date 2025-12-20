@@ -407,6 +407,66 @@
   }
 }
 
+/* Mobile Bottom Navigation (BoilerBuddy Style) */
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgb(0, 0, 0);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.5rem 0;
+  z-index: 30;
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+.mobile-bottom-nav-content {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  max-width: 100%;
+}
+
+.mobile-bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: none;
+  color: rgb(156, 163, 175);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: color var(--motion-duration-fast) var(--motion-ease-out);
+  flex: 1;
+  min-width: 0;
+}
+
+.mobile-bottom-nav-item:hover {
+  color: rgb(255, 255, 255);
+}
+
+.mobile-bottom-nav-item--active {
+  color: rgb(234, 179, 8); /* yellow-400 / gold */
+}
+
+.mobile-bottom-nav-item i {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .mobile-bottom-nav {
+    display: block;
+  }
+  
+  .app-main {
+    padding-bottom: 4.5rem; /* Space for bottom nav */
+  }
+}
+
 .app-main {
   flex: 1;
   overflow-y: auto;
@@ -958,7 +1018,7 @@ button:not(.nav-item):focus:not(:focus-visible), .btn-animate:focus:not(:focus-v
 
 /* Navigation Active Indicator */
 .nav-item {
-    color: rgb(203, 213, 225);
+    color: rgb(255, 255, 255);
     background-color: transparent;
     border: none;
     cursor: pointer;
@@ -976,7 +1036,7 @@ button:not(.nav-item):focus:not(:focus-visible), .btn-animate:focus:not(:focus-v
 }
 
 .nav-item:hover {
-    background-color: rgb(51, 65, 85);
+    background-color: rgba(255, 255, 255, 0.1);
     transform: translateY(-1px);
 }
 
@@ -994,12 +1054,12 @@ button:not(.nav-item):focus:not(:focus-visible), .btn-animate:focus:not(:focus-v
 }
 
 .nav-item--active {
-    background-color: var(--boilerbuddy-accent);
-    color: var(--boilerbuddy-accent-foreground);
+    background-color: rgba(255, 255, 255, 0.1);
+    color: rgb(255, 255, 255);
 }
 
 .nav-item--active:hover {
-    background-color: rgba(155, 114, 207, 0.9);
+    background-color: rgba(255, 255, 255, 0.15);
 }
 
 /* Mobile nav items */

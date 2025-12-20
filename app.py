@@ -519,6 +519,86 @@ def auth_config():
         "google_client_id": os.getenv('GOOGLE_CLIENT_ID', '')
     })
 
+@app.route('/api/save-course', methods=['POST'])
+@login_required
+def save_course():
+    """Save user's course selection."""
+    try:
+        data = request.get_json()
+        course_code = data.get('course_code')
+        
+        if not course_code:
+            return jsonify({'error': 'Course code is required'}), 400
+        
+        db = get_db()
+        db.cursor.execute(
+            'UPDATE users SET course_code = ? WHERE user_id = ?',
+            (course_code, current_user.id)
+        )
+        db.conn.commit()
+        
+        # Update current_user object
+        current_user.course_code = course_code
+        
+        return jsonify({'success': True, 'course_code': course_code})
+    except Exception as e:
+        print(f"Error saving course: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/save-exam-plan', methods=['POST'])
+@login_required
+def save_exam_plan():
+    """Save user's exam date and topic confidence."""
+    try:
+        data = request.get_json()
+        exam_date = data.get('exam_date')
+        topic_confidence = data.get('topic_confidence')
+        
+        # Convert topic_confidence dict to JSON string if provided
+        topic_confidence_json = json.dumps(topic_confidence) if topic_confidence else None
+        
+        db = get_db()
+        
+        # Check if user already has an exam plan
+        db.cursor.execute(
+            'SELECT plan_id FROM user_exam_plans WHERE user_id = ?',
+            (current_user.id,)
+        )
+        existing = db.cursor.fetchone()
+        
+        if existing:
+            # Update existing plan
+            if exam_date or topic_confidence_json:
+                update_fields = []
+                params = []
+                if exam_date:
+                    update_fields.append('exam_date = ?')
+                    params.append(exam_date)
+                if topic_confidence_json:
+                    update_fields.append('topic_confidence = ?')
+                    params.append(topic_confidence_json)
+                update_fields.append('updated_at = CURRENT_TIMESTAMP')
+                params.append(existing['plan_id'])
+                
+                db.cursor.execute(
+                    f'UPDATE user_exam_plans SET {", ".join(update_fields)} WHERE plan_id = ?',
+                    params
+                )
+        else:
+            # Create new plan
+            db.cursor.execute(
+                '''INSERT INTO user_exam_plans (user_id, course_code, exam_date, topic_confidence)
+                   VALUES (?, ?, ?, ?)''',
+                (current_user.id, current_user.course_code, exam_date, topic_confidence_json)
+            )
+        
+        db.conn.commit()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Error saving exam plan: {e}")
+        return jsonify({'error': str(e)}), 500
+
 
 @app.route('/upload', methods=['POST'])
 @login_required

@@ -45,6 +45,42 @@ function app() {
         // View State
         currentView: 'home',
         mobileNavOpen: false,
+        showUserMenu: false,
+        
+        // Onboarding State
+        onboardingStep: null, // null = complete, 'course' = course selection, 'exam-date' = exam date setup
+        selectedCourse: '',
+        examDate: '',
+        topicStrengths: {},
+        daysUntilExam: 0,
+        
+        // Group Study State
+        sessionCode: 'ABC-123',
+        activeMembers: [
+            { id: 1, name: 'Jamie S.', avatar: 'JS', status: 'active', answered: true },
+            { id: 2, name: 'Alex M.', avatar: 'AM', status: 'active', answered: false },
+            { id: 3, name: 'Taylor R.', avatar: 'TR', status: 'thinking', answered: true },
+            { id: 4, name: 'Morgan P.', avatar: 'MP', status: 'active', answered: false }
+        ],
+        chatMessages: [
+            { id: 1, user: 'Jamie S.', message: 'Hey everyone! Ready to tackle derivatives?', time: '2:05 PM', isSystem: false },
+            { id: 2, user: 'Alex M.', message: "Let's do this!", time: '2:06 PM', isSystem: false },
+            { id: 3, user: 'System', message: 'New question loaded: Find derivative of 3x² + 2x - 5', time: '2:07 PM', isSystem: true },
+            { id: 4, user: 'Taylor R.', message: 'Is it 6x + 2?', time: '2:08 PM', isSystem: false }
+        ],
+        chatMessage: '',
+        
+        // Heatmap State
+        heatmapTimeFilter: 'now',
+        studyLocations: [
+            { id: 1, name: 'Hicks Undergraduate Library', x: 35, y: 45, students: 24, hot: true },
+            { id: 2, name: 'PMU Study Rooms', x: 55, y: 30, students: 18, hot: true },
+            { id: 3, name: 'WALC', x: 70, y: 55, students: 32, hot: true },
+            { id: 4, name: 'MATH Building', x: 25, y: 65, students: 15, hot: false },
+            { id: 5, name: 'Engineering Fountain', x: 45, y: 70, students: 8, hot: false },
+            { id: 6, name: 'Krannert', x: 60, y: 50, students: 12, hot: false },
+            { id: 7, name: 'LILY Hall', x: 40, y: 35, students: 6, hot: false }
+        ],
         
         // User Stats
         studyStreak: 0,
@@ -89,6 +125,7 @@ function app() {
         masteryProgressChart: null,
         timeOfDayChart: null,
         topicDistributionChart: null,
+        retentionChart: null,
         
         // Initialize app
         async init() {
@@ -164,10 +201,15 @@ function app() {
                         this.loadDocuments();
                     } else if (newView === 'exam-questions') {
                         this.loadExams();
-                    } else if (newView === 'analytics') {
+                    } else                     if (newView === 'analytics') {
                         // Lazy-load charts only when Analytics view is active
                         setTimeout(() => {
                             this.initCharts();
+                        }, 100);
+                    } else if (newView === 'home') {
+                        // Initialize retention chart on dashboard
+                        setTimeout(() => {
+                            this.initRetentionChart();
                         }, 100);
                     }
                     
@@ -239,6 +281,21 @@ function app() {
                     this.usersOnline = data.users_online;
                     this.xpProgress = data.xp_progress || {};
                     this.studyStreak = data.user.study_streak || 0;
+                    
+                    // Check if onboarding is needed
+                    if (!this.currentUser.course_code) {
+                        this.onboardingStep = 'course';
+                        this.currentView = 'onboarding-course';
+                    } else {
+                        this.onboardingStep = null;
+                    }
+                    
+                    // Initialize lucide icons after auth check
+                    this.$nextTick(() => {
+                        if (window.lucide) {
+                            lucide.createIcons();
+                        }
+                    });
                 } else {
                     this.isAuthenticated = false;
                 }
@@ -297,9 +354,152 @@ function app() {
                 this.isAuthenticated = false;
                 this.currentUser = {};
                 this.currentView = 'home';
+                this.onboardingStep = null;
             } catch (err) {
                 console.error('Logout error:', err);
             }
+        },
+        
+        // Onboarding functions
+        async saveCourse() {
+            if (!this.selectedCourse) return;
+            
+            try {
+                const response = await fetch('/api/save-course', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ course_code: this.selectedCourse })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    this.currentUser.course_code = this.selectedCourse;
+                    // Move to exam date step (optional)
+                    this.onboardingStep = 'exam-date';
+                    this.currentView = 'onboarding-exam-date';
+                    // Re-initialize icons
+                    this.$nextTick(() => {
+                        if (window.lucide) {
+                            lucide.createIcons();
+                        }
+                    });
+                } else {
+                    const error = await response.json();
+                    alert(error.error || 'Failed to save course');
+                }
+            } catch (err) {
+                console.error('Error saving course:', err);
+                alert('Failed to save course. Please try again.');
+            }
+        },
+        
+        async saveExamDate() {
+            if (!this.examDate) return;
+            
+            try {
+                const response = await fetch('/api/save-exam-plan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        exam_date: this.examDate,
+                        topic_confidence: this.topicStrengths
+                    })
+                });
+                
+                if (response.ok) {
+                    // Move to topic confidence step
+                    this.onboardingStep = 'topic-confidence';
+                    this.currentView = 'onboarding-topic-confidence';
+                    // Re-initialize icons
+                    this.$nextTick(() => {
+                        if (window.lucide) {
+                            lucide.createIcons();
+                        }
+                    });
+                } else {
+                    const error = await response.json();
+                    alert(error.error || 'Failed to save exam date');
+                }
+            } catch (err) {
+                console.error('Error saving exam date:', err);
+                alert('Failed to save exam date. Please try again.');
+            }
+        },
+        
+        async skipExamDate() {
+            // Skip exam date and move to topic confidence
+            this.onboardingStep = 'topic-confidence';
+            this.currentView = 'onboarding-topic-confidence';
+            this.$nextTick(() => {
+                if (window.lucide) {
+                    lucide.createIcons();
+                }
+            });
+        },
+        
+        async skipTopicConfidence() {
+            // Skip topic confidence and complete onboarding
+            await this.completeOnboarding();
+        },
+        
+        async completeOnboarding() {
+            try {
+                // Save topic confidence if provided
+                if (Object.keys(this.topicStrengths).length > 0) {
+                    const response = await fetch('/api/save-exam-plan', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            topic_confidence: this.topicStrengths
+                        })
+                    });
+                    // Don't fail if this doesn't work
+                    if (!response.ok) {
+                        console.warn('Failed to save topic confidence, continuing anyway');
+                    }
+                }
+                
+                // Complete onboarding
+                this.onboardingStep = null;
+                this.currentView = 'home';
+                // Reload user data
+                await this.checkAuth();
+                this.loadStats();
+                // Re-initialize icons
+                this.$nextTick(() => {
+                    if (window.lucide) {
+                        lucide.createIcons();
+                    }
+                });
+            } catch (err) {
+                console.error('Error completing onboarding:', err);
+                // Still complete onboarding even if save fails
+                this.onboardingStep = null;
+                this.currentView = 'home';
+            }
+        },
+        
+        // Group Study functions
+        sendChatMessage() {
+            if (!this.chatMessage || !this.chatMessage.trim()) return;
+            
+            const newMessage = {
+                id: this.chatMessages.length + 1,
+                user: this.currentUser.username || 'You',
+                message: this.chatMessage,
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                isSystem: false
+            };
+            
+            this.chatMessages.push(newMessage);
+            this.chatMessage = '';
+            
+            // Re-initialize icons
+            this.$nextTick(() => {
+                if (window.lucide) {
+                    lucide.createIcons();
+                }
+            });
         },
         
         async loginWithGoogle() {
@@ -543,6 +743,55 @@ function app() {
                     this.generateStudyHeatmap();
                 }
             }, 300);
+        },
+        
+        initRetentionChart() {
+            const canvas = document.getElementById('retention-chart');
+            if (!canvas || !window.Chart) return;
+            
+            const ctx = canvas.getContext('2d');
+            if (this.retentionChart) {
+                this.retentionChart.destroy();
+            }
+            
+            // Sample retention data (would come from backend)
+            const retentionData = {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Retention %',
+                    data: [45, 62, 71, 78, 85, 88, 92],
+                    borderColor: '#9B72CF',
+                    backgroundColor: 'rgba(155, 114, 207, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true
+                }]
+            };
+            
+            this.retentionChart = new Chart(ctx, {
+                type: 'line',
+                data: retentionData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         },
         
         loadForgettingCurveData() {
