@@ -282,7 +282,7 @@
                         <i x-show="onboardingStep === 'course'" data-lucide="book-open" class="w-8 h-8 text-[#9B72CF]"></i>
                         <i x-show="onboardingStep === 'exam-date'" data-lucide="calendar" class="w-8 h-8 text-[#9B72CF]"></i>
                         <i x-show="onboardingStep === 'topic-confidence'" data-lucide="brain" class="w-8 h-8 text-[#9B72CF]"></i>
-                        <h2 class="text-2xl font-semibold">
+                        <h2 class="text-2xl font-semibold text-gray-900">
                             <span x-show="onboardingStep === 'course'">Pick your course</span>
                             <span x-show="onboardingStep === 'exam-date'">Set your exam date</span>
                             <span x-show="onboardingStep === 'topic-confidence'">Rate your topic strengths</span>
@@ -300,7 +300,7 @@
                     <template x-for="course in ['MA 161 – Calculus I', 'MA 162 – Calculus II', 'MA 165 – Analytic Geometry & Calculus I', 'MA 166 – Analytic Geometry & Calculus II', 'MA 261 – Multivariate Calculus', 'MA 265 – Linear Algebra']" :key="course">
                         <button
                             @click="selectedCourse = course"
-                            :class="selectedCourse === course ? 'border-[#9B72CF] bg-[#9B72CF]/10' : 'border-gray-200 hover:border-[#9B72CF]/50 hover:bg-[#9B72CF]/5'"
+                            :class="selectedCourse === course ? 'border-[#9B72CF] bg-[#9B72CF]/10 text-gray-900' : 'border-gray-200 hover:border-[#9B72CF]/50 hover:bg-[#9B72CF]/5 text-gray-900'"
                             class="w-full text-left p-4 rounded-2xl border-2 transition-all">
                             <span x-text="course"></span>
                         </button>
