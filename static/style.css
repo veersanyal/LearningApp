@@ -40,9 +40,9 @@
   position: relative;
 }
 
-.onboarding-bg::after {
+.onboarding-bg::before {
   content: "";
-  position: fixed;
+  position: absolute;
   inset: 0;
   background-image: radial-gradient(rgba(130, 140, 170, 0.14) 1px, transparent 1px);
   background-size: 22px 22px;
