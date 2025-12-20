@@ -38,6 +38,7 @@
   background-image:
     radial-gradient(900px 600px at 50% 40%, rgba(168, 120, 255, 0.16), transparent 60%),
     linear-gradient(180deg, #fbfbfe 0%, #f2f4fb 100%);
+  background-attachment: fixed;
   position: relative;
 }
 
@@ -51,7 +52,7 @@
   background-image: radial-gradient(rgba(130, 140, 170, 0.14) 1px, transparent 1px);
   background-size: 22px 22px;
   background-position: 0 0;
-  opacity: 0.25;
+  opacity: 0.3;
   pointer-events: none;
   z-index: 0;
 }
