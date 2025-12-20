@@ -1,0 +1,94 @@
+{% extends "layout.html" %}
+
+{% block title %}Heatmap - StudyBoiler{% endblock %}
+
+{% block page_content %}
+<div class="page">
+    <div class="mb-8">
+        <h1 class="text-3xl md:text-4xl mb-2 flex items-center gap-3">
+            <i data-lucide="map-pin" class="w-8 h-8 text-[#9B72CF]"></i>
+            Campus Heatmap
+        </h1>
+        <p class="text-gray-400">See where Boilermakers are studying right now</p>
+    </div>
+    
+    <!-- Time Filter -->
+    <div class="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-gray-200 mb-6">
+        <label class="text-sm text-gray-600 mb-3 block flex items-center gap-2">
+            <i data-lucide="clock" class="w-4 h-4"></i>
+            Time Filter
+        </label>
+        <div class="flex gap-2">
+            <button @click="heatmapTimeFilter = 'now'" 
+                    :class="heatmapTimeFilter === 'now' ? 'bg-[#9B72CF]/10 text-[#9B72CF] border-2 border-[#9B72CF]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                    class="px-4 py-2 rounded-xl transition-all border-2 border-transparent">
+                Now
+            </button>
+            <button @click="heatmapTimeFilter = '24h'" 
+                    :class="heatmapTimeFilter === '24h' ? 'bg-[#9B72CF]/10 text-[#9B72CF] border-2 border-[#9B72CF]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                    class="px-4 py-2 rounded-xl transition-all border-2 border-transparent">
+                Past 24 Hours
+            </button>
+            <button @click="heatmapTimeFilter = 'week'" 
+                    :class="heatmapTimeFilter === 'week' ? 'bg-[#9B72CF]/10 text-[#9B72CF] border-2 border-[#9B72CF]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                    class="px-4 py-2 rounded-xl transition-all border-2 border-transparent">
+                Past Week
+            </button>
+        </div>
+    </div>
+    
+    <!-- Heatmap -->
+    <div class="bg-white rounded-3xl p-6 md:p-8 shadow-lg border border-gray-200 mb-6">
+        <div class="relative h-[500px] bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl overflow-hidden mb-6">
+            <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg shadow-sm">
+                <p class="text-sm">Purdue University Campus</p>
+            </div>
+            <!-- Study location markers would be rendered here -->
+            <div class="absolute inset-0 flex items-center justify-center text-gray-400">
+                <p>Map visualization coming soon</p>
+            </div>
+        </div>
+        
+        <!-- Legend -->
+        <div class="flex items-center justify-center gap-6 text-sm flex-wrap">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-gradient-to-br from-green-500 to-green-400 rounded-full"></div>
+                <span class="text-gray-600">Low Activity (1-10)</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-full"></div>
+                <span class="text-gray-600">Medium Activity (11-25)</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-500 rounded-full"></div>
+                <span class="text-gray-600">High Activity (26+)</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Location List -->
+    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
+        <h3 class="text-lg font-semibold mb-4">All Study Locations</h3>
+        <div class="grid md:grid-cols-2 gap-4">
+            <template x-for="location in studyLocations.sort((a, b) => b.students - a.students)" :key="location.id">
+                <div class="flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:border-[#9B72CF] hover:bg-[#9B72CF]/5 transition-all">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-gradient-to-br from-[#9B72CF] to-[#CEB888] rounded-xl flex items-center justify-center text-white">
+                            <i data-lucide="map-pin" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-medium" x-text="location.name"></h4>
+                            <p class="text-sm text-gray-600 flex items-center gap-1">
+                                <i data-lucide="users" class="w-3 h-3"></i>
+                                <span x-text="location.students + ' students'"></span>
+                            </p>
+                        </div>
+                    </div>
+                    <span x-show="location.hot" class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs">🔥 Hot Spot</span>
+                </div>
+            </template>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

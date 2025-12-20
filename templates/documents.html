@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+
+{% block title %}Documents - StudyBoiler{% endblock %}
+
+{% block page_content %}
+<div class="page">
+    <div>
+        <h1 class="text-3xl font-bold mb-2">My Documents</h1>
+        <p class="text-slate-400 mb-6">View and manage your uploaded study materials</p>
+    </div>
+
+    <!-- Documents List -->
+    <div class="space-y-4 animate-card-stagger">
+        <template x-for="doc in documents" :key="doc.document_id">
+            <div class="card hover:bg-slate-750 transition depth-1 lift-on-hover">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-3 mb-2">
+                            <span class="text-2xl">
+                                <template x-if="doc && doc.file_type === 'pdf'">📄</template>
+                                <template x-if="doc && doc.file_type === 'image'">🖼️</template>
+                                <template x-if="doc && doc.file_type === 'text'">📝</template>
+                            </span>
+                            <div>
+                                <h2 class="text-lg font-semibold" x-text="doc.filename"></h2>
+                                <p class="text-sm text-slate-400">
+                                    <span x-text="doc.topics_count"></span> topics extracted • 
+                                    <span x-text="formatFileSize(doc.file_size)"></span> • 
+                                    <span x-text="formatDate(doc.uploaded_at)"></span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button @click="loadDocument(doc.document_id)" 
+                                class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition text-sm btn-animate">
+                            Load Topics
+                        </button>
+                        <button @click="deleteDocument(doc.document_id)" 
+                                class="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg font-medium transition text-sm btn-animate">
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+        
+        <div x-show="documents.length === 0" class="card empty-state-card">
+            <div class="empty-state-icon" aria-hidden="true">📄</div>
+            <h2 class="empty-state-title">No documents yet</h2>
+            <p class="empty-state-description">Upload your first PDF, slide deck, or image to start extracting topics.</p>
+            <a href="{{ url_for('dashboard') }}" 
+               class="inline-block px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition btn-animate">
+                Upload Study Material
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

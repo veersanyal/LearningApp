@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block title %}Achievements - StudyBoiler{% endblock %}
+
+{% block page_content %}
+<div class="page">
+    <div>
+        <h1 class="text-3xl font-bold mb-2">Achievements</h1>
+        <p class="text-slate-400 mb-6">Unlock achievements as you progress in your studies</p>
+    </div>
+
+    <div class="grid grid-cols-3 gap-4 animate-card-stagger">
+        <!-- Achievement cards will be inserted here -->
+        <template x-for="achievement in allAchievements" :key="achievement.achievement_id">
+            <div class="bg-slate-800 rounded-xl p-6 text-center depth-1 lift-on-hover"
+                 :class="achievement.unlocked ? 'ring-2 ring-blue-500' : 'opacity-50'">
+                <div class="text-5xl mb-3" x-text="achievement.badge_icon"></div>
+                <h4 class="font-semibold mb-2" x-text="achievement.achievement_name"></h4>
+                <p class="text-sm text-slate-400 mb-3" x-text="achievement.description"></p>
+                <div class="text-xs text-blue-400">
+                    <span x-show="achievement.unlocked">✅ Unlocked!</span>
+                    <span x-show="!achievement.unlocked" x-text="'+' + achievement.xp_reward + ' XP'"></span>
+                </div>
+            </div>
+        </template>
+    </div>
+</div>
+{% endblock %}
+

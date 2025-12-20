@@ -1,0 +1,101 @@
+{% extends "layout.html" %}
+
+{% block title %}Study - StudyBoiler{% endblock %}
+
+{% block page_content %}
+<div class="page">
+    <!-- Progress Header (BoilerBuddy Style) -->
+    <div class="card mb-6" id="study-progress-header" style="display: none;">
+        <div class="flex items-center justify-between">
+            <a href="{{ url_for('dashboard') }}" 
+               class="p-2 hover:bg-slate-700 rounded-xl transition-colors">
+                <span class="text-xl">✕</span>
+            </a>
+            <div class="flex-1 mx-4">
+                <div class="h-2 bg-slate-700 rounded-full overflow-hidden">
+                    <div id="study-progress-bar" class="h-full bg-[#9B72CF] rounded-full transition-all" style="width: 40%"></div>
+                </div>
+            </div>
+            <span class="text-sm text-slate-400" id="study-progress-text">2/5</span>
+        </div>
+    </div>
+
+    <!-- Step-by-step Stepper (BoilerBuddy Style) -->
+    <div class="card mb-6" id="step-stepper" style="display: none;">
+        <h4 class="mb-4 text-slate-400 text-sm">Problem-solving steps</h4>
+        <div class="space-y-3" id="steps-container">
+            <!-- Steps will be populated by JavaScript -->
+        </div>
+    </div>
+    
+    <!-- Quiz Section (BoilerBuddy Style) -->
+    <div id="quiz-section" style="display: none;" class="card">
+        <div class="flex items-start justify-between mb-6">
+            <div class="flex-1">
+                <span id="topic-name" class="inline-block text-xs text-[#9B72CF] bg-[#9B72CF]/10 px-3 py-1 rounded-full mb-3"></span>
+                <h2 id="question-text" class="text-2xl mb-4 leading-relaxed"></h2>
+                <p class="text-slate-400 text-sm" id="question-hint"></p>
+            </div>
+        </div>
+        
+        <!-- AI Hint (shown when hint is requested) -->
+        <div id="hint-container" style="display: none;" class="mb-6 bg-blue-900/30 border border-blue-700 rounded-2xl p-4">
+            <div class="flex gap-3">
+                <span class="text-2xl">💡</span>
+                <div>
+                    <h4 class="text-blue-300 font-semibold mb-1">Hint</h4>
+                    <p class="text-sm text-blue-200" id="hint-text"></p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Multiple Choice Options (BoilerBuddy Style) -->
+        <div id="options-container" class="space-y-3 mb-6"></div>
+        
+        <!-- Action Buttons (BoilerBuddy Style) -->
+        <div class="flex flex-col sm:flex-row gap-3">
+            <button @click="showHint()" id="show-hint-btn"
+                    class="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border-2 border-slate-600 hover:bg-slate-700 transition-colors">
+                <span>❓</span>
+                <span>Show Hint</span>
+            </button>
+            <button @click="checkAnswer()" id="check-answer-btn"
+                    disabled
+                    class="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-[#9B72CF] text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
+                Check Answer
+                <span>→</span>
+            </button>
+        </div>
+        
+        <!-- Feedback (BoilerBuddy Style) -->
+        <div id="feedback" style="display: none;" class="mt-6">
+            <div id="feedback-content" class="rounded-2xl p-6 mb-4"></div>
+            <button id="next-btn" style="display: none;" 
+                    class="w-full px-6 py-3 bg-[#9B72CF] hover:opacity-90 rounded-2xl font-medium transition text-white">
+                Next Question
+            </button>
+        </div>
+    </div>
+    
+    <!-- No Quiz Active Message (BoilerBuddy Style) -->
+    <div id="no-quiz-message" class="card empty-state-card">
+        <div class="empty-state-icon" aria-hidden="true">📚</div>
+        <h2 class="empty-state-title">No Active Study Session</h2>
+        <p class="empty-state-description">Upload study materials or select a topic to begin practicing.</p>
+        <a href="{{ url_for('dashboard') }}" 
+           class="inline-block px-6 py-3 bg-[#9B72CF] hover:opacity-90 rounded-2xl font-medium transition text-white shadow-lg">
+            Go to Home
+        </a>
+    </div>
+    
+    <!-- Floating "I feel stuck" Button (BoilerBuddy Style) -->
+    <button @click="openGuideMeModal()" 
+            id="stuck-button"
+            style="display: none;"
+            class="fixed bottom-24 lg:bottom-8 right-8 bg-[#d4183d] text-white px-6 py-4 rounded-full shadow-lg hover:opacity-90 transition-opacity flex items-center gap-2 z-40">
+        <span>⚠️</span>
+        <span>I feel stuck</span>
+    </button>
+</div>
+{% endblock %}
+
