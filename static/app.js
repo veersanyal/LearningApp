@@ -500,6 +500,7 @@ function app() {
         },
         
         async loginWithGoogle() {
+            // Clear any previous errors
             this.authError = '';
             
             try {

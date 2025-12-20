@@ -129,12 +129,12 @@
             
             <!-- Toggle between Login and Register -->
             <div class="flex mb-6 bg-slate-700 rounded-2xl p-1">
-                <button @click="authMode = 'login'" 
+                <button @click="authMode = 'login'; authError = ''" 
                         :class="authMode === 'login' ? 'bg-[#9B72CF] text-white' : 'bg-transparent text-slate-400'"
                         class="flex-1 py-2.5 rounded-xl transition-all font-medium">
                     Login
                 </button>
-                <button @click="authMode = 'register'"
+                <button @click="authMode = 'register'; authError = ''"
                         :class="authMode === 'register' ? 'bg-[#9B72CF] text-white' : 'bg-transparent text-slate-400'"
                         class="flex-1 py-2.5 rounded-xl transition-all font-medium">
                     Register
