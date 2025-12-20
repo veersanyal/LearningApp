@@ -422,6 +422,82 @@ def settings():
     return render_template('settings.html')
 
 
+@app.route('/exams')
+@login_required
+def exams():
+    """List available exams."""
+    db = get_db()
+    try:
+        # Get all exams formatted for display
+        db.cursor.execute('''
+            SELECT exam_id, exam_name, file_type, total_questions, created_at 
+            FROM exams 
+            WHERE user_id = ? 
+            ORDER BY created_at DESC
+        ''', (current_user.id,))
+        exams_data = db.cursor.fetchall()
+        
+        # Convert to list of dicts for easier handling
+        exams_list = []
+        for exam in exams_data:
+            exams_list.append({
+                'exam_id': exam['exam_id'],
+                'exam_name': exam['exam_name'],
+                'file_type': exam['file_type'],
+                'total_questions': exam['total_questions'],
+                'created_at': exam['created_at'].split(' ')[0] # Just the date
+            })
+            
+        return render_template('exams.html', exams=exams_list)
+        
+    except Exception as e:
+        print(f"Error loading exams: {e}")
+        return render_template('exams.html', exams=[])
+    finally:
+        db.disconnect()
+
+
+@app.route('/exams/<int:exam_id>')
+@login_required
+def exam_detail(exam_id):
+    """View specific exam for taking."""
+    db = get_db()
+    try:
+        # Get exam details
+        db.cursor.execute('SELECT * FROM exams WHERE exam_id = ? AND user_id = ?', (exam_id, current_user.id))
+        exam = db.cursor.fetchone()
+        
+        if not exam:
+            return redirect(url_for('exams'))
+            
+        # Get all questions for this exam
+        db.cursor.execute('''
+            SELECT * FROM exam_questions 
+            WHERE exam_id = ? 
+            ORDER BY page_number, CAST(question_number AS INTEGER)
+        ''', (exam_id,))
+        questions = db.cursor.fetchall()
+        
+        # Format questions for JS
+        questions_list = []
+        for q in questions:
+            questions_list.append({
+                'question_id': q['question_id'],
+                'question_number': q['question_number'],
+                'raw_text': q['raw_text'],
+                'solved_json': q['solved_json'],
+                'diagram_note': q['diagram_note'],
+                'topics': json.loads(q['topics_json'])['topics'] if q['topics_json'] else []
+            })
+            
+        return render_template('exam_detail.html', exam=exam, questions=questions_list)
+        
+    except Exception as e:
+        print(f"Error loading exam detail: {e}")
+        return redirect(url_for('exams'))
+    finally:
+        db.disconnect()
+
 # Authentication Routes
 @app.route('/auth/register', methods=['POST'])
 def auth_register():

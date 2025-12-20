@@ -1,0 +1,242 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ exam.exam_name }} - BoilerBuddy{% endblock %}
+
+{% block page_content %}
+<div class="page" x-data="examApp()">
+    <!-- Header with Progress -->
+    <div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <a href="{{ url_for('exams') }}"
+                class="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-2 transition-colors">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                Back to Exams
+            </a>
+            <h1 class="text-2xl md:text-3xl font-bold text-white">{{ exam.exam_name }}</h1>
+        </div>
+
+        <div class="flex items-center gap-4 bg-white/10 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10">
+            <div class="text-right">
+                <p class="text-xs text-gray-300">Question</p>
+                <p class="text-xl font-bold text-white">
+                    <span x-text="currentParams.index + 1"></span><span class="text-gray-400 text-sm">/{{
+                        total_questions }}</span>
+                </p>
+            </div>
+            <div class="h-10 w-px bg-white/20"></div>
+            <div class="w-12 h-12 relative flex items-center justify-center">
+                <svg class="transform -rotate-90 w-12 h-12">
+                    <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="4" fill="transparent"
+                        class="text-gray-700" />
+                    <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="4" fill="transparent"
+                        class="text-[#CEB888] transition-all duration-500 ease-out" :stroke-dasharray="circumference"
+                        :stroke-dashoffset="circumference - (progress / 100) * circumference" />
+                </svg>
+                <span class="absolute text-xs font-bold text-white" x-text="Math.round(progress) + '%'"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Question Card -->
+    <div
+        class="bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden min-h-[500px] flex flex-col relative">
+
+        <!-- Question Content -->
+        <div class="p-6 md:p-8 flex-1">
+            <div class="flex items-start justify-between mb-6">
+                <span
+                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                    <span
+                        x-text="currentQuestion.difficulty ? 'Difficulty: ' + currentQuestion.difficulty : 'Question ' + currentQuestion.question_number"></span>
+                </span>
+
+                <!-- Topic Tag -->
+                <template x-if="currentQuestion.topics && currentQuestion.topics.length > 0">
+                    <span class="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700"
+                        x-text="currentQuestion.topics[0]"></span>
+                </template>
+            </div>
+
+            <!-- Question Text -->
+            <div class="prose prose-lg max-w-none text-gray-800 mb-8">
+                <div x-html="renderMath(currentQuestion.raw_text)"></div>
+            </div>
+
+            <!-- Diagram if present -->
+            <template x-if="currentQuestion.diagram_note">
+                <div class="mb-8 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                    <p class="text-sm font-semibold text-gray-500 mb-1">Diagram Description (Visual Placeholder):</p>
+                    <p class="text-gray-700 italic" x-text="currentQuestion.diagram_note"></p>
+                </div>
+            </template>
+
+            <!-- Options -->
+            <div class="space-y-3 max-w-2xl">
+                <template x-if="currentQuestion.solved_json && getOptions(currentQuestion)">
+                    <template x-for="(option, idx) in getOptions(currentQuestion)" :key="idx">
+                        <button @click="selectOption(idx)"
+                            class="w-full text-left p-4 rounded-xl border-2 transition-all group relative overflow-hidden"
+                            :class="selectedOption === idx ? 'border-[#9B72CF] bg-[#9B72CF]/5' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'"
+                            :disabled="isAnswered">
+
+                            <div class="flex items-center gap-3 relative z-10">
+                                <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-sm transition-colors"
+                                    :class="getOptionClass(idx)">
+                                    <span x-text="String.fromCharCode(65 + idx)"></span>
+                                </div>
+                                <div class="flex-1 font-medium text-gray-700" x-html="renderMath(option)"></div>
+
+                                <!-- Feedback Icons -->
+                                <div x-show="isAnswered && idx === JSON.parse(currentQuestion.solved_json).correct_answer"
+                                    class="text-green-500">
+                                    <i data-lucide="check-circle" class="w-6 h-6"></i>
+                                </div>
+                                <div x-show="isAnswered && selectedOption === idx && idx !== JSON.parse(currentQuestion.solved_json).correct_answer"
+                                    class="text-red-500">
+                                    <i data-lucide="x-circle" class="w-6 h-6"></i>
+                                </div>
+                            </div>
+                        </button>
+                    </template>
+                </template>
+
+                <!-- Fallback for non-MCQ -->
+                <template x-if="!currentQuestion.solved_json || !getOptions(currentQuestion)">
+                    <div class="p-6 bg-yellow-50 rounded-xl border border-yellow-200">
+                        <p class="text-yellow-800 font-medium mb-2">Free Response / Short Answer</p>
+                        <textarea
+                            class="w-full p-3 rounded-lg border border-yellow-300 focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white"
+                            rows="4" placeholder="Type your answer here..." :disabled="isAnswered"></textarea>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="p-6 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+            <button @click="prevQuestion()" :disabled="currentParams.index === 0"
+                class="px-5 py-2.5 rounded-xl font-medium text-gray-600 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                Previous
+            </button>
+
+            <button @click="isAnswered ? nextQuestion() : checkButtonAction()"
+                class="px-8 py-2.5 rounded-xl font-medium text-white shadow-lg shadow-purple-200 transition-all transform active:scale-95 flex items-center gap-2"
+                :class="isAnswered ? 'bg-gray-800 hover:bg-gray-700' : 'bg-[#9B72CF] hover:bg-[#8A63BF]'">
+                <span
+                    x-text="isAnswered ? (currentParams.index === questions.length - 1 ? 'Finish Exam' : 'Next Question') : 'Check Answer'"></span>
+                <i x-show="isAnswered" data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script>
+    window.MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']]
+        },
+        options: {
+            skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+        }
+    };
+
+    function examApp() {
+        return {
+            questions: {{ questions | tojson }
+    },
+    currentParams: { index: 0 },
+    selectedOption: null,
+        isAnswered: false,
+            circumference: 2 * Math.PI * 20,
+
+                get currentQuestion() {
+        return this.questions[this.currentParams.index];
+    },
+
+            get progress() {
+        return ((this.currentParams.index + (this.isAnswered ? 1 : 0)) / this.questions.length) * 100;
+    },
+            
+            get total_questions() {
+        return this.questions.length;
+    },
+
+    init() {
+        this.$watch('currentParams.index', () => {
+            this.selectedOption = null;
+            this.isAnswered = false;
+            this.$nextTick(() => {
+                if (window.MathJax) {
+                    MathJax.typesetPromise();
+                }
+                lucide.createIcons();
+            });
+        });
+        // Initial render
+        this.$nextTick(() => {
+            if (window.MathJax) {
+                MathJax.typesetPromise();
+            }
+        });
+    },
+
+    getOptions(question) {
+        try {
+            const data = JSON.parse(question.solved_json);
+            return data.options;
+        } catch (e) {
+            return null;
+        }
+    },
+
+    getOptionClass(idx) {
+        if (this.isAnswered) {
+            const correct = JSON.parse(this.currentQuestion.solved_json).correct_answer;
+            if (idx === correct) return 'bg-green-100 border-green-500 text-green-700';
+            if (idx === this.selectedOption) return 'bg-red-100 border-red-500 text-red-700';
+        }
+        if (idx === this.selectedOption) return 'bg-[#9B72CF] border-[#9B72CF] text-white';
+        return 'bg-white border-gray-300 text-gray-500 group-hover:border-gray-400';
+    },
+
+    selectOption(idx) {
+        if (!this.isAnswered) {
+            this.selectedOption = idx;
+        }
+    },
+
+    checkButtonAction() {
+        if (this.selectedOption !== null) {
+            this.isAnswered = true;
+        } else {
+            // Start free response flow or just verify
+            alert("Please select an option.");
+        }
+    },
+
+    nextQuestion() {
+        if (this.currentParams.index < this.questions.length - 1) {
+            this.currentParams.index++;
+        } else {
+            alert("Exam Completed!");
+            window.location.href = "{{ url_for('exams') }}";
+        }
+    },
+
+    prevQuestion() {
+        if (this.currentParams.index > 0) {
+            this.currentParams.index--;
+        }
+    },
+
+    renderMath(text) {
+        return text; // MathJax will handle the rendering in the DOM
+    }
+        }
+    }
+</script>
+{% endblock %}

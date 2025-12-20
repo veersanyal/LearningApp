@@ -2,7 +2,7 @@
 
 {% block content %}
 <div x-show="isAuthenticated && onboardingStep === null && onboardingStep !== 'checking'" x-cloak class="app-shell">
-    
+
     <!-- App Header with Navigation (BoilerBuddy Style) -->
     <header class="app-header" role="banner">
         <div class="app-header-content">
@@ -17,123 +17,118 @@
                     </h1>
                 </a>
             </div>
-            
+
             <!-- Mobile Nav Toggle -->
-            <button 
-                class="nav-toggle md:hidden"
-                @click="mobileNavOpen = !mobileNavOpen"
-                :aria-expanded="mobileNavOpen"
-                aria-label="Toggle navigation menu"
-                aria-controls="primary-nav">
+            <button class="nav-toggle md:hidden" @click="mobileNavOpen = !mobileNavOpen" :aria-expanded="mobileNavOpen"
+                aria-label="Toggle navigation menu" aria-controls="primary-nav">
                 <i x-show="!mobileNavOpen" data-lucide="menu" class="w-6 h-6"></i>
                 <i x-show="mobileNavOpen" data-lucide="x" class="w-6 h-6"></i>
             </button>
-            
+
             <!-- Center: Navigation (Desktop) -->
             <nav id="primary-nav" class="app-header-nav hidden md:flex" aria-label="Primary navigation">
-                <a href="{{ url_for('dashboard') }}" 
-                   class="nav-item {% if request.endpoint == 'dashboard' %}nav-item--active{% endif %}"
-                   aria-label="Go to Dashboard">
+                <a href="{{ url_for('dashboard') }}"
+                    class="nav-item {% if request.endpoint == 'dashboard' %}nav-item--active{% endif %}"
+                    aria-label="Go to Dashboard">
                     <i data-lucide="home" class="w-5 h-5"></i>
                     <span class="font-medium">Dashboard</span>
                 </a>
-                
-                <a href="{{ url_for('study') }}" 
-                   class="nav-item {% if request.endpoint == 'study' %}nav-item--active{% endif %}"
-                   aria-label="Go to Study">
+
+                <a href="{{ url_for('study') }}"
+                    class="nav-item {% if request.endpoint == 'study' %}nav-item--active{% endif %}"
+                    aria-label="Go to Study">
                     <i data-lucide="book-open" class="w-5 h-5"></i>
                     <span class="font-medium">Study</span>
                 </a>
-                
-                <a href="{{ url_for('group_study') }}" 
-                   class="nav-item {% if request.endpoint == 'group_study' %}nav-item--active{% endif %}"
-                   aria-label="Go to Group Study">
+
+                <a href="{{ url_for('group_study') }}"
+                    class="nav-item {% if request.endpoint == 'group_study' %}nav-item--active{% endif %}"
+                    aria-label="Go to Group Study">
                     <i data-lucide="users" class="w-5 h-5"></i>
                     <span class="font-medium">Group</span>
                 </a>
-                
-                <a href="{{ url_for('dashboard') }}#leaderboard-section" 
-                   class="nav-item {% if request.endpoint == 'dashboard' %}nav-item--active{% endif %}"
-                   aria-label="Go to Leaderboard"
-                   onclick="event.preventDefault(); document.getElementById('leaderboard-section').scrollIntoView({ behavior: 'smooth' });">
+
+                <a href="{{ url_for('dashboard') }}#leaderboard-section"
+                    class="nav-item {% if request.endpoint == 'dashboard' %}nav-item--active{% endif %}"
+                    aria-label="Go to Leaderboard"
+                    onclick="event.preventDefault(); document.getElementById('leaderboard-section').scrollIntoView({ behavior: 'smooth' });">
                     <i data-lucide="trophy" class="w-5 h-5"></i>
                     <span class="font-medium">Leaderboard</span>
                 </a>
-                
-                <a href="{{ url_for('dashboard') }}#heatmap-section" 
-                   class="nav-item {% if request.endpoint == 'dashboard' %}nav-item--active{% endif %}"
-                   aria-label="Go to Heatmap"
-                   onclick="event.preventDefault(); document.getElementById('heatmap-section').scrollIntoView({ behavior: 'smooth' });">
+
+                <a href="{{ url_for('dashboard') }}#heatmap-section"
+                    class="nav-item {% if request.endpoint == 'dashboard' %}nav-item--active{% endif %}"
+                    aria-label="Go to Heatmap"
+                    onclick="event.preventDefault(); document.getElementById('heatmap-section').scrollIntoView({ behavior: 'smooth' });">
                     <i data-lucide="map" class="w-5 h-5"></i>
                     <span class="font-medium">Heatmap</span>
                 </a>
-                
-                <a href="{{ url_for('documents') }}" 
-                   class="nav-item {% if request.endpoint == 'documents' %}nav-item--active{% endif %}"
-                   aria-label="Upload">
+
+                <a href="{{ url_for('exams') }}"
+                    class="nav-item {% if request.endpoint == 'exams' %}nav-item--active{% endif %}"
+                    aria-label="Go to Exams">
+                    <i data-lucide="file-text" class="w-5 h-5"></i>
+                    <span class="font-medium">Exams</span>
+                </a>
+
+                <a href="{{ url_for('documents') }}"
+                    class="nav-item {% if request.endpoint == 'documents' %}nav-item--active{% endif %}"
+                    aria-label="Upload">
                     <i data-lucide="upload" class="w-5 h-5"></i>
                     <span class="font-medium">Upload</span>
                 </a>
             </nav>
-            
+
             <!-- Mobile Navigation Menu -->
-            <nav 
-                class="nav-menu-mobile"
-                :class="{ 'is-open': mobileNavOpen }"
-                aria-label="Mobile navigation menu"
-                x-show="mobileNavOpen"
-                x-cloak>
-                <a href="{{ url_for('dashboard') }}" 
-                   class="nav-item {% if request.endpoint == 'dashboard' %}nav-item--active{% endif %}">
+            <nav class="nav-menu-mobile" :class="{ 'is-open': mobileNavOpen }" aria-label="Mobile navigation menu"
+                x-show="mobileNavOpen" x-cloak>
+                <a href="{{ url_for('dashboard') }}"
+                    class="nav-item {% if request.endpoint == 'dashboard' %}nav-item--active{% endif %}">
                     <i data-lucide="home" class="w-5 h-5"></i>
                     <span class="font-medium">Dashboard</span>
                 </a>
-                <a href="{{ url_for('study') }}" 
-                   class="nav-item {% if request.endpoint == 'study' %}nav-item--active{% endif %}">
+                <a href="{{ url_for('study') }}"
+                    class="nav-item {% if request.endpoint == 'study' %}nav-item--active{% endif %}">
                     <i data-lucide="book-open" class="w-5 h-5"></i>
                     <span class="font-medium">Study</span>
                 </a>
-                <a href="{{ url_for('dashboard') }}#leaderboard-section" 
-                   class="nav-item {% if request.endpoint == 'dashboard' %}nav-item--active{% endif %}"
-                   onclick="event.preventDefault(); document.getElementById('leaderboard-section').scrollIntoView({ behavior: 'smooth' });">
+                <a href="{{ url_for('dashboard') }}#leaderboard-section"
+                    class="nav-item {% if request.endpoint == 'dashboard' %}nav-item--active{% endif %}"
+                    onclick="event.preventDefault(); document.getElementById('leaderboard-section').scrollIntoView({ behavior: 'smooth' });">
                     <i data-lucide="trophy" class="w-5 h-5"></i>
                     <span class="font-medium">Rank</span>
                 </a>
-                <a href="{{ url_for('group_study') }}" 
-                   class="nav-item {% if request.endpoint == 'group_study' %}nav-item--active{% endif %}">
+                <a href="{{ url_for('group_study') }}"
+                    class="nav-item {% if request.endpoint == 'group_study' %}nav-item--active{% endif %}">
                     <i data-lucide="users" class="w-5 h-5"></i>
                     <span class="font-medium">Groups</span>
                 </a>
             </nav>
-            
+
             <!-- Right: User Profile (BoilerBuddy Style) -->
             <div class="app-header-right relative">
-                <button
-                    @click="showUserMenu = !showUserMenu"
+                <button @click="showUserMenu = !showUserMenu"
                     class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center hover:opacity-80 transition-opacity"
                     aria-label="User menu">
                     <i data-lucide="user" class="w-5 h-5 text-white"></i>
                 </button>
-                <div x-show="showUserMenu" 
-                     @click.away="showUserMenu = false"
-                     x-cloak
-                     class="absolute right-0 top-12 bg-white text-black rounded-lg shadow-xl p-2 min-w-[160px] z-50">
+                <div x-show="showUserMenu" @click.away="showUserMenu = false" x-cloak
+                    class="absolute right-0 top-12 bg-white text-black rounded-lg shadow-xl p-2 min-w-[160px] z-50">
                     <div class="px-3 py-2 border-b border-gray-200">
                         <p class="font-medium text-sm" x-text="currentUser.username || 'Student'"></p>
                         <p class="text-xs text-gray-500">Level <span x-text="xpProgress.current_level || 1"></span></p>
                     </div>
-                    <a href="{{ url_for('settings') }}" 
-                       class="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors text-sm">
+                    <a href="{{ url_for('settings') }}"
+                        class="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors text-sm">
                         <i data-lucide="settings" class="w-4 h-4"></i>
                         <span>Settings</span>
                     </a>
-                    <a href="{{ url_for('achievements') }}" 
-                       class="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors text-sm">
+                    <a href="{{ url_for('achievements') }}"
+                        class="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors text-sm">
                         <i data-lucide="award" class="w-4 h-4"></i>
                         <span>Achievements</span>
                     </a>
-                    <button 
-                        @click="logout(); showUserMenu = false" 
+                    <button @click="logout(); showUserMenu = false"
                         class="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors text-sm">
                         <i data-lucide="log-out" class="w-4 h-4"></i>
                         <span>Logout</span>
@@ -142,37 +137,37 @@
             </div>
         </div>
     </header>
-    
+
     <!-- Main Content Area -->
     <main class="app-main" role="main">
         {% block page_content %}{% endblock %}
     </main>
-    
+
     <!-- Mobile Bottom Navigation (BoilerBuddy Style) -->
     <nav class="mobile-bottom-nav" aria-label="Mobile bottom navigation">
         <div class="mobile-bottom-nav-content">
-            <a href="{{ url_for('dashboard') }}" 
-               class="mobile-bottom-nav-item {% if request.endpoint == 'dashboard' %}mobile-bottom-nav-item--active{% endif %}"
-               aria-label="Dashboard">
+            <a href="{{ url_for('dashboard') }}"
+                class="mobile-bottom-nav-item {% if request.endpoint == 'dashboard' %}mobile-bottom-nav-item--active{% endif %}"
+                aria-label="Dashboard">
                 <i data-lucide="home" class="w-6 h-6"></i>
                 <span>Home</span>
             </a>
-            <a href="{{ url_for('study') }}" 
-               class="mobile-bottom-nav-item {% if request.endpoint == 'study' %}mobile-bottom-nav-item--active{% endif %}"
-               aria-label="Study">
+            <a href="{{ url_for('study') }}"
+                class="mobile-bottom-nav-item {% if request.endpoint == 'study' %}mobile-bottom-nav-item--active{% endif %}"
+                aria-label="Study">
                 <i data-lucide="book-open" class="w-6 h-6"></i>
                 <span>Study</span>
             </a>
-            <a href="{{ url_for('dashboard') }}#leaderboard-section" 
-               class="mobile-bottom-nav-item {% if request.endpoint == 'dashboard' %}mobile-bottom-nav-item--active{% endif %}"
-               aria-label="Rank"
-               onclick="event.preventDefault(); document.getElementById('leaderboard-section').scrollIntoView({ behavior: 'smooth' });">
+            <a href="{{ url_for('dashboard') }}#leaderboard-section"
+                class="mobile-bottom-nav-item {% if request.endpoint == 'dashboard' %}mobile-bottom-nav-item--active{% endif %}"
+                aria-label="Rank"
+                onclick="event.preventDefault(); document.getElementById('leaderboard-section').scrollIntoView({ behavior: 'smooth' });">
                 <i data-lucide="trophy" class="w-6 h-6"></i>
                 <span>Rank</span>
             </a>
-            <a href="{{ url_for('group_study') }}" 
-               class="mobile-bottom-nav-item {% if request.endpoint == 'group_study' %}mobile-bottom-nav-item--active{% endif %}"
-               aria-label="Groups">
+            <a href="{{ url_for('group_study') }}"
+                class="mobile-bottom-nav-item {% if request.endpoint == 'group_study' %}mobile-bottom-nav-item--active{% endif %}"
+                aria-label="Groups">
                 <i data-lucide="users" class="w-6 h-6"></i>
                 <span>Groups</span>
             </a>
@@ -180,4 +175,3 @@
     </nav>
 </div>
 {% endblock %}
-

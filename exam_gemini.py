@@ -3,12 +3,15 @@ Use Gemini Vision to extract exam questions directly from PDFs/images.
 This replaces OCR with AI-powered extraction that handles LaTeX, math, and complex formatting.
 """
 
+
 import os
 import json
 import io
+import time
+import tempfile
 from typing import List, Dict, Optional
 from PIL import Image
-from pdf2image import convert_from_bytes
+import google.generativeai as genai
 from database import get_db
 from datetime import datetime
 
@@ -82,86 +85,96 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
         instruction_pages = []
         
         if file_type == 'pdf':
-            # Convert PDF to images
-            print("[GEMINI_EXTRACT] Converting PDF to images...")
-            try:
-                pdf_images = convert_from_bytes(file_bytes, dpi=150)  # Lower DPI for faster processing
-                total_pages = len(pdf_images)
-                print(f"[GEMINI_EXTRACT] Converted {total_pages} pages to images")
-            except Exception as e:
-                print(f"[GEMINI_EXTRACT] Error converting PDF to images: {e}")
-                import traceback
-                traceback.print_exc()
-                return {"error": f"Failed to convert PDF to images: {str(e)}"}
+            # Use Gemini File API for PDF
+            print("[GEMINI_EXTRACT] Uploading PDF to Gemini File API...")
             
-            # Limit pages to prevent timeout (process max 20 pages)
-            max_pages_to_process = 20
-            if total_pages > max_pages_to_process:
-                print(f"[GEMINI_EXTRACT] Warning: PDF has {total_pages} pages, processing first {max_pages_to_process} pages only")
-                pdf_images = pdf_images[:max_pages_to_process]
-                total_pages = max_pages_to_process
-            
-            # Process each page with Gemini
-            for page_idx, page_image in enumerate(pdf_images):
-                page_num = page_idx + 1
-                print(f"[GEMINI_EXTRACT] Processing page {page_num}/{total_pages} with Gemini...")
+            # Create a temporary file to upload
+            with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as temp_pdf:
+                temp_pdf.write(file_bytes)
+                temp_pdf_path = temp_pdf.name
                 
+            try:
+                # Upload the file
+                uploaded_file = genai.upload_file(temp_pdf_path, mime_type="application/pdf")
+                print(f"[GEMINI_EXTRACT] Uploaded file: {uploaded_file.name}")
+                
+                # Wait for file to be active
+                print("[GEMINI_EXTRACT] Waiting for file processing...")
+                while uploaded_file.state.name == "PROCESSING":
+                    time.sleep(2)
+                    uploaded_file = genai.get_file(uploaded_file.name)
+                
+                if uploaded_file.state.name == "FAILED":
+                    raise ValueError("Gemini File API failed to process the PDF.")
+                
+                print("[GEMINI_EXTRACT] File processed successfully. Generating content...")
+                
+                # Generate content
+                response = vision_model.generate_content(
+                    [prompt, uploaded_file],
+                    request_options={"timeout": 600}  # Long timeout for full PDF processing
+                )
+                
+                # Process response
+                response_text = response.text.strip()
+                    
+                # Remove markdown code blocks if present
+                if response_text.startswith("```"):
+                    parts = response_text.split("```")
+                    if len(parts) >= 2:
+                        response_text = parts[1]
+                        if response_text.startswith("json"):
+                            response_text = response_text[4:]
+                response_text = response_text.strip()
+                
+                # Parse JSON response
                 try:
-                    # Send page to Gemini with shorter timeout to prevent 502s
-                    page_prompt = prompt + f"\n\nThis is page {page_num} of {total_pages}. Extract questions from this page only."
-                    response = vision_model.generate_content(
-                        [page_prompt, page_image],
-                        request_options={"timeout": 20}  # Reduced from 30 to 20 seconds
-                    )
-                    
-                    response_text = response.text.strip()
-                    
-                    # Remove markdown code blocks if present
-                    if response_text.startswith("```"):
-                        parts = response_text.split("```")
-                        if len(parts) >= 2:
-                            response_text = parts[1]
-                            if response_text.startswith("json"):
-                                response_text = response_text[4:]
-                    response_text = response_text.strip()
-                    
-                    # Parse JSON response
-                    page_data = json.loads(response_text)
-                    
-                    # Check if this page was skipped (instruction page)
-                    if page_data.get("instruction_pages_skipped"):
-                        if page_num in page_data["instruction_pages_skipped"]:
-                            print(f"[GEMINI_EXTRACT] Page {page_num} detected as instructions - skipping")
-                            instruction_pages.append(page_num)
-                            continue
-                    
-                    # Add questions from this page
-                    if page_data.get("questions"):
-                        for q in page_data["questions"]:
-                            q["page_number"] = page_num
-                            questions_data.append(q)
-                        print(f"[GEMINI_EXTRACT] Extracted {len(page_data.get('questions', []))} questions from page {page_num}")
+                    data = json.loads(response_text)
+                    if data.get("questions"):
+                        questions_data = data["questions"]
+                        print(f"[GEMINI_EXTRACT] Extracted {len(questions_data)} questions from PDF")
+                        
+                    total_pages = data.get("total_pages", 1) # AI estimate
+                    instruction_pages = data.get("instruction_pages_skipped", [])
                     
                 except json.JSONDecodeError as e:
-                    print(f"[GEMINI_EXTRACT] Error parsing JSON from page {page_num}: {e}")
-                    print(f"[GEMINI_EXTRACT] Response text: {response_text[:500]}")
-                    import traceback
-                    traceback.print_exc()
-                    # Don't continue silently - return error for first page failure
-                    if page_num == 1:
-                        return {"error": f"Failed to parse Gemini response from page {page_num}. The AI may have returned invalid JSON. Try uploading again."}
-                    continue
-                except Exception as e:
-                    print(f"[GEMINI_EXTRACT] Error processing page {page_num}: {e}")
-                    import traceback
-                    traceback.print_exc()
-                    # Return error for first page failure
-                    if page_num == 1:
-                        return {"error": f"Failed to process page {page_num}: {str(e)}"}
-                    continue
+                    print(f"[GEMINI_EXTRACT] Error parsing JSON: {e}")
+                    # Try to find JSON array in text
+                    import re
+                    json_match = re.search(r'\{.*"questions".*\}', response_text, re.DOTALL)
+                    if json_match:
+                        try:
+                            data = json.loads(json_match.group(0))
+                            questions_data = data.get("questions", [])
+                            print(f"[GEMINI_EXTRACT] Recovered {len(questions_data)} questions from messy response")
+                        except:
+                            print(f"[GEMINI_EXTRACT] Failed to recover JSON")
+                
+                # Clean up remote file
+                try:
+                    genai.delete_file(uploaded_file.name)
+                    print("[GEMINI_EXTRACT] Deleted remote file")
+                except:
+                    pass
+                    
+            except Exception as e:
+                print(f"[GEMINI_EXTRACT] Error using Gemini File API: {e}")
+                import traceback
+                traceback.print_exc()
+                # Clean up remote file if it exists and we have the ref
+                if 'uploaded_file' in locals():
+                    try:
+                        genai.delete_file(uploaded_file.name)
+                    except:
+                        pass
+                raise e
+            finally:
+                # Clean up local temp file
+                if os.path.exists(temp_pdf_path):
+                    os.unlink(temp_pdf_path)
         
         elif file_type in ['png', 'jpg', 'jpeg', 'gif', 'webp']:
-            # Single image
+            # Single image - use direct inline data
             print("[GEMINI_EXTRACT] Processing single image with Gemini...")
             image = Image.open(io.BytesIO(file_bytes))
             total_pages = 1
@@ -208,7 +221,7 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
         else:
             return {"error": f"Unsupported file type: {file_type}"}
         
-        print(f"[GEMINI_EXTRACT] Total: {len(questions_data)} questions extracted from {total_pages} pages")
+        print(f"[GEMINI_EXTRACT] Total: {len(questions_data)} questions extracted")
         
         return {
             "questions": questions_data,
