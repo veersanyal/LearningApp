@@ -397,12 +397,14 @@ def group_study():
 @app.route('/leaderboard')
 @login_required
 def leaderboard():
-    return render_template('leaderboard.html')
+    # Redirect to dashboard with anchor
+    return redirect(url_for('dashboard', _anchor='leaderboard-section'))
 
 @app.route('/heatmap')
 @login_required
 def heatmap():
-    return render_template('heatmap.html')
+    # Redirect to dashboard with anchor
+    return redirect(url_for('dashboard', _anchor='heatmap-section'))
 
 @app.route('/documents')
 @login_required

@@ -52,16 +52,18 @@
                     <span class="font-medium">Group</span>
                 </a>
                 
-                <a href="{{ url_for('leaderboard') }}" 
-                   class="nav-item {% if request.endpoint == 'leaderboard' %}nav-item--active{% endif %}"
-                   aria-label="Go to Leaderboard">
+                <a href="{{ url_for('dashboard') }}#leaderboard-section" 
+                   class="nav-item {% if request.endpoint == 'dashboard' %}nav-item--active{% endif %}"
+                   aria-label="Go to Leaderboard"
+                   onclick="event.preventDefault(); document.getElementById('leaderboard-section').scrollIntoView({ behavior: 'smooth' });">
                     <i data-lucide="trophy" class="w-5 h-5"></i>
                     <span class="font-medium">Leaderboard</span>
                 </a>
                 
-                <a href="{{ url_for('heatmap') }}" 
-                   class="nav-item {% if request.endpoint == 'heatmap' %}nav-item--active{% endif %}"
-                   aria-label="Go to Heatmap">
+                <a href="{{ url_for('dashboard') }}#heatmap-section" 
+                   class="nav-item {% if request.endpoint == 'dashboard' %}nav-item--active{% endif %}"
+                   aria-label="Go to Heatmap"
+                   onclick="event.preventDefault(); document.getElementById('heatmap-section').scrollIntoView({ behavior: 'smooth' });">
                     <i data-lucide="map" class="w-5 h-5"></i>
                     <span class="font-medium">Heatmap</span>
                 </a>
@@ -91,8 +93,9 @@
                     <i data-lucide="book-open" class="w-5 h-5"></i>
                     <span class="font-medium">Study</span>
                 </a>
-                <a href="{{ url_for('leaderboard') }}" 
-                   class="nav-item {% if request.endpoint == 'leaderboard' %}nav-item--active{% endif %}">
+                <a href="{{ url_for('dashboard') }}#leaderboard-section" 
+                   class="nav-item {% if request.endpoint == 'dashboard' %}nav-item--active{% endif %}"
+                   onclick="event.preventDefault(); document.getElementById('leaderboard-section').scrollIntoView({ behavior: 'smooth' });">
                     <i data-lucide="trophy" class="w-5 h-5"></i>
                     <span class="font-medium">Rank</span>
                 </a>
@@ -160,9 +163,10 @@
                 <i data-lucide="book-open" class="w-6 h-6"></i>
                 <span>Study</span>
             </a>
-            <a href="{{ url_for('leaderboard') }}" 
-               class="mobile-bottom-nav-item {% if request.endpoint == 'leaderboard' %}mobile-bottom-nav-item--active{% endif %}"
-               aria-label="Rank">
+            <a href="{{ url_for('dashboard') }}#leaderboard-section" 
+               class="mobile-bottom-nav-item {% if request.endpoint == 'dashboard' %}mobile-bottom-nav-item--active{% endif %}"
+               aria-label="Rank"
+               onclick="event.preventDefault(); document.getElementById('leaderboard-section').scrollIntoView({ behavior: 'smooth' });">
                 <i data-lucide="trophy" class="w-6 h-6"></i>
                 <span>Rank</span>
             </a>
