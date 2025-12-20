@@ -559,6 +559,7 @@ function app() {
                                 this.isAuthenticated = true;
                                 this.currentUser = data.user;
                                 this.authError = ''; // Clear any previous errors
+                                this.onboardingStep = 'checking'; // Prevent dashboard flash
                                 await this.init();
                             } else {
                                 const errorMsg = data.error || 'Google login failed';
