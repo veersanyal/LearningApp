@@ -478,6 +478,33 @@ function app() {
             }
         },
         
+        // Quick date picker for exam date
+        setQuickDate(type) {
+            const today = new Date();
+            let targetDate = new Date();
+            
+            if (type === 'tomorrow') {
+                targetDate.setDate(today.getDate() + 1);
+            } else if (type === 'nextweek') {
+                targetDate.setDate(today.getDate() + 7);
+            } else if (type === 'twoweeks') {
+                targetDate.setDate(today.getDate() + 14);
+            }
+            
+            // Format as YYYY-MM-DD for date input
+            const year = targetDate.getFullYear();
+            const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+            const day = String(targetDate.getDate()).padStart(2, '0');
+            this.examDate = `${year}-${month}-${day}`;
+            
+            // Re-initialize icons
+            this.$nextTick(() => {
+                if (window.lucide) {
+                    lucide.createIcons();
+                }
+            });
+        },
+        
         // Group Study functions
         sendChatMessage() {
             if (!this.chatMessage || !this.chatMessage.trim()) return;

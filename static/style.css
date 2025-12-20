@@ -27,6 +27,11 @@
   --card-radius-sm: 16px;
 }
 
+/* Background gradient utilities */
+.bg-gradient-radial {
+  background: radial-gradient(circle, var(--tw-gradient-stops));
+}
+
 /* Main View Transitions */
 .view {
   opacity: 0;

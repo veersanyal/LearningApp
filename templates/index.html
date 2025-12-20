@@ -260,35 +260,53 @@
     </div>
 
     <!-- Onboarding Views -->
-    <div x-show="isAuthenticated && onboardingStep !== null && onboardingStep !== 'checking'" x-cloak class="min-h-screen bg-gradient-to-br from-white via-purple-50/20 to-amber-50/30 flex items-center justify-center p-4">
-        <div class="w-full max-w-2xl">
-            <!-- Progress indicator -->
-            <div class="flex items-center justify-center gap-2 mb-8">
-                <template x-for="s in [1, 2, 3]" :key="s">
-                    <div class="h-2 rounded-full transition-all"
-                         :class="{
-                             'w-12 bg-[#9B72CF]': (onboardingStep === 'course' && s === 1) || (onboardingStep === 'exam-date' && s === 2) || (onboardingStep === 'topic-confidence' && s === 3),
-                             'w-8 bg-[#CEB888]': (onboardingStep === 'exam-date' && s === 1) || (onboardingStep === 'topic-confidence' && s <= 2),
-                             'w-8 bg-gray-300': (onboardingStep === 'course' && s > 1) || (onboardingStep === 'exam-date' && s === 3)
-                         }">
-                    </div>
-                </template>
-            </div>
-
+    <div x-show="isAuthenticated && onboardingStep !== null && onboardingStep !== 'checking'" x-cloak class="min-h-screen bg-gradient-to-br from-white via-purple-50/20 to-amber-50/30 flex items-center justify-center p-4 relative">
+        <!-- Background polish: subtle radial glow behind card -->
+        <div class="absolute inset-0 bg-gradient-radial from-white/40 via-transparent to-transparent pointer-events-none"></div>
+        
+        <div class="w-full max-w-2xl relative z-10">
             <!-- Main card -->
-            <div class="bg-white rounded-3xl shadow-xl p-8 md:p-12 border border-gray-200 text-gray-900">
+            <div class="bg-white rounded-3xl shadow-2xl p-8 md:p-12 border border-gray-200/50 text-gray-900 relative overflow-hidden">
+                <!-- Subtle header gradient strip -->
+                <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#9B72CF]/20 via-[#9B72CF]/10 to-transparent"></div>
+                
+                <!-- Progress indicator inside card -->
                 <div class="mb-8">
-                    <div class="flex items-center gap-3 mb-4">
-                        <i x-show="onboardingStep === 'course'" data-lucide="book-open" class="w-8 h-8 text-[#9B72CF]"></i>
-                        <i x-show="onboardingStep === 'exam-date'" data-lucide="calendar" class="w-8 h-8 text-[#9B72CF]"></i>
-                        <i x-show="onboardingStep === 'topic-confidence'" data-lucide="brain" class="w-8 h-8 text-[#9B72CF]"></i>
-                        <h2 class="text-2xl font-semibold text-gray-900 !text-gray-900">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm font-medium text-gray-500">
+                                <span x-show="onboardingStep === 'course'">Step 1 of 3</span>
+                                <span x-show="onboardingStep === 'exam-date'">Step 2 of 3</span>
+                                <span x-show="onboardingStep === 'topic-confidence'">Step 3 of 3</span>
+                            </span>
+                        </div>
+                    </div>
+                    <!-- Progress bar -->
+                    <div class="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                        <div class="h-full bg-[#9B72CF] rounded-full transition-all duration-300"
+                             :style="{
+                                 width: onboardingStep === 'course' ? '33.33%' : (onboardingStep === 'exam-date' ? '66.66%' : '100%')
+                             }">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Header with icon and title -->
+                <div class="mb-6">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="relative">
+                            <div class="absolute -inset-2 bg-[#9B72CF]/10 rounded-2xl blur-sm"></div>
+                            <i x-show="onboardingStep === 'course'" data-lucide="book-open" class="w-8 h-8 text-[#9B72CF] relative z-10"></i>
+                            <i x-show="onboardingStep === 'exam-date'" data-lucide="calendar" class="w-8 h-8 text-[#9B72CF] relative z-10"></i>
+                            <i x-show="onboardingStep === 'topic-confidence'" data-lucide="brain" class="w-8 h-8 text-[#9B72CF] relative z-10"></i>
+                        </div>
+                        <h2 class="text-[28px] font-semibold text-gray-900 leading-tight">
                             <span x-show="onboardingStep === 'course'">Pick your course</span>
                             <span x-show="onboardingStep === 'exam-date'">Set your exam date</span>
                             <span x-show="onboardingStep === 'topic-confidence'">Rate your topic strengths</span>
                         </h2>
                     </div>
-                    <p class="text-gray-600">
+                    <p class="text-[15px] text-gray-500 mt-4 ml-11">
                         <span x-show="onboardingStep === 'course'">Which math course are you studying for?</span>
                         <span x-show="onboardingStep === 'exam-date'">When's your next exam? We'll build a study plan for you.</span>
                         <span x-show="onboardingStep === 'topic-confidence'">Help us understand where you are so we can personalize your learning.</span>
@@ -320,12 +338,12 @@
                 </div>
 
                 <!-- Step 3: Topic strengths -->
-                <div x-show="onboardingStep === 'topic-confidence'" class="space-y-6">
+                <div x-show="onboardingStep === 'topic-confidence'" class="space-y-6 mt-2">
                     <template x-for="topic in [{id: 'limits', name: 'Limits'}, {id: 'derivatives', name: 'Derivatives'}, {id: 'integrals', name: 'Integrals'}, {id: 'series', name: 'Series'}, {id: 'vectorcalc', name: 'Vector Calculus'}, {id: 'diffeq', name: 'Differential Equations'}]" :key="topic.id">
                         <div>
-                            <div class="flex justify-between items-center mb-2">
-                                <label class="text-sm" x-text="topic.name"></label>
-                                <span class="text-sm text-gray-500" x-text="(topicStrengths[topic.id] || 3) + '/5'"></span>
+                            <div class="flex justify-between items-center mb-3">
+                                <label class="text-sm font-medium text-gray-900" x-text="topic.name"></label>
+                                <span class="text-sm font-medium text-[#9B72CF]" x-text="(topicStrengths[topic.id] || 3) + '/5'"></span>
                             </div>
                             <input
                                 type="range"
@@ -335,7 +353,7 @@
                                 @input="topicStrengths[topic.id] = parseInt($event.target.value)"
                                 class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#9B72CF]"
                             />
-                            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                            <div class="flex justify-between text-xs text-gray-400 mt-2">
                                 <span>Beginner</span>
                                 <span>Expert</span>
                             </div>
@@ -344,30 +362,30 @@
                 </div>
 
                 <!-- Navigation buttons -->
-                <div class="flex gap-3 mt-8">
+                <div class="flex gap-3 mt-10">
                     <button
                         x-show="onboardingStep === 'exam-date' || onboardingStep === 'topic-confidence'"
                         @click="onboardingStep === 'exam-date' ? onboardingStep = 'course' : onboardingStep = 'exam-date'"
-                        class="flex items-center gap-2 px-6 py-3 rounded-2xl border-2 border-gray-200 hover:bg-gray-50 transition-colors">
+                        class="flex items-center gap-2 px-6 py-3 rounded-2xl border-2 border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors font-medium">
                         <i data-lucide="chevron-left" class="w-5 h-5"></i>
                         Back
                     </button>
                     <button
                         x-show="onboardingStep === 'exam-date'"
                         @click="skipExamDate()"
-                        class="px-6 py-3 rounded-2xl border-2 border-gray-200 hover:bg-gray-50 transition-colors">
+                        class="px-6 py-3 rounded-2xl text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors font-medium">
                         Skip for now
                     </button>
                     <button
                         x-show="onboardingStep === 'topic-confidence'"
                         @click="skipTopicConfidence()"
-                        class="px-6 py-3 rounded-2xl border-2 border-gray-200 hover:bg-gray-50 transition-colors">
+                        class="px-6 py-3 rounded-2xl text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors font-medium">
                         Skip for now
                     </button>
                     <button
                         @click="onboardingStep === 'course' ? saveCourse() : (onboardingStep === 'exam-date' ? saveExamDate() : completeOnboarding())"
                         :disabled="(onboardingStep === 'course' && !selectedCourse) || (onboardingStep === 'exam-date' && !examDate)"
-                        class="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-[#9B72CF] text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
+                        class="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-[#9B72CF] text-white hover:bg-[#8B62BF] hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#9B72CF] font-medium shadow-md">
                         <span x-show="onboardingStep === 'course' || onboardingStep === 'exam-date'">Next</span>
                         <span x-show="onboardingStep === 'topic-confidence'">Let's go!</span>
                         <i x-show="onboardingStep === 'course' || onboardingStep === 'exam-date'" data-lucide="chevron-right" class="w-5 h-5"></i>
