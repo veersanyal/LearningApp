@@ -265,9 +265,9 @@
         <div x-show="onboardingStep === 'course'" class="w-full max-w-2xl">
             <!-- Progress indicator -->
             <div class="flex items-center justify-center gap-2 mb-8">
-                <div class="h-2 w-12 rounded-full bg-[#9B72CF]"></div>
-                <div class="h-2 w-8 rounded-full bg-gray-300"></div>
-                <div class="h-2 w-8 rounded-full bg-gray-300"></div>
+                <div class="h-2 w-12 rounded-full bg-[#9B72CF] transition-all"></div>
+                <div class="h-2 w-8 rounded-full bg-gray-300 transition-all"></div>
+                <div class="h-2 w-8 rounded-full bg-gray-300 transition-all"></div>
             </div>
 
             <!-- Main card -->
@@ -309,9 +309,9 @@
         <div x-show="onboardingStep === 'exam-date'" class="w-full max-w-2xl">
             <!-- Progress indicator -->
             <div class="flex items-center justify-center gap-2 mb-8">
-                <div class="h-2 w-8 rounded-full bg-[#CEB888]"></div>
-                <div class="h-2 w-12 rounded-full bg-[#9B72CF]"></div>
-                <div class="h-2 w-8 rounded-full bg-gray-300"></div>
+                <div class="h-2 w-8 rounded-full bg-[#CEB888] transition-all"></div>
+                <div class="h-2 w-12 rounded-full bg-[#9B72CF] transition-all"></div>
+                <div class="h-2 w-8 rounded-full bg-gray-300 transition-all"></div>
             </div>
 
             <!-- Main card -->
@@ -329,7 +329,7 @@
                     <input
                         type="date"
                         x-model="examDate"
-                        class="w-full p-4 rounded-2xl border-2 border-gray-200 bg-gray-50 focus:border-[#9B72CF] focus:outline-none focus:ring-2 focus:ring-[#9B72CF]/20"
+                        class="w-full p-4 rounded-2xl border-2 border-gray-200 bg-gray-50 text-gray-900 placeholder:text-gray-500 focus:border-[#9B72CF] focus:outline-none focus:ring-2 focus:ring-[#9B72CF]/20"
                     />
                     <p class="text-sm text-gray-500 mt-4">
                         💡 Tip: We recommend starting at least 2 weeks before your exam for optimal results!
@@ -340,13 +340,13 @@
                 <div class="flex gap-3 mt-8">
                     <button
                         @click="onboardingStep = 'course'"
-                        class="flex items-center gap-2 px-6 py-3 rounded-2xl border-2 border-gray-200 hover:bg-gray-50 transition-colors">
+                        class="flex items-center gap-2 px-6 py-3 rounded-2xl border-2 border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors font-medium">
                         <i data-lucide="chevron-left" class="w-5 h-5"></i>
                         Back
                     </button>
                     <button
                         @click="skipExamDate()"
-                        class="px-6 py-3 rounded-2xl border-2 border-gray-200 hover:bg-gray-50 transition-colors">
+                        class="px-6 py-3 rounded-2xl border-2 border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors font-medium">
                         Skip for now
                     </button>
                     <button
@@ -364,9 +364,9 @@
         <div x-show="onboardingStep === 'topic-confidence'" class="w-full max-w-2xl">
             <!-- Progress indicator -->
             <div class="flex items-center justify-center gap-2 mb-8">
-                <div class="h-2 w-8 rounded-full bg-[#CEB888]"></div>
-                <div class="h-2 w-8 rounded-full bg-[#CEB888]"></div>
-                <div class="h-2 w-12 rounded-full bg-[#9B72CF]"></div>
+                <div class="h-2 w-8 rounded-full bg-[#CEB888] transition-all"></div>
+                <div class="h-2 w-8 rounded-full bg-[#CEB888] transition-all"></div>
+                <div class="h-2 w-12 rounded-full bg-[#9B72CF] transition-all"></div>
             </div>
 
             <!-- Main card -->
