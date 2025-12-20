@@ -38,14 +38,19 @@
     radial-gradient(900px 600px at 50% 40%, rgba(168, 120, 255, 0.16), transparent 60%),
     linear-gradient(180deg, #fbfbfe 0%, #f2f4fb 100%);
   position: relative;
+  background-color: #fbfbfe; /* Fallback color */
 }
 
 .onboarding-bg::before {
   content: "";
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-image: radial-gradient(rgba(130, 140, 170, 0.14) 1px, transparent 1px);
   background-size: 22px 22px;
+  background-position: 0 0;
   opacity: 0.25;
   pointer-events: none;
   z-index: 0;
