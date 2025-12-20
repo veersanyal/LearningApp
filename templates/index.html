@@ -314,27 +314,58 @@
                 </div>
 
                 <!-- Step 1: Course selection -->
-                <div x-show="onboardingStep === 'course'" class="space-y-3">
+                <div x-show="onboardingStep === 'course'" class="space-y-3 mt-2">
                     <template x-for="course in ['MA 161 – Calculus I', 'MA 162 – Calculus II', 'MA 165 – Analytic Geometry & Calculus I', 'MA 166 – Analytic Geometry & Calculus II', 'MA 261 – Multivariate Calculus', 'MA 265 – Linear Algebra']" :key="course">
                         <button
                             @click="selectedCourse = course"
-                            :class="selectedCourse === course ? 'border-[#9B72CF] bg-[#9B72CF]/10 text-gray-900' : 'border-gray-200 hover:border-[#9B72CF]/50 hover:bg-[#9B72CF]/5 text-gray-900'"
-                            class="w-full text-left p-4 rounded-2xl border-2 transition-all">
+                            :class="selectedCourse === course ? 'border-[#9B72CF] bg-[#9B72CF]/10 text-gray-900 shadow-sm' : 'border-gray-200 hover:border-[#9B72CF]/50 hover:bg-[#9B72CF]/5 text-gray-900'"
+                            class="w-full text-left p-4 rounded-2xl border-2 transition-all font-normal">
                             <span x-text="course"></span>
                         </button>
                     </template>
                 </div>
 
                 <!-- Step 2: Exam date -->
-                <div x-show="onboardingStep === 'exam-date'">
-                    <input
-                        type="date"
-                        x-model="examDate"
-                        class="w-full p-4 rounded-2xl border-2 border-gray-200 bg-gray-50 focus:border-[#9B72CF] focus:outline-none focus:ring-2 focus:ring-[#9B72CF]/20"
-                    />
-                    <p class="text-sm text-gray-500 mt-4">
-                        💡 Tip: We recommend starting at least 2 weeks before your exam for optimal results!
-                    </p>
+                <div x-show="onboardingStep === 'exam-date'" class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Exam date</label>
+                        <div class="relative">
+                            <i data-lucide="calendar" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"></i>
+                            <input
+                                type="date"
+                                x-model="examDate"
+                                placeholder="mm/dd/yyyy"
+                                class="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-gray-200 bg-gray-50 text-gray-900 placeholder:text-gray-400 focus:border-[#9B72CF] focus:outline-none focus:ring-4 focus:ring-[#9B72CF]/10 transition-all"
+                            />
+                        </div>
+                    </div>
+                    
+                    <!-- Quick pick chips -->
+                    <div class="flex flex-wrap gap-2">
+                        <button
+                            @click="setQuickDate('tomorrow')"
+                            class="px-4 py-2 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-[#9B72CF]/30 transition-colors text-sm font-medium">
+                            Tomorrow
+                        </button>
+                        <button
+                            @click="setQuickDate('nextweek')"
+                            class="px-4 py-2 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-[#9B72CF]/30 transition-colors text-sm font-medium">
+                            Next week
+                        </button>
+                        <button
+                            @click="setQuickDate('twoweeks')"
+                            class="px-4 py-2 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-[#9B72CF]/30 transition-colors text-sm font-medium">
+                            2 weeks
+                        </button>
+                    </div>
+                    
+                    <!-- Tip callout -->
+                    <div class="bg-[#9B72CF]/5 border border-[#9B72CF]/20 rounded-2xl p-4 flex items-start gap-3">
+                        <i data-lucide="info" class="w-5 h-5 text-[#9B72CF] flex-shrink-0 mt-0.5"></i>
+                        <p class="text-sm text-gray-700 leading-relaxed">
+                            <span class="font-medium text-gray-900">Tip:</span> We recommend starting at least 2 weeks before your exam for optimal results!
+                        </p>
+                    </div>
                 </div>
 
                 <!-- Step 3: Topic strengths -->
