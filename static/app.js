@@ -555,9 +555,12 @@ function app() {
                             if (authResponse.ok) {
                                 this.isAuthenticated = true;
                                 this.currentUser = data.user;
+                                this.authError = ''; // Clear any previous errors
                                 await this.init();
                             } else {
-                                this.authError = data.error || 'Google login failed';
+                                const errorMsg = data.error || 'Google login failed';
+                                this.authError = errorMsg;
+                                console.error('Google login error:', errorMsg);
                             }
                         } catch (err) {
                             console.error('Google login error:', err);

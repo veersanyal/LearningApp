@@ -44,6 +44,13 @@ class User(UserMixin):
             ).fetchone()
             
             if user_data:
+                # Handle course_code - it might not exist in older database schemas
+                course_code = None
+                try:
+                    course_code = user_data['course_code']
+                except (KeyError, IndexError):
+                    pass  # Column doesn't exist yet, will be added by migration
+                
                 return User(
                     user_id=user_data['user_id'],
                     username=user_data['username'],
@@ -55,7 +62,7 @@ class User(UserMixin):
                     total_xp=user_data['total_xp'],
                     created_at=user_data['created_at'],
                     last_login=user_data['last_login'],
-                    course_code=user_data.get('course_code')
+                    course_code=course_code
                 )
             return None
         finally:
@@ -322,20 +329,42 @@ def get_or_create_oauth_user(email, name, provider, provider_id):
         # Ensure username is unique
         base_username = username
         counter = 1
+        max_attempts = 100  # Prevent infinite loop
+        attempts = 0
         while db.cursor.execute('SELECT user_id FROM users WHERE username = ?', (username,)).fetchone():
             username = f"{base_username}{counter}"
             counter += 1
+            attempts += 1
+            if attempts >= max_attempts:
+                print(f"Error: Could not generate unique username after {max_attempts} attempts")
+                raise Exception("Could not generate unique username")
         
         # Insert new user (no password for OAuth users - use NULL)
-        db.cursor.execute('''
-            INSERT INTO users (username, email, full_name, password_hash, oauth_provider, oauth_id)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (username, email, name, None, provider, provider_id))
-        
-        db.conn.commit()
-        user_id = db.cursor.lastrowid
-        
-        return User.get(user_id)
+        # Note: course_code is not included here - it will be NULL, which triggers onboarding
+        try:
+            db.cursor.execute('''
+                INSERT INTO users (username, email, full_name, password_hash, oauth_provider, oauth_id)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (username, email, name, None, provider, provider_id))
+            
+            db.conn.commit()
+            user_id = db.cursor.lastrowid
+            
+            if not user_id:
+                print(f"Error: Failed to get user_id after insert")
+                return None
+            
+            return User.get(user_id)
+        except sqlite3.IntegrityError as e:
+            print(f"Integrity error creating OAuth user: {e}")
+            # User might already exist - try to get by email or oauth_id
+            user_data = db.cursor.execute(
+                'SELECT * FROM users WHERE email = ? OR (oauth_provider = ? AND oauth_id = ?)',
+                (email, provider, provider_id)
+            ).fetchone()
+            if user_data:
+                return User.get(user_data['user_id'])
+            raise
     
     except Exception as e:
         print(f"Error in get_or_create_oauth_user: {e}")

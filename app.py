@@ -493,10 +493,17 @@ def auth_google():
             return jsonify({"error": "Email not provided by Google"}), 400
         
         # Get or create user
-        user = get_or_create_oauth_user(email, name, 'google', google_id)
-        
-        if not user:
-            return jsonify({"error": "Failed to create user"}), 500
+        try:
+            user = get_or_create_oauth_user(email, name, 'google', google_id)
+            
+            if not user:
+                print(f"Error: get_or_create_oauth_user returned None for email {email}")
+                return jsonify({"error": "Failed to authenticate user. Please try again."}), 500
+        except Exception as e:
+            print(f"Error in get_or_create_oauth_user: {e}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({"error": f"Authentication error: {str(e)}"}), 500
         
         # Login user (always remember for OAuth logins)
         login_user(user, remember=True)
