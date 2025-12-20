@@ -276,13 +276,13 @@
             </div>
 
             <!-- Main card -->
-            <div class="bg-white rounded-3xl shadow-xl p-8 md:p-12 border border-gray-200">
+            <div class="bg-white rounded-3xl shadow-xl p-8 md:p-12 border border-gray-200 text-gray-900">
                 <div class="mb-8">
                     <div class="flex items-center gap-3 mb-4">
                         <i x-show="onboardingStep === 'course'" data-lucide="book-open" class="w-8 h-8 text-[#9B72CF]"></i>
                         <i x-show="onboardingStep === 'exam-date'" data-lucide="calendar" class="w-8 h-8 text-[#9B72CF]"></i>
                         <i x-show="onboardingStep === 'topic-confidence'" data-lucide="brain" class="w-8 h-8 text-[#9B72CF]"></i>
-                        <h2 class="text-2xl font-semibold text-gray-900">
+                        <h2 class="text-2xl font-semibold text-gray-900 !text-gray-900">
                             <span x-show="onboardingStep === 'course'">Pick your course</span>
                             <span x-show="onboardingStep === 'exam-date'">Set your exam date</span>
                             <span x-show="onboardingStep === 'topic-confidence'">Rate your topic strengths</span>
