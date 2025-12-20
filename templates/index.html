@@ -261,8 +261,7 @@
 
     <!-- Onboarding Views -->
     <div x-show="isAuthenticated && onboardingStep !== null && onboardingStep !== 'checking'" x-cloak class="onboarding-bg min-h-screen flex items-center justify-center p-4 relative">
-        
-        <div class="w-full max-w-2xl relative z-10">
+        <div class="w-full max-w-2xl relative" style="z-index: 1;">
             <!-- Main card -->
             <div class="bg-white rounded-3xl shadow-2xl p-8 md:p-12 border border-gray-200/50 text-gray-900 relative overflow-hidden">
                 <!-- Subtle header gradient strip -->
