@@ -34,11 +34,11 @@
 
 /* Onboarding background with math grid pattern */
 .onboarding-bg {
-  background:
+  background-color: #fbfbfe !important; /* Fallback and override body background */
+  background-image:
     radial-gradient(900px 600px at 50% 40%, rgba(168, 120, 255, 0.16), transparent 60%),
     linear-gradient(180deg, #fbfbfe 0%, #f2f4fb 100%);
   position: relative;
-  background-color: #fbfbfe; /* Fallback color */
 }
 
 .onboarding-bg::before {
