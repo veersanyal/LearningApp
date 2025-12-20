@@ -2203,14 +2203,33 @@ def get_heatmap_data():
         cursor = db.cursor.execute(query, (threshold,))
         results = cursor.fetchall()
         
+        
+        # Hardcoded coordinates for demo (approximate % on map)
+        # Assuming a standard north-up map of Purdue campus
+        COORDINATE_MAP = {
+            'WALC': (55, 45),
+            'HSSE': (45, 48),
+            'KRAN': (65, 55),
+            'LWSN': (40, 35),
+            'PMU': (60, 60),
+            'MRRTT': (30, 40),
+            'BRNG': (35, 45),
+            'STEW': (50, 50)
+        }
+        
         locations = []
         for row in results:
             count = row['student_count']
+            building_code = row['building_code']
+            
+            # Default to center if not found
+            x, y = COORDINATE_MAP.get(building_code, (50, 50))
+            
             locations.append({
                 "id": row['location_id'],
                 "name": row['location_name'],
-                "x": 50, # Placeholder coordinates for map visualization
-                "y": 50,
+                "x": x,
+                "y": y,
                 "students": count,
                 "hot": count > 5 # Simple threshold for "hot"
             })

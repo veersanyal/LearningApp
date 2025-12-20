@@ -27,55 +27,49 @@
 
             <!-- Center: Navigation (Desktop) -->
             <nav id="primary-nav" class="app-header-nav hidden md:flex" aria-label="Primary navigation">
+
+                <!-- Search Bar -->
+                <div class="mr-4 hidden lg:block">
+                    <div class="nav-search">
+                        <i data-lucide="search" class="w-4 h-4"></i>
+                        <input type="text" placeholder="Search topics..."
+                            class="bg-transparent border-none outline-none text-sm w-full placeholder-slate-500">
+                    </div>
+                </div>
+
                 <a href="{{ url_for('dashboard') }}"
                     class="nav-item {% if request.endpoint == 'dashboard' %}nav-item--active{% endif %}"
                     aria-label="Go to Dashboard">
-                    <i data-lucide="home" class="w-5 h-5"></i>
-                    <span class="font-medium">Dashboard</span>
+                    <span class="font-medium">Home</span>
                 </a>
 
                 <a href="{{ url_for('study') }}"
                     class="nav-item {% if request.endpoint == 'study' %}nav-item--active{% endif %}"
                     aria-label="Go to Study">
-                    <i data-lucide="book-open" class="w-5 h-5"></i>
                     <span class="font-medium">Study</span>
                 </a>
 
                 <a href="{{ url_for('group_study') }}"
                     class="nav-item {% if request.endpoint == 'group_study' %}nav-item--active{% endif %}"
                     aria-label="Go to Group Study">
-                    <i data-lucide="users" class="w-5 h-5"></i>
                     <span class="font-medium">Group</span>
                 </a>
 
-                <a href="{{ url_for('dashboard') }}#leaderboard-section"
-                    class="nav-item {% if request.endpoint == 'dashboard' %}nav-item--active{% endif %}"
-                    aria-label="Go to Leaderboard"
+                <a href="{{ url_for('dashboard') }}#leaderboard-section" class="nav-item" aria-label="Go to Leaderboard"
                     onclick="event.preventDefault(); document.getElementById('leaderboard-section').scrollIntoView({ behavior: 'smooth' });">
-                    <i data-lucide="trophy" class="w-5 h-5"></i>
-                    <span class="font-medium">Leaderboard</span>
-                </a>
-
-                <a href="{{ url_for('dashboard') }}#heatmap-section"
-                    class="nav-item {% if request.endpoint == 'dashboard' %}nav-item--active{% endif %}"
-                    aria-label="Go to Heatmap"
-                    onclick="event.preventDefault(); document.getElementById('heatmap-section').scrollIntoView({ behavior: 'smooth' });">
-                    <i data-lucide="map" class="w-5 h-5"></i>
-                    <span class="font-medium">Heatmap</span>
+                    <span class="font-medium">Rank</span>
                 </a>
 
                 <a href="{{ url_for('exams') }}"
                     class="nav-item {% if request.endpoint == 'exams' %}nav-item--active{% endif %}"
                     aria-label="Go to Exams">
-                    <i data-lucide="file-text" class="w-5 h-5"></i>
                     <span class="font-medium">Exams</span>
                 </a>
 
-                <a href="{{ url_for('documents') }}"
-                    class="nav-item {% if request.endpoint == 'documents' %}nav-item--active{% endif %}"
-                    aria-label="Upload">
-                    <i data-lucide="upload" class="w-5 h-5"></i>
-                    <span class="font-medium">Upload</span>
+                <!-- Primary Action -->
+                <a href="{{ url_for('documents') }}" class="btn-primary-nav ml-2" aria-label="Upload">
+                    <i data-lucide="upload" class="w-4 h-4"></i>
+                    <span>Upload</span>
                 </a>
             </nav>
 

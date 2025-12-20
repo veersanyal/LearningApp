@@ -1806,38 +1806,42 @@ function app() {
                 podiumContainer.innerHTML = `
                     <!-- 2nd place -->
                     <div class="text-center">
-                        <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-3xl p-6 shadow-lg border-2 border-slate-600 mb-3">
-                            <div class="w-20 h-20 mx-auto rounded-full bg-slate-600 flex items-center justify-center text-white text-xl mb-3">
+                        <div class="surface-glass surface-glass-hover rounded-3xl p-6 relative group h-full flex flex-col justify-end">
+                            <div class="w-16 h-16 mx-auto rounded-full bg-slate-700 border-2 border-slate-600 flex items-center justify-center text-white text-lg mb-3 shadow-lg">
                                 ${top3[1].username ? top3[1].username.substring(0, 2).toUpperCase() : '2'}
                             </div>
-                            <span class="text-3xl mb-2 block">🥈</span>
-                            <p class="text-sm mb-1 font-medium">${top3[1].username || 'User'}</p>
-                            <p class="text-2xl text-slate-300 font-bold">${top3[1].total_xp || 0}</p>
-                            <p class="text-xs text-slate-400">XP</p>
+                            <span class="text-3xl mb-1 block drop-shadow-md">🥈</span>
+                            <p class="text-sm mb-1 font-medium text-white truncate w-full">${top3[1].username || 'User'}</p>
+                            <div class="bg-indigo-500/20 px-3 py-1 rounded-full inline-block">
+                                <p class="text-xs text-indigo-300 font-bold">${top3[1].total_xp || 0} XP</p>
+                            </div>
                         </div>
                     </div>
                     <!-- 1st place -->
-                    <div class="text-center">
-                        <div class="bg-gradient-to-br from-amber-600/30 to-amber-700/20 rounded-3xl p-6 shadow-xl border-2 border-amber-500/50 mb-3 transform scale-105">
-                            <div class="w-24 h-24 mx-auto rounded-full bg-amber-500 flex items-center justify-center text-white text-2xl mb-3">
+                    <div class="text-center z-10 -mt-6">
+                        <div class="bg-gradient-to-b from-amber-500/20 to-amber-600/5 rounded-3xl p-6 border border-amber-500/30 relative h-full flex flex-col justify-end shadow-[0_0_30px_rgba(245,158,11,0.1)]">
+                             <div class="absolute -top-4 -right-4 text-4xl animate-bounce">👑</div>
+                            <div class="w-20 h-20 mx-auto rounded-full bg-gradient-to-r from-amber-400 to-orange-500 flex items-center justify-center text-white text-2xl mb-3 shadow-lg ring-4 ring-amber-500/20">
                                 ${top3[0].username ? top3[0].username.substring(0, 2).toUpperCase() : '1'}
                             </div>
-                            <span class="text-4xl mb-2 block">🥇</span>
-                            <p class="text-sm mb-1 font-medium">${top3[0].username || 'User'}</p>
-                            <p class="text-3xl text-amber-300 font-bold">${top3[0].total_xp || 0}</p>
-                            <p class="text-xs text-slate-400">XP</p>
+                            <span class="text-5xl mb-2 block drop-shadow-md">🥇</span>
+                            <p class="text-base mb-1 font-bold text-white truncate w-full">${top3[0].username || 'User'}</p>
+                             <div class="bg-amber-500/20 px-4 py-1.5 rounded-full inline-block border border-amber-500/20">
+                                <p class="text-sm text-amber-300 font-bold">${top3[0].total_xp || 0} XP</p>
+                            </div>
                         </div>
                     </div>
                     <!-- 3rd place -->
                     <div class="text-center">
-                        <div class="bg-gradient-to-br from-amber-700/20 to-amber-800/10 rounded-3xl p-6 shadow-lg border-2 border-amber-600/30 mb-3">
-                            <div class="w-20 h-20 mx-auto rounded-full bg-amber-700 flex items-center justify-center text-white text-xl mb-3">
+                        <div class="surface-glass surface-glass-hover rounded-3xl p-6 relative group h-full flex flex-col justify-end">
+                            <div class="w-16 h-16 mx-auto rounded-full bg-slate-700 border-2 border-slate-600 flex items-center justify-center text-white text-lg mb-3 shadow-lg">
                                 ${top3[2].username ? top3[2].username.substring(0, 2).toUpperCase() : '3'}
                             </div>
-                            <span class="text-3xl mb-2 block">🥉</span>
-                            <p class="text-sm mb-1 font-medium">${top3[2].username || 'User'}</p>
-                            <p class="text-2xl text-amber-200 font-bold">${top3[2].total_xp || 0}</p>
-                            <p class="text-xs text-slate-400">XP</p>
+                            <span class="text-3xl mb-1 block drop-shadow-md">🥉</span>
+                            <p class="text-sm mb-1 font-medium text-white truncate w-full">${top3[2].username || 'User'}</p>
+                            <div class="bg-indigo-500/20 px-3 py-1 rounded-full inline-block">
+                                <p class="text-xs text-indigo-300 font-bold">${top3[2].total_xp || 0} XP</p>
+                            </div>
                         </div>
                     </div>
                 `;
