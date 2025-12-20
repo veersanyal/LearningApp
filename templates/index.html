@@ -285,8 +285,8 @@
                     <template x-for="course in ['MA 161 – Calculus I', 'MA 162 – Calculus II', 'MA 165 – Analytic Geometry & Calculus I', 'MA 166 – Analytic Geometry & Calculus II', 'MA 261 – Multivariate Calculus', 'MA 265 – Linear Algebra']" :key="course">
                         <button
                             @click="selectedCourse = course"
-                            :class="selectedCourse === course ? 'border-[#9B72CF] bg-[#9B72CF]/10' : 'border-gray-200 hover:border-[#9B72CF]/50 hover:bg-[#9B72CF]/5'"
-                            class="w-full text-left p-4 rounded-2xl border-2 transition-all">
+                            :class="selectedCourse === course ? 'border-[#9B72CF] bg-[#9B72CF]/10 text-gray-900' : 'border-gray-200 bg-white text-gray-900 hover:border-[#9B72CF]/50 hover:bg-[#9B72CF]/5'"
+                            class="w-full text-left p-4 rounded-2xl border-2 transition-all font-normal">
                             <span x-text="course"></span>
                         </button>
                     </template>
