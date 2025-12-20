@@ -285,7 +285,7 @@ function app() {
                     // Check if onboarding is needed
                     if (!this.currentUser.course_code) {
                         this.onboardingStep = 'course';
-                        this.currentView = 'onboarding-course';
+                        // Don't set currentView - onboarding views are controlled by x-show based on onboardingStep
                     } else {
                         this.onboardingStep = null;
                     }
@@ -376,7 +376,6 @@ function app() {
                     this.currentUser.course_code = this.selectedCourse;
                     // Move to exam date step (optional)
                     this.onboardingStep = 'exam-date';
-                    this.currentView = 'onboarding-exam-date';
                     // Re-initialize icons
                     this.$nextTick(() => {
                         if (window.lucide) {
@@ -409,7 +408,6 @@ function app() {
                 if (response.ok) {
                     // Move to topic confidence step
                     this.onboardingStep = 'topic-confidence';
-                    this.currentView = 'onboarding-topic-confidence';
                     // Re-initialize icons
                     this.$nextTick(() => {
                         if (window.lucide) {
@@ -429,7 +427,6 @@ function app() {
         async skipExamDate() {
             // Skip exam date and move to topic confidence
             this.onboardingStep = 'topic-confidence';
-            this.currentView = 'onboarding-topic-confidence';
             this.$nextTick(() => {
                 if (window.lucide) {
                     lucide.createIcons();
