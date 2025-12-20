@@ -48,7 +48,7 @@ function app() {
         showUserMenu: false,
         
         // Onboarding State
-        onboardingStep: null, // null = complete, 'course' = course selection, 'exam-date' = exam date setup
+        onboardingStep: 'checking', // 'checking' = checking auth, null = complete, 'course' = course selection, 'exam-date' = exam date setup
         selectedCourse: '',
         examDate: '',
         topicStrengths: {},
@@ -317,6 +317,7 @@ function app() {
                 if (response.ok) {
                     this.isAuthenticated = true;
                     this.currentUser = data.user;
+                    this.onboardingStep = 'checking'; // Prevent dashboard flash
                     await this.init();
                 } else {
                     this.authError = data.error || 'Login failed';
@@ -339,6 +340,7 @@ function app() {
                 if (response.ok) {
                     this.isAuthenticated = true;
                     this.currentUser = data.user;
+                    this.onboardingStep = 'checking'; // Prevent dashboard flash
                     await this.init();
                 } else {
                     this.authError = data.error || 'Registration failed';

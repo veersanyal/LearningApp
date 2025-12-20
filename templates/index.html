@@ -260,7 +260,7 @@
     </div>
 
     <!-- Onboarding Views -->
-    <div x-show="isAuthenticated && onboardingStep !== null" x-cloak class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div x-show="isAuthenticated && onboardingStep !== null && onboardingStep !== 'checking'" x-cloak class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <!-- Course Selection View -->
         <div x-show="onboardingStep === 'course'" class="w-full max-w-2xl">
             <!-- Progress indicator -->
@@ -275,9 +275,9 @@
                 <div class="mb-8">
                     <div class="flex items-center gap-3 mb-4">
                         <i data-lucide="book-open" class="w-8 h-8 text-[#9B72CF]"></i>
-                        <h2 class="text-2xl font-bold">Pick your course</h2>
+                        <h2 class="text-2xl font-semibold text-gray-400">Pick your course</h2>
                     </div>
-                    <p class="text-gray-600">Which math course are you studying for?</p>
+                    <p class="text-gray-900">Which math course are you studying for?</p>
                 </div>
 
                 <!-- Course selection -->
@@ -427,7 +427,7 @@
     </div>
 
     <!-- Main Layout: Header + Main Content -->
-    <div x-show="isAuthenticated && onboardingStep === null" x-cloak class="app-shell">
+    <div x-show="isAuthenticated && onboardingStep === null && onboardingStep !== 'checking'" x-cloak class="app-shell">
         
         <!-- App Header with Navigation (BoilerBuddy Style) -->
         <header class="app-header" role="banner">
@@ -1828,7 +1828,7 @@
     </div>
     
     <!-- Mobile Bottom Navigation (BoilerBuddy Style) -->
-    <nav x-show="isAuthenticated && onboardingStep === null" x-cloak class="mobile-bottom-nav" aria-label="Mobile bottom navigation">
+    <nav x-show="isAuthenticated && onboardingStep === null && onboardingStep !== 'checking'" x-cloak class="mobile-bottom-nav" aria-label="Mobile bottom navigation">
         <div class="mobile-bottom-nav-content">
             <button 
                 @click="currentView = 'home'" 
