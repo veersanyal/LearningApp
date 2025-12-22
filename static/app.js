@@ -414,16 +414,19 @@ function app() {
         async saveCourse() {
             if (!this.selectedCourse) return;
 
+            // Extract course code (e.g., "MA 161 – Calculus I" -> "MA161")
+            let courseCode = this.selectedCourse.split('–')[0].trim().replace(/\s+/g, '');
+
             try {
                 const response = await fetch('/api/save-course', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ course_code: this.selectedCourse })
+                    body: JSON.stringify({ course_code: courseCode })
                 });
 
                 if (response.ok) {
                     const data = await response.json();
-                    this.currentUser.course_code = this.selectedCourse;
+                    this.currentUser.course_code = courseCode;
                     // Move to exam date step (optional)
                     this.onboardingStep = 'exam-date';
                     // Re-initialize icons
