@@ -166,6 +166,25 @@ def main():
 
         seed_retention_history(cursor, users)
         conn.commit()
+
+        # Seed data for specific demo user 'veer.orgami' if not exists
+        print("Seeding demo user 'veer.orgami'...")
+        cursor.execute("SELECT user_id FROM users WHERE username = 'veer.orgami'")
+        demo_user = cursor.fetchone()
+        
+        if demo_user:
+            demo_user_id = demo_user[0]
+            # Ensure demo user has history
+            seed_retention_history(cursor, [demo_user_id])
+            seed_progress(cursor, [demo_user_id])
+            conn.commit()
+        else:
+            print("Demo user 'veer.orgami' not found. Skipping personal seed.")
+
+        # Update leaderboard cache
+        print("Updating leaderboard cache...")
+        from leaderboards import update_leaderboard_cache
+        update_leaderboard_cache()
         
         print("Seeding complete!")
         
