@@ -257,9 +257,25 @@ body {
 }
 
 /* Layer 2: Inset Panels */
+/* Layer 2: Inset Panels */
 .dark .surface-inset {
   background-color: #0A1120;
   border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+/* Hero Surface (Layer 1.5 - Highlighted) */
+.surface-hero {
+  background-color: #ffffff;
+  border: 1px solid rgba(203, 184, 124, 0.4);
+  /* Gold Tint Border */
+  box-shadow: 0 20px 40px rgba(203, 184, 124, 0.1);
+}
+
+.dark .surface-hero {
+  background-color: #131b2e;
+  /* Slightly lighter than card */
+  border: 1px solid rgba(203, 184, 124, 0.3);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(203, 184, 124, 0.05);
 }
 
 /* Button Utilities - Paper UI */
@@ -331,21 +347,40 @@ body {
 }
 
 /* Chip Component */
+/* Chips & Pills Standardized */
 .chip {
-  border-radius: 9999px;
-  border: 1px solid #e2e8f0;
-  /* slate-200 */
-  background-color: #ffffff;
   padding: 0.25rem 0.75rem;
-  font-size: 0.875rem;
-  color: #64748b;
+  /* py-1 px-3 */
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  /* text-xs */
+  font-weight: 500;
+  border: 1px solid transparent;
   transition: all 0.2s;
+  height: 28px;
+  /* Fixed height */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .chip[data-active="true"] {
+  background-color: rgba(208, 185, 145, 0.15);
+  color: #8c7340;
+  border-color: rgba(208, 185, 145, 0.5);
+}
+
+.dark .chip[data-active="true"] {
+  background-color: rgba(203, 184, 124, 0.15);
+  color: #CBB87C;
   border-color: #CBB87C;
-  background-color: rgba(203, 184, 124, 0.1);
-  color: #1a1a1a;
+}
+
+.chip {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  /* slate-200 */
+  color: #64748b;
 }
 
 .dark .chip {
