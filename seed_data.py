@@ -174,12 +174,19 @@ def main():
         
         if demo_user:
             demo_user_id = demo_user[0]
-            # Ensure demo user has history
-            seed_retention_history(cursor, [demo_user_id])
-            seed_progress(cursor, [demo_user_id])
-            conn.commit()
+            print(f"Found demo user (ID: {demo_user_id})")
         else:
-            print("Demo user 'veer.orgami' not found. Skipping personal seed.")
+            print("Demo user 'veer.orgami' not found. Creating...")
+            cursor.execute('''
+                INSERT INTO users (username, full_name, email, major, graduation_year, total_xp, study_streak)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', ('veer.orgami', 'Veer Sanyal', 'veer.orgami@purdue.edu', 'Computer Science', 2026, 1250, 5))
+            demo_user_id = cursor.lastrowid
+            
+        # Ensure demo user has history
+        seed_retention_history(cursor, [demo_user_id])
+        seed_progress(cursor, [demo_user_id])
+        conn.commit()
 
         # Update leaderboard cache
         print("Updating leaderboard cache...")
