@@ -4,17 +4,22 @@
 <div x-show="isAuthenticated && onboardingStep === null && onboardingStep !== 'checking'" x-cloak class="app-shell">
 
     <!-- App Header with Navigation (BoilerBuddy Style) -->
-    <header class="app-header" role="banner">
-        <div class="app-header-content">
+    <header class="app-header bg-white/80 backdrop-blur-md border-b border-slate-200/50" role="banner">
+        <!-- Subtle Grid Background for Header -->
+        <div class="absolute inset-0 opacity-[0.12] pointer-events-none"
+            style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 24px 24px;">
+        </div>
+
+        <div class="app-header-content relative z-10">
             <!-- Left: Logo -->
             <div class="app-header-left flex items-center gap-3">
-                <a href="{{ url_for('dashboard') }}" class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-2xl flex items-center justify-center"
-                        style="background-color: var(--text-heading);">
-                        <i data-lucide="book-open" class="w-6 h-6 text-[#CEB888]"></i>
+                <a href="{{ url_for('dashboard') }}" class="flex items-center gap-3 group">
+                    <div
+                        class="w-10 h-10 rounded-xl flex items-center justify-center bg-black group-hover:bg-slate-900 transition-colors">
+                        <i data-lucide="book-open" class="w-5 h-5 text-[#CEB888]"></i>
                     </div>
-                    <h1 class="text-xl font-bold" style="color: var(--text-heading);">
-                        <span class="text-[#CEB888]">Boiler</span><span>Buddy</span>
+                    <h1 class="text-xl font-bold tracking-tight text-slate-900">
+                        Boiler<span class="text-slate-400 font-normal">Buddy</span>
                     </h1>
                 </a>
             </div>
@@ -27,48 +32,53 @@
             </button>
 
             <!-- Center: Navigation (Desktop) -->
-            <nav id="primary-nav" class="app-header-nav hidden md:flex" aria-label="Primary navigation">
+            <nav id="primary-nav" class="app-header-nav hidden md:flex gap-1" aria-label="Primary navigation">
 
                 <!-- Search Bar -->
-                <div class="mr-4 hidden lg:block">
-                    <div class="nav-search">
-                        <i data-lucide="search" class="w-4 h-4"></i>
+                <div class="mr-6 hidden lg:block">
+                    <div
+                        class="nav-search flex items-center gap-2 px-3 py-1.5 bg-slate-100/50 rounded-full border border-transparent focus-within:border-slate-300 focus-within:bg-white transition-all w-64">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
                         <input type="text" placeholder="Search topics..."
-                            class="bg-transparent border-none outline-none text-sm w-full placeholder-slate-500">
+                            class="bg-transparent border-none outline-none text-sm w-full placeholder-slate-400 text-slate-700">
                     </div>
                 </div>
 
                 <a href="{{ url_for('dashboard') }}"
-                    class="nav-item {% if request.endpoint == 'dashboard' %}nav-item--active{% endif %}"
+                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'dashboard' %}bg-[#CEB888]/10 text-slate-900 ring-1 ring-[#CEB888]/50{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}"
                     aria-label="Go to Dashboard">
-                    <span class="font-medium">Home</span>
+                    Home
                 </a>
 
                 <a href="{{ url_for('study') }}"
-                    class="nav-item {% if request.endpoint == 'study' %}nav-item--active{% endif %}"
+                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'study' %}bg-[#CEB888]/10 text-slate-900 ring-1 ring-[#CEB888]/50{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}"
                     aria-label="Go to Study">
-                    <span class="font-medium">Study</span>
+                    Study
                 </a>
 
                 <a href="{{ url_for('group_study') }}"
-                    class="nav-item {% if request.endpoint == 'group_study' %}nav-item--active{% endif %}"
+                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'group_study' %}bg-[#CEB888]/10 text-slate-900 ring-1 ring-[#CEB888]/50{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}"
                     aria-label="Go to Group Study">
-                    <span class="font-medium">Group</span>
+                    Group
                 </a>
 
-                <a href="{{ url_for('dashboard') }}#leaderboard-section" class="nav-item" aria-label="Go to Leaderboard"
+                <a href="{{ url_for('dashboard') }}#leaderboard-section"
+                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                    aria-label="Go to Leaderboard"
                     onclick="event.preventDefault(); document.getElementById('leaderboard-section').scrollIntoView({ behavior: 'smooth' });">
-                    <span class="font-medium">Leaderboard</span>
+                    Leaderboard
                 </a>
 
                 <a href="{{ url_for('exams') }}"
-                    class="nav-item {% if request.endpoint == 'exams' %}nav-item--active{% endif %}"
+                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'exams' %}bg-[#CEB888]/10 text-slate-900 ring-1 ring-[#CEB888]/50{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}"
                     aria-label="Go to Exams">
-                    <span class="font-medium">Exams</span>
+                    Exams
                 </a>
 
                 <!-- Primary Action -->
-                <a href="{{ url_for('documents') }}" class="btn-primary-nav ml-2" aria-label="Upload">
+                <a href="{{ url_for('documents') }}"
+                    class="ml-4 px-4 py-2 rounded-full bg-black text-white hover:bg-slate-800 transition-all text-sm font-medium flex items-center gap-2 shadow-lg shadow-black/5"
+                    aria-label="Upload">
                     <i data-lucide="upload" class="w-4 h-4"></i>
                     <span>Upload</span>
                 </a>

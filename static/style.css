@@ -32,20 +32,21 @@ html {
   /* Darker/Subtle for borders or small accents */
 
   /* Neutral Palette - Light Mode (Warm Off-White Base) */
-  --bg-page: #FDFBF7;
+  --bg-page: #FBFBF8;
   /* Warm off-white */
   --bg-card: #FFFFFF;
   /* True white */
   --bg-card-hover: #FFFFFF;
-  --border-card: rgba(0, 0, 0, 0.06);
-  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --border-card: rgba(226, 232, 240, 0.7);
+  /* slate-200/70 */
+  --shadow-card: 0 12px 30px rgba(15, 15, 15, 0.06);
 
   --text-heading: #1a1a1a;
   /* Near Black */
   --text-body: #475569;
   /* Neuatral Gray (Slate-600) */
-  --text-muted: #94a3b8;
-  /* Slate-400 */
+  --text-muted: #64748b;
+  /* Slightly darker than slate-400 for contrast */
 
   --nav-item-color: var(--text-muted);
   --nav-item-active-color: var(--text-heading);
@@ -54,13 +55,16 @@ html {
   /* Low opacity gold */
   --nav-pill-active-border: var(--gold-primary);
 
-  --header-bg: rgba(255, 255, 255, 0.9);
-  --header-border: rgba(0, 0, 0, 0.05);
+  --header-bg: #ffffff;
+  --header-border: rgba(0, 0, 0, 0.04);
+
+  --nav-item-active-border: var(--gold-primary);
 
   /* Card radius */
-  --card-radius: 24px;
-  --card-radius-lg: 28px;
-  --card-radius-sm: 16px;
+  --card-radius: 16px;
+  /* consistent radius everywhere per request */
+  --card-radius-lg: 16px;
+  --card-radius-sm: 12px;
 
   /* Legacy mapping for compatibility while refactoring */
   --card-bg: var(--bg-card);
@@ -146,6 +150,72 @@ body:has(.onboarding-bg) {
   background-color: #fbfbfe !important;
 }
 
+/* Dashboard Specific Background */
+body {
+  background-color: var(--bg-page);
+  background-image: radial-gradient(rgba(0, 0, 0, 0.12) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.dashboard-spotlight {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 500px;
+  background: radial-gradient(circle at 50% 0%, rgba(206, 184, 136, 0.12), transparent 70%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Updated Surface Styles */
+.surface-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-card);
+  box-shadow: var(--shadow-card);
+  border-radius: 1rem;
+  /* rounded-2xl */
+}
+
+/* Button Utilities */
+.btn-primary-black {
+  background-color: #000000;
+  color: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.btn-primary-black:hover {
+  background-color: #333333;
+  transform: translateY(-1px);
+}
+
+.btn-secondary-outline {
+  background-color: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: var(--text-heading);
+  transition: all 0.2s ease;
+}
+
+.btn-secondary-outline:hover {
+  border-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.badge-gold {
+  background-color: rgba(206, 184, 136, 0.15);
+  color: #bfa060;
+  border: 1px solid rgba(206, 184, 136, 0.3);
+}
+
+.badge-gold-pill {
+  background-color: #D0B991;
+  color: black;
+  font-weight: 500;
+  font-size: 0.75rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 9999px;
+}
+
 /* Main View Transitions */
 .view {
   opacity: 0;
@@ -213,10 +283,7 @@ body:has(.onboarding-bg) {
     box-shadow var(--motion-duration-fast) var(--motion-ease-out);
 }
 
-.dark .card {
-  /* Dark mode overrides handled by variables where possible */
-  /* This rule is kept for potential future overrides */
-}
+
 
 .dark .card {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
