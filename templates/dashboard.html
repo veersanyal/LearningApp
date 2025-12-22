@@ -290,9 +290,9 @@
         <div id="leaderboard-section" class="lg:col-span-8 surface-card p-6">
             <div class="flex items-center justify-between mb-6">
                 <div>
-                    <h2 class="text-xl font-bold text-slate-900">Leaderboard</h2>
-                    <p class="text-sm text-slate-500">Competing with <span
-                            class="text-slate-700 font-medium">Engineering</span>
+                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">Leaderboard</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Competing with <span
+                            class="font-medium text-slate-900 dark:text-white">Engineering</span>
                         students</p>
                 </div>
 
@@ -327,11 +327,12 @@
         <!-- Local Stats / Progress (4 cols) -->
         <div class="lg:col-span-4 space-y-6">
             <div class="surface-card p-6">
-                <h3 class="text-lg font-semibold text-slate-900 mb-4">Your Progress</h3>
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Your Progress</h3>
 
                 <div class="flex items-center justify-between mb-2">
-                    <span class="text-sm text-slate-500">Current Rank</span>
-                    <span class="text-xl font-bold text-slate-900" x-text="'#' + (myRank || '-')"></span>
+                    <span class="text-sm text-slate-500 dark:text-slate-400">Current Rank</span>
+                    <span class="text-xl font-bold text-slate-900 dark:text-white"
+                        x-text="'#' + (myRank || '-')"></span>
                 </div>
 
                 <div class="mb-6">
@@ -391,10 +392,10 @@
     <div id="heatmap-section" class="mb-12 surface-card p-6">
         <div class="flex items-center justify-between mb-6">
             <div>
-                <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <i data-lucide="map-pin" class="w-6 h-6 text-[#bfa060]"></i> Campus Heatmap
                 </h2>
-                <p class="text-sm text-slate-500">Live study activity across campus</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Live study activity across campus</p>
             </div>
             <!-- Legend as Pills -->
             <div class="hidden md:flex gap-2">
