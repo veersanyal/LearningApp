@@ -83,6 +83,7 @@ function app() {
         masteredTopics: 0,
         dailyProgress: 0,
         xpProgress: {},
+        hasRetentionData: false,
 
         // Quiz State
         currentQuestion: null,
@@ -769,7 +770,7 @@ function app() {
             }, 300);
         },
 
-        initRetentionChart() {
+        async initRetentionChart() {
             const canvas = document.getElementById('retention-chart');
             if (!canvas || !window.Chart) return;
 
@@ -778,44 +779,87 @@ function app() {
                 this.retentionChart.destroy();
             }
 
-            // Sample retention data (would come from backend)
-            const retentionData = {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                datasets: [{
-                    label: 'Retention %',
-                    data: [45, 62, 71, 78, 85, 88, 92],
-                    borderColor: '#9B72CF',
-                    backgroundColor: 'rgba(155, 114, 207, 0.1)',
-                    borderWidth: 3,
-                    tension: 0.4,
-                    fill: true
-                }]
-            };
+            try {
+                // Fetch real retention data
+                const response = await fetch('/api/retention-history');
+                const data = await response.json();
 
-            this.retentionChart = new Chart(ctx, {
-                type: 'line',
-                data: retentionData,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: {
-                                callback: function (value) {
-                                    return value + '%';
+                if (data.labels && data.labels.length > 0) {
+                    this.hasRetentionData = true;
+                    // Ensure the canvas is visible before rendering
+                    canvas.classList.remove('hidden');
+
+                    this.retentionChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.labels,
+                            datasets: [{
+                                label: 'Retention %',
+                                data: data.data,
+                                borderColor: '#D0B991', // Gold
+                                backgroundColor: 'rgba(208, 185, 145, 0.1)',
+                                borderWidth: 3,
+                                tension: 0.4,
+                                fill: true,
+                                pointBackgroundColor: '#000000',
+                                pointBorderColor: '#D0B991',
+                                pointBorderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                    callbacks: {
+                                        label: function (context) {
+                                            return `Retention: ${context.parsed.y}%`;
+                                        }
+                                    }
                                 }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100,
+                                    grid: {
+                                        color: 'rgba(255, 255, 255, 0.05)'
+                                    },
+                                    ticks: {
+                                        color: '#9D9796', // Silver
+                                        callback: function (value) {
+                                            return value + '%';
+                                        }
+                                    }
+                                },
+                                x: {
+                                    grid: {
+                                        display: false
+                                    },
+                                    ticks: {
+                                        color: '#9D9796' // Silver
+                                    }
+                                }
+                            },
+                            interaction: {
+                                mode: 'nearest',
+                                axis: 'x',
+                                intersect: false
                             }
                         }
-                    }
+                    });
+                } else {
+                    this.hasRetentionData = false;
                 }
-            });
+            } catch (err) {
+                console.error('Error loading retention chart:', err);
+                this.hasRetentionData = false;
+            }
         },
 
         loadForgettingCurveData() {

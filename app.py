@@ -2393,6 +2393,43 @@ def vote_community_question_route(question_id):
         return jsonify({"error": str(e)}), 500
 
 
+@app.route('/api/retention-history')
+@login_required
+def get_retention_history():
+    """Get retention history for charts."""
+    db = get_db()
+    try:
+        # Get average retention by day for the last 30 days
+        history = db.cursor.execute('''
+            SELECT date(timestamp) as study_date, AVG(retention) as avg_retention
+            FROM attempt_history
+            WHERE user_id = ?
+            GROUP BY date(timestamp)
+            ORDER BY study_date ASC
+            LIMIT 30
+        ''', (current_user.id,)).fetchall()
+        
+        labels = []
+        data = []
+        
+        for row in history:
+            # Format date as 'Mon 21'
+            if row['study_date']:
+                dt = datetime.strptime(row['study_date'], '%Y-%m-%d')
+                labels.append(dt.strftime('%a %d'))
+                data.append(round(row['avg_retention'] * 100, 1))
+        
+        return jsonify({
+            'labels': labels,
+            'data': data
+        })
+    except Exception as e:
+        print(f"Error getting retention history: {e}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        db.disconnect()
+
+
 # Auto-initialize database on first run
 with app.app_context():
     if not os.path.exists('learning_app.db'):

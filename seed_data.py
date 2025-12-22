@@ -123,6 +123,27 @@ def seed_study_sessions(cursor, user_ids):
                 VALUES (?, ?, ?)
             ''', (user_id, loc_id, start_time))
 
+def seed_retention_history(cursor, user_ids):
+    print("Seeding retention history...")
+    for user_id in user_ids:
+        # Generate last 14 days of history
+        base_retention = random.uniform(0.6, 0.9)
+        for i in range(14):
+            day_offset = 14 - i
+            date = datetime.now() - timedelta(days=day_offset)
+            
+            # Simulate a natural curve with some noise
+            # Retention starts high, decays, bumps up on review
+            daily_retention = base_retention * (0.8 + (random.random() * 0.4)) 
+            daily_retention = min(0.99, max(0.1, daily_retention))
+            
+            # Create a fake attempt to log this retention
+            cursor.execute('''
+                INSERT INTO attempt_history 
+                (user_id, topic_id, correct, mastery_at_time, retention, timestamp)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (user_id, 'fake_topic', True, 0.8, daily_retention, date))
+
 def main():
     conn = get_db()
     cursor = conn.cursor()
@@ -137,7 +158,13 @@ def main():
         seed_progress(cursor, users)
         conn.commit()
         
+        seed_progress(cursor, users)
+        conn.commit()
+        
         seed_study_sessions(cursor, users)
+        conn.commit()
+
+        seed_retention_history(cursor, users)
         conn.commit()
         
         print("Seeding complete!")
