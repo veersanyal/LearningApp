@@ -135,560 +135,558 @@ function app() {
                     const initialView = document.querySelector(`[data-view="${this.currentView}"]`);
                     if (initialView) {
                         initialView.classList.add('is-active');
-                        // Also call showView to ensure proper state
-                        showView(this.currentView);
-                    }
-                });
-            }
+                        this.checkAuth();
+                        this.startTimers();
 
-            if (this.isAuthenticated) {
-                this.loadStats();
-                this.initCharts();
-                this.setupEventListeners();
-                this.loadSocialProof();
-                this.loadAchievements();
-                this.loadDocuments();
-                this.loadExams();
-
-                // Load activity feed
-                this.loadActivityFeed();
-
-                // Poll for updates every 60 seconds
-                setInterval(() => {
-                    this.loadSocialProof();
-                    this.loadActivityFeed();
-                    if (this.currentView === 'leaderboards') {
-                        this.loadLeaderboard();
-                    }
-                }, 60000);
-
-                // Trigger initial animations on page load
-                this.$nextTick(() => {
-                    // Wait for Alpine to finish rendering
-                    setTimeout(() => {
-                        // Animate stats cards on the current view
-                        this.animateStatsCards();
-                        // Animate any card lists
-                        this.animateCardLists();
-                    }, 300);
-                });
-
-                // Watch for view changes - showView() is called via x-init on body
-                this.$watch('currentView', (newView, oldView) => {
-                    // showView() is called automatically via x-init="$watch('currentView', value => showView(value))"
-                    // Wait for view transition to complete before animating content
-                    this.$nextTick(() => {
-                        setTimeout(() => {
-                            // Animate stats cards in the new view
-                            this.animateStatsCards();
-                            // Animate card lists
-                            this.animateCardLists();
-                        }, 250); // Reduced delay since CSS handles transition
-                    });
-
-                    if (newView === 'leaderboards') {
-                        this.loadLeaderboard();
-                    } else if (newView === 'achievements') {
-                        this.loadAchievements();
-                    } else if (newView === 'documents') {
-                        this.loadDocuments();
-                    } else if (newView === 'exam-questions') {
-                        this.loadExams();
-                    } else if (newView === 'analytics') {
-                        // Lazy-load charts only when Analytics view is active
+                        // Initialize charts after a short delay to ensure DOM is ready
                         setTimeout(() => {
                             this.initCharts();
-                        }, 100);
-                    } else if (newView === 'home') {
-                        // Initialize retention chart on dashboard
-                        setTimeout(() => {
-                            this.initRetentionChart();
-                        }, 100);
+                            this.loadLeaderboard();
+                        }, 500);
+
+                        if (this.isAuthenticated) {
+                            this.loadStats();
+                            this.setupEventListeners();
+                            this.loadSocialProof();
+                            this.loadAchievements();
+                            this.loadDocuments();
+                        }
+                        // Poll for updates every 60 seconds
+                        setInterval(() => {
+                            this.loadSocialProof();
+                            this.loadActivityFeed();
+                            if (this.currentView === 'leaderboards') {
+                                this.loadLeaderboard();
+                            }
+                        }, 60000);
+
+                        // Trigger initial animations on page load
+                        this.$nextTick(() => {
+                            // Wait for Alpine to finish rendering
+                            setTimeout(() => {
+                                // Animate stats cards on the current view
+                                this.animateStatsCards();
+                                // Animate any card lists
+                                this.animateCardLists();
+                            }, 300);
+                        });
+
+                        // Watch for view changes - showView() is called via x-init on body
+                        this.$watch('currentView', (newView, oldView) => {
+                            // showView() is called automatically via x-init="$watch('currentView', value => showView(value))"
+                            // Wait for view transition to complete before animating content
+                            this.$nextTick(() => {
+                                setTimeout(() => {
+                                    // Animate stats cards in the new view
+                                    this.animateStatsCards();
+                                    // Animate card lists
+                                    this.animateCardLists();
+                                }, 250); // Reduced delay since CSS handles transition
+                            });
+
+                            if (newView === 'leaderboards') {
+                                this.loadLeaderboard();
+                            } else if (newView === 'achievements') {
+                                this.loadAchievements();
+                            } else if (newView === 'documents') {
+                                this.loadDocuments();
+                            } else if (newView === 'exam-questions') {
+                                this.loadExams();
+                            } else if (newView === 'analytics') {
+                                // Lazy-load charts only when Analytics view is active
+                                setTimeout(() => {
+                                    this.initCharts();
+                                }, 100);
+                            } else if (newView === 'home') {
+                                // Initialize retention chart on dashboard
+                                setTimeout(() => {
+                                    this.initRetentionChart();
+                                }, 100);
+                            }
+
+                            // Close mobile nav when switching views
+                            this.mobileNavOpen = false;
+                        });
+                    } else {
+                        // Load social proof for login screen
+                        this.loadSocialProof();
                     }
 
-                    // Close mobile nav when switching views
-                    this.mobileNavOpen = false;
-                });
-            } else {
-                // Load social proof for login screen
-                this.loadSocialProof();
-            }
+                    // Watch for heatmap filter changes
+                    this.$watch('heatmapTimeFilter', () => {
+                        this.loadHeatmapData();
+                    });
 
-            // Watch for heatmap filter changes
-            this.$watch('heatmapTimeFilter', () => {
-                this.loadHeatmapData();
-            });
+                    // Initial load if authenticated
+                    if (this.isAuthenticated) {
+                        this.loadHeatmapData();
+                    }
+                },
 
-            // Initial load if authenticated
-            if (this.isAuthenticated) {
-                this.loadHeatmapData();
-            }
-        },
-
-        // Animate card lists (documents, exams, questions, etc.)
-        animateCardLists() {
-            // Animate document cards
-            const docContainer = document.querySelector('.animate-card-stagger');
-            if (docContainer) {
-                this.animateStaggeredElements(docContainer);
-            }
+                    // Animate card lists (documents, exams, questions, etc.)
+                    animateCardLists() {
+                        // Animate document cards
+                        const docContainer = document.querySelector('.animate-card-stagger');
+                        if(docContainer) {
+                            this.animateStaggeredElements(docContainer);
+                        }
 
             // Animate question cards
             const questionContainers = document.querySelectorAll('.animate-card-stagger');
-            questionContainers.forEach(container => {
-                if (container.offsetParent !== null) {
-                    this.animateStaggeredElements(container);
-                }
-            });
-
-            // Animate leaderboard rows
-            const leaderboardContainer = document.querySelector('.animate-row-stagger');
-            if (leaderboardContainer && leaderboardContainer.offsetParent !== null) {
-                this.animateStaggeredElements(leaderboardContainer, 30);
-            }
-        },
-
-        // Animate stats cards
-        animateStatsCards(container = document) {
-            const statsCards = Array.from(container.querySelectorAll('.animate-stats-card')).filter(card => {
-                // Only animate visible cards
-                const rect = card.getBoundingClientRect();
-                return rect.width > 0 && rect.height > 0;
-            });
-
-            statsCards.forEach((card, index) => {
-                const delay = card.getAttribute('data-animate-delay') || index;
-                // Reset to initial state
-                card.style.opacity = '0';
-                card.style.transform = 'scale(0.95)';
-
-                setTimeout(() => {
-                    requestAnimationFrame(() => {
-                        requestAnimationFrame(() => {
-                            card.style.transition = 'opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-                            card.style.opacity = '1';
-                            card.style.transform = 'scale(1)';
+                        questionContainers.forEach(container => {
+                            if (container.offsetParent !== null) {
+                                this.animateStaggeredElements(container);
+                            }
                         });
-                    });
-                }, parseInt(delay) * 100);
-            });
-        },
+
+                        // Animate leaderboard rows
+                        const leaderboardContainer = document.querySelector('.animate-row-stagger');
+                        if(leaderboardContainer && leaderboardContainer.offsetParent !== null) {
+                    this.animateStaggeredElements(leaderboardContainer, 30);
+                }
+            },
+
+            // Animate stats cards
+            animateStatsCards(container = document) {
+                const statsCards = Array.from(container.querySelectorAll('.animate-stats-card')).filter(card => {
+                    // Only animate visible cards
+                    const rect = card.getBoundingClientRect();
+                    return rect.width > 0 && rect.height > 0;
+                });
+
+                statsCards.forEach((card, index) => {
+                    const delay = card.getAttribute('data-animate-delay') || index;
+                    // Reset to initial state
+                    card.style.opacity = '0';
+                    card.style.transform = 'scale(0.95)';
+
+                    setTimeout(() => {
+                        requestAnimationFrame(() => {
+                            requestAnimationFrame(() => {
+                                card.style.transition = 'opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                                card.style.opacity = '1';
+                                card.style.transform = 'scale(1)';
+                            });
+                        });
+                    }, parseInt(delay) * 100);
+                });
+            },
 
         async checkAuth() {
-            try {
-                const response = await fetch('/auth/me');
-                if (response.ok) {
-                    const data = await response.json();
-                    this.isAuthenticated = true;
-                    this.currentUser = data.user;
-                    this.usersOnline = data.users_online;
-                    this.xpProgress = data.xp_progress || {};
-                    this.studyStreak = data.user.study_streak || 0;
+                try {
+                    const response = await fetch('/auth/me');
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.isAuthenticated = true;
+                        this.currentUser = data.user;
+                        this.usersOnline = data.users_online;
+                        this.xpProgress = data.xp_progress || {};
+                        this.studyStreak = data.user.study_streak || 0;
 
-                    // Check if onboarding is needed
-                    if (!this.currentUser.course_code) {
-                        this.onboardingStep = 'course';
-                        // Don't set currentView - onboarding views are controlled by x-show based on onboardingStep
-                    } else {
-                        this.onboardingStep = null;
-                    }
-
-                    // Initialize lucide icons after auth check
-                    this.$nextTick(() => {
-                        if (window.lucide) {
-                            lucide.createIcons();
+                        // Check if onboarding is needed
+                        if (!this.currentUser.course_code) {
+                            this.onboardingStep = 'course';
+                            // Don't set currentView - onboarding views are controlled by x-show based on onboardingStep
+                        } else {
+                            this.onboardingStep = null;
                         }
-                    });
-                } else {
+
+                        // Initialize lucide icons after auth check
+                        this.$nextTick(() => {
+                            if (window.lucide) {
+                                lucide.createIcons();
+                            }
+                        });
+                    } else {
+                        this.isAuthenticated = false;
+                    }
+                } catch (err) {
                     this.isAuthenticated = false;
                 }
-            } catch (err) {
-                this.isAuthenticated = false;
-            }
-        },
+            },
 
         async login() {
-            this.authError = '';
-            try {
-                const response = await fetch('/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(this.loginForm)
-                });
-                const data = await response.json();
+                this.authError = '';
+                try {
+                    const response = await fetch('/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(this.loginForm)
+                    });
+                    const data = await response.json();
 
-                if (response.ok) {
-                    this.isAuthenticated = true;
-                    this.currentUser = data.user;
-                    this.onboardingStep = 'checking'; // Prevent dashboard flash
-                    await this.init();
-                } else {
-                    this.authError = data.error || 'Login failed';
+                    if (response.ok) {
+                        this.isAuthenticated = true;
+                        this.currentUser = data.user;
+                        this.onboardingStep = 'checking'; // Prevent dashboard flash
+                        await this.init();
+                    } else {
+                        this.authError = data.error || 'Login failed';
+                    }
+                } catch (err) {
+                    this.authError = 'Connection error';
                 }
-            } catch (err) {
-                this.authError = 'Connection error';
-            }
-        },
+            },
 
         async register() {
-            this.authError = '';
-            try {
-                const response = await fetch('/auth/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(this.registerForm)
-                });
-                const data = await response.json();
+                this.authError = '';
+                try {
+                    const response = await fetch('/auth/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(this.registerForm)
+                    });
+                    const data = await response.json();
 
-                if (response.ok) {
-                    this.isAuthenticated = true;
-                    this.currentUser = data.user;
-                    this.onboardingStep = 'checking'; // Prevent dashboard flash
-                    await this.init();
-                } else {
-                    this.authError = data.error || 'Registration failed';
+                    if (response.ok) {
+                        this.isAuthenticated = true;
+                        this.currentUser = data.user;
+                        this.onboardingStep = 'checking'; // Prevent dashboard flash
+                        await this.init();
+                    } else {
+                        this.authError = data.error || 'Registration failed';
+                    }
+                } catch (err) {
+                    this.authError = 'Connection error';
                 }
-            } catch (err) {
-                this.authError = 'Connection error';
-            }
-        },
+            },
 
         async logout() {
-            try {
-                await fetch('/auth/logout', { method: 'POST' });
-                this.isAuthenticated = false;
-                this.currentUser = {};
-                this.currentView = 'home';
-                this.onboardingStep = null;
-            } catch (err) {
-                console.error('Logout error:', err);
-            }
-        },
+                try {
+                    await fetch('/auth/logout', { method: 'POST' });
+                    this.isAuthenticated = false;
+                    this.currentUser = {};
+                    this.currentView = 'home';
+                    this.onboardingStep = null;
+                } catch (err) {
+                    console.error('Logout error:', err);
+                }
+            },
 
         // Onboarding functions
         async saveCourse() {
-            if (!this.selectedCourse) return;
+                if (!this.selectedCourse) return;
 
-            try {
-                const response = await fetch('/api/save-course', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ course_code: this.selectedCourse })
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    this.currentUser.course_code = this.selectedCourse;
-                    // Move to exam date step (optional)
-                    this.onboardingStep = 'exam-date';
-                    // Re-initialize icons
-                    this.$nextTick(() => {
-                        if (window.lucide) {
-                            lucide.createIcons();
-                        }
+                try {
+                    const response = await fetch('/api/save-course', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ course_code: this.selectedCourse })
                     });
-                } else {
-                    const error = await response.json();
-                    alert(error.error || 'Failed to save course');
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.currentUser.course_code = this.selectedCourse;
+                        // Move to exam date step (optional)
+                        this.onboardingStep = 'exam-date';
+                        // Re-initialize icons
+                        this.$nextTick(() => {
+                            if (window.lucide) {
+                                lucide.createIcons();
+                            }
+                        });
+                    } else {
+                        const error = await response.json();
+                        alert(error.error || 'Failed to save course');
+                    }
+                } catch (err) {
+                    console.error('Error saving course:', err);
+                    alert('Failed to save course. Please try again.');
                 }
-            } catch (err) {
-                console.error('Error saving course:', err);
-                alert('Failed to save course. Please try again.');
-            }
-        },
+            },
 
         async saveExamDate() {
-            if (!this.examDate) return;
+                if (!this.examDate) return;
 
-            try {
-                const response = await fetch('/api/save-exam-plan', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        exam_date: this.examDate,
-                        topic_confidence: this.topicStrengths
-                    })
-                });
-
-                if (response.ok) {
-                    // Move to topic confidence step
-                    this.onboardingStep = 'topic-confidence';
-                    // Re-initialize icons
-                    this.$nextTick(() => {
-                        if (window.lucide) {
-                            lucide.createIcons();
-                        }
-                    });
-                } else {
-                    const error = await response.json();
-                    alert(error.error || 'Failed to save exam date');
-                }
-            } catch (err) {
-                console.error('Error saving exam date:', err);
-                alert('Failed to save exam date. Please try again.');
-            }
-        },
-
-        async skipExamDate() {
-            // Skip exam date and move to topic confidence
-            this.onboardingStep = 'topic-confidence';
-            this.$nextTick(() => {
-                if (window.lucide) {
-                    lucide.createIcons();
-                }
-            });
-        },
-
-        async skipTopicConfidence() {
-            // Skip topic confidence and complete onboarding
-            await this.completeOnboarding();
-        },
-
-        async completeOnboarding() {
-            try {
-                // Save topic confidence if provided
-                if (Object.keys(this.topicStrengths).length > 0) {
+                try {
                     const response = await fetch('/api/save-exam-plan', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
+                            exam_date: this.examDate,
                             topic_confidence: this.topicStrengths
                         })
                     });
-                    // Don't fail if this doesn't work
-                    if (!response.ok) {
-                        console.warn('Failed to save topic confidence, continuing anyway');
-                    }
-                }
 
-                // Complete onboarding and redirect to dashboard
-                this.onboardingStep = null;
-                window.location.href = '/dashboard';
-            } catch (err) {
-                console.error('Error completing onboarding:', err);
-                // Still redirect even if save fails
-                this.onboardingStep = null;
-                window.location.href = '/dashboard';
-            }
-        },
-
-        // Quick date picker for exam date
-        setQuickDate(type) {
-            const today = new Date();
-            let targetDate = new Date();
-
-            if (type === 'tomorrow') {
-                targetDate.setDate(today.getDate() + 1);
-            } else if (type === 'nextweek') {
-                targetDate.setDate(today.getDate() + 7);
-            } else if (type === 'twoweeks') {
-                targetDate.setDate(today.getDate() + 14);
-            }
-
-            // Format as YYYY-MM-DD for date input
-            const year = targetDate.getFullYear();
-            const month = String(targetDate.getMonth() + 1).padStart(2, '0');
-            const day = String(targetDate.getDate()).padStart(2, '0');
-            this.examDate = `${year}-${month}-${day}`;
-
-            // Re-initialize icons
-            this.$nextTick(() => {
-                if (window.lucide) {
-                    lucide.createIcons();
-                }
-            });
-        },
-
-        // Group Study functions
-        sendChatMessage() {
-            if (!this.chatMessage || !this.chatMessage.trim()) return;
-
-            const newMessage = {
-                id: this.chatMessages.length + 1,
-                user: this.currentUser.username || 'You',
-                message: this.chatMessage,
-                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                isSystem: false
-            };
-
-            this.chatMessages.push(newMessage);
-            this.chatMessage = '';
-
-            // Re-initialize icons
-            this.$nextTick(() => {
-                if (window.lucide) {
-                    lucide.createIcons();
-                }
-            });
-        },
-
-        async loginWithGoogle() {
-            // Clear any previous errors
-            this.authError = '';
-
-            try {
-                // Wait for Google Identity Services to load
-                await new Promise((resolve) => {
-                    if (typeof google !== 'undefined' && google.accounts) {
-                        resolve();
-                    } else {
-                        const checkInterval = setInterval(() => {
-                            if (typeof google !== 'undefined' && google.accounts) {
-                                clearInterval(checkInterval);
-                                resolve();
+                    if (response.ok) {
+                        // Move to topic confidence step
+                        this.onboardingStep = 'topic-confidence';
+                        // Re-initialize icons
+                        this.$nextTick(() => {
+                            if (window.lucide) {
+                                lucide.createIcons();
                             }
-                        }, 100);
+                        });
+                    } else {
+                        const error = await response.json();
+                        alert(error.error || 'Failed to save exam date');
+                    }
+                } catch (err) {
+                    console.error('Error saving exam date:', err);
+                    alert('Failed to save exam date. Please try again.');
+                }
+            },
 
-                        // Timeout after 5 seconds
-                        setTimeout(() => {
-                            clearInterval(checkInterval);
-                            resolve();
-                        }, 5000);
+        async skipExamDate() {
+                // Skip exam date and move to topic confidence
+                this.onboardingStep = 'topic-confidence';
+                this.$nextTick(() => {
+                    if (window.lucide) {
+                        lucide.createIcons();
                     }
                 });
+            },
 
-                if (typeof google === 'undefined' || !google.accounts) {
-                    this.authError = 'Google Sign In not loaded. Please refresh the page.';
-                    return;
-                }
+        async skipTopicConfidence() {
+                // Skip topic confidence and complete onboarding
+                await this.completeOnboarding();
+            },
 
-                // Get Google Client ID from environment or use a placeholder
-                const clientId = await this.getGoogleClientId();
-
-                if (!clientId || clientId === 'YOUR_GOOGLE_CLIENT_ID') {
-                    this.authError = 'Google Sign In not configured. Please contact support or use username/password.';
-                    return;
-                }
-
-                // Initialize Google Sign In
-                google.accounts.id.initialize({
-                    client_id: clientId,
-                    callback: async (response) => {
-                        try {
-                            // Send credential to backend
-                            const authResponse = await fetch('/auth/google', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    credential: response.credential
-                                })
-                            });
-
-                            const data = await authResponse.json();
-
-                            if (authResponse.ok) {
-                                this.isAuthenticated = true;
-                                this.currentUser = data.user;
-                                this.authError = ''; // Clear any previous errors
-                                this.onboardingStep = 'checking'; // Prevent dashboard flash
-                                await this.init();
-                            } else {
-                                const errorMsg = data.error || 'Google login failed';
-                                this.authError = errorMsg;
-                                console.error('Google login error:', errorMsg);
-                            }
-                        } catch (err) {
-                            console.error('Google login error:', err);
-                            this.authError = 'Error processing Google login';
+        async completeOnboarding() {
+                try {
+                    // Save topic confidence if provided
+                    if (Object.keys(this.topicStrengths).length > 0) {
+                        const response = await fetch('/api/save-exam-plan', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                topic_confidence: this.topicStrengths
+                            })
+                        });
+                        // Don't fail if this doesn't work
+                        if (!response.ok) {
+                            console.warn('Failed to save topic confidence, continuing anyway');
                         }
                     }
-                });
 
-                // Trigger sign in popup
-                google.accounts.id.prompt((notification) => {
-                    if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-                        // Fallback: show one tap
-                        google.accounts.id.renderButton(
-                            document.getElementById('google-signin-button'),
-                            { theme: 'outline', size: 'large' }
-                        );
+                    // Complete onboarding and redirect to dashboard
+                    this.onboardingStep = null;
+                    window.location.href = '/dashboard';
+                } catch (err) {
+                    console.error('Error completing onboarding:', err);
+                    // Still redirect even if save fails
+                    this.onboardingStep = null;
+                    window.location.href = '/dashboard';
+                }
+            },
+
+            // Quick date picker for exam date
+            setQuickDate(type) {
+                const today = new Date();
+                let targetDate = new Date();
+
+                if (type === 'tomorrow') {
+                    targetDate.setDate(today.getDate() + 1);
+                } else if (type === 'nextweek') {
+                    targetDate.setDate(today.getDate() + 7);
+                } else if (type === 'twoweeks') {
+                    targetDate.setDate(today.getDate() + 14);
+                }
+
+                // Format as YYYY-MM-DD for date input
+                const year = targetDate.getFullYear();
+                const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+                const day = String(targetDate.getDate()).padStart(2, '0');
+                this.examDate = `${year}-${month}-${day}`;
+
+                // Re-initialize icons
+                this.$nextTick(() => {
+                    if (window.lucide) {
+                        lucide.createIcons();
                     }
                 });
+            },
 
-            } catch (err) {
-                console.error('Google OAuth error:', err);
-                this.authError = 'Google Sign In error. Please try again or use username/password.';
-            }
-        },
+            // Group Study functions
+            sendChatMessage() {
+                if (!this.chatMessage || !this.chatMessage.trim()) return;
+
+                const newMessage = {
+                    id: this.chatMessages.length + 1,
+                    user: this.currentUser.username || 'You',
+                    message: this.chatMessage,
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    isSystem: false
+                };
+
+                this.chatMessages.push(newMessage);
+                this.chatMessage = '';
+
+                // Re-initialize icons
+                this.$nextTick(() => {
+                    if (window.lucide) {
+                        lucide.createIcons();
+                    }
+                });
+            },
+
+        async loginWithGoogle() {
+                // Clear any previous errors
+                this.authError = '';
+
+                try {
+                    // Wait for Google Identity Services to load
+                    await new Promise((resolve) => {
+                        if (typeof google !== 'undefined' && google.accounts) {
+                            resolve();
+                        } else {
+                            const checkInterval = setInterval(() => {
+                                if (typeof google !== 'undefined' && google.accounts) {
+                                    clearInterval(checkInterval);
+                                    resolve();
+                                }
+                            }, 100);
+
+                            // Timeout after 5 seconds
+                            setTimeout(() => {
+                                clearInterval(checkInterval);
+                                resolve();
+                            }, 5000);
+                        }
+                    });
+
+                    if (typeof google === 'undefined' || !google.accounts) {
+                        this.authError = 'Google Sign In not loaded. Please refresh the page.';
+                        return;
+                    }
+
+                    // Get Google Client ID from environment or use a placeholder
+                    const clientId = await this.getGoogleClientId();
+
+                    if (!clientId || clientId === 'YOUR_GOOGLE_CLIENT_ID') {
+                        this.authError = 'Google Sign In not configured. Please contact support or use username/password.';
+                        return;
+                    }
+
+                    // Initialize Google Sign In
+                    google.accounts.id.initialize({
+                        client_id: clientId,
+                        callback: async (response) => {
+                            try {
+                                // Send credential to backend
+                                const authResponse = await fetch('/auth/google', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        credential: response.credential
+                                    })
+                                });
+
+                                const data = await authResponse.json();
+
+                                if (authResponse.ok) {
+                                    this.isAuthenticated = true;
+                                    this.currentUser = data.user;
+                                    this.authError = ''; // Clear any previous errors
+                                    this.onboardingStep = 'checking'; // Prevent dashboard flash
+                                    await this.init();
+                                } else {
+                                    const errorMsg = data.error || 'Google login failed';
+                                    this.authError = errorMsg;
+                                    console.error('Google login error:', errorMsg);
+                                }
+                            } catch (err) {
+                                console.error('Google login error:', err);
+                                this.authError = 'Error processing Google login';
+                            }
+                        }
+                    });
+
+                    // Trigger sign in popup
+                    google.accounts.id.prompt((notification) => {
+                        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                            // Fallback: show one tap
+                            google.accounts.id.renderButton(
+                                document.getElementById('google-signin-button'),
+                                { theme: 'outline', size: 'large' }
+                            );
+                        }
+                    });
+
+                } catch (err) {
+                    console.error('Google OAuth error:', err);
+                    this.authError = 'Google Sign In error. Please try again or use username/password.';
+                }
+            },
 
         async getGoogleClientId() {
-            // Try to get from backend config
-            try {
-                const response = await fetch('/auth/config');
-                const data = await response.json();
-                return data.google_client_id;
-            } catch (err) {
-                // Return placeholder - in production, this should be set in Railway env vars
-                return null;
-            }
-        },
+                // Try to get from backend config
+                try {
+                    const response = await fetch('/auth/config');
+                    const data = await response.json();
+                    return data.google_client_id;
+                } catch (err) {
+                    // Return placeholder - in production, this should be set in Railway env vars
+                    return null;
+                }
+            },
 
 
         async loadSocialProof() {
-            try {
-                const response = await fetch('/social-proof');
-                const data = await response.json();
-                this.usersOnline = data.active_now || 0;
-            } catch (err) {
-                console.error('Error loading social proof:', err);
-            }
-        },
+                try {
+                    const response = await fetch('/social-proof');
+                    const data = await response.json();
+                    this.usersOnline = data.active_now || 0;
+                } catch (err) {
+                    console.error('Error loading social proof:', err);
+                }
+            },
 
-        loadStats() {
-            fetch('/stats')
-                .then(response => response.json())
-                .then(data => {
-                    this.updateStatsFromData(data);
-                })
-                .catch(err => console.error('Error loading stats:', err));
+            loadStats() {
+                fetch('/stats')
+                    .then(response => response.json())
+                    .then(data => {
+                        this.updateStatsFromData(data);
+                    })
+                    .catch(err => console.error('Error loading stats:', err));
 
-            // Load analytics
-            this.loadAnalytics();
-        },
+                // Load analytics
+                this.loadAnalytics();
+            },
 
-        updateStatsFromData(data) {
-            if (!data.user_state) return;
+            updateStatsFromData(data) {
+                if (!data.user_state) return;
 
-            const userState = data.user_state;
-            let totalAttempts = 0;
-            let totalCorrect = 0;
-            let topicsCount = 0;
-            let mastered = 0;
+                const userState = data.user_state;
+                let totalAttempts = 0;
+                let totalCorrect = 0;
+                let topicsCount = 0;
+                let mastered = 0;
 
-            for (const [topicId, stats] of Object.entries(userState)) {
-                totalAttempts += stats.attempts || 0;
-                totalCorrect += stats.correct || 0;
-                topicsCount++;
-                if (stats.mastery > 0.8) mastered++;
-            }
+                for (const [topicId, stats] of Object.entries(userState)) {
+                    totalAttempts += stats.attempts || 0;
+                    totalCorrect += stats.correct || 0;
+                    topicsCount++;
+                    if (stats.mastery > 0.8) mastered++;
+                }
 
-            this.totalQuestions = totalAttempts;
-            this.accuracy = totalAttempts > 0 ? Math.round((totalCorrect / totalAttempts) * 100) : 0;
-            this.topicsStudied = topicsCount;
-            this.masteredTopics = mastered;
+                this.totalQuestions = totalAttempts;
+                this.accuracy = totalAttempts > 0 ? Math.round((totalCorrect / totalAttempts) * 100) : 0;
+                this.topicsStudied = topicsCount;
+                this.masteredTopics = mastered;
 
-            // Update right panel stats
-            this.updateRightPanelStats(userState);
-        },
+                // Update right panel stats
+                this.updateRightPanelStats(userState);
+            },
 
-        loadAnalytics() {
-            fetch('/analytics')
-                .then(response => response.json())
-                .then(data => {
-                    if (!data.error) {
-                        this.studyStreak = data.study_streak || 0;
-                        this.updatePerformanceInsights(data);
-                        this.updateWeakTopics(data.weak_topics || []);
-                    }
-                })
-                .catch(err => console.error('Error loading analytics:', err));
-        },
+            loadAnalytics() {
+                fetch('/analytics')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.error) {
+                            this.studyStreak = data.study_streak || 0;
+                            this.updatePerformanceInsights(data);
+                            this.updateWeakTopics(data.weak_topics || []);
+                        }
+                    })
+                    .catch(err => console.error('Error loading analytics:', err));
+            },
 
-        updatePerformanceInsights(data) {
-            const container = document.getElementById('performance-insights');
-            if (!container) return;
+            updatePerformanceInsights(data) {
+                const container = document.getElementById('performance-insights');
+                if (!container) return;
 
-            container.innerHTML = `
+                container.innerHTML = `
                 <p class="flex items-start space-x-2">
                     <span>🔥</span>
                     <span>Current study streak: ${data.study_streak || 0} days</span>
@@ -702,772 +700,774 @@ function app() {
                     <span>Topics needing practice: ${(data.weak_topics || []).length}</span>
                 </p>
             `;
-        },
+            },
 
-        updateWeakTopics(weakTopics) {
-            const container = document.getElementById('weak-topics-list');
-            if (!container) return;
+            updateWeakTopics(weakTopics) {
+                const container = document.getElementById('weak-topics-list');
+                if (!container) return;
 
-            if (weakTopics.length === 0) {
-                container.innerHTML = '<p class="text-slate-400 text-xs">Great job! No weak topics.</p>';
-                return;
-            }
+                if (weakTopics.length === 0) {
+                    container.innerHTML = '<p class="text-slate-400 text-xs">Great job! No weak topics.</p>';
+                    return;
+                }
 
-            container.innerHTML = weakTopics.slice(0, 3).map(topic => `
+                container.innerHTML = weakTopics.slice(0, 3).map(topic => `
                 <div class="flex justify-between items-center p-2 bg-slate-600 rounded">
                     <span class="text-xs truncate flex-1">${topic.topic_id}</span>
                     <span class="text-xs text-yellow-400">${Math.round(topic.mastery * 100)}%</span>
                 </div>
             `).join('');
-        },
+            },
 
-        updateRightPanelStats(userState) {
-            // Update upcoming reviews
-            const reviewsContainer = document.getElementById('upcoming-reviews-list');
-            if (reviewsContainer) {
-                const reviewsNeeded = [];
-                const now = new Date();
+            updateRightPanelStats(userState) {
+                // Update upcoming reviews
+                const reviewsContainer = document.getElementById('upcoming-reviews-list');
+                if (reviewsContainer) {
+                    const reviewsNeeded = [];
+                    const now = new Date();
 
-                for (const [topicId, stats] of Object.entries(userState)) {
-                    if (stats.next_review) {
-                        const nextReview = new Date(stats.next_review);
-                        if (nextReview <= now || (nextReview - now) < 24 * 60 * 60 * 1000) {
-                            reviewsNeeded.push({ topicId, nextReview });
+                    for (const [topicId, stats] of Object.entries(userState)) {
+                        if (stats.next_review) {
+                            const nextReview = new Date(stats.next_review);
+                            if (nextReview <= now || (nextReview - now) < 24 * 60 * 60 * 1000) {
+                                reviewsNeeded.push({ topicId, nextReview });
+                            }
                         }
                     }
-                }
 
-                if (reviewsNeeded.length === 0) {
-                    reviewsContainer.innerHTML = '<p class="text-slate-400 text-xs">No reviews due soon!</p>';
-                } else {
-                    reviewsContainer.innerHTML = reviewsNeeded.slice(0, 5).map(item => `
+                    if (reviewsNeeded.length === 0) {
+                        reviewsContainer.innerHTML = '<p class="text-slate-400 text-xs">No reviews due soon!</p>';
+                    } else {
+                        reviewsContainer.innerHTML = reviewsNeeded.slice(0, 5).map(item => `
                         <div class="flex justify-between items-center text-xs">
                             <span class="truncate flex-1">${item.topicId}</span>
                             <span class="text-blue-400">Due</span>
                         </div>
                     `).join('');
+                    }
                 }
-            }
-        },
+            },
 
-        initCharts() {
-            // Lazy-load charts only when Analytics view is active
-            // This prevents unnecessary chart initialization on page load
-            if (this.currentView !== 'analytics') {
-                return;
-            }
-
-            // TODO: Consider using Intersection Observer for even better lazy loading
-            // For now, load charts when Analytics view becomes active
-            setTimeout(() => {
-                if (this.currentView === 'analytics') {
-                    this.loadForgettingCurveData();
-                    this.loadMasteryProgressData();
-                    this.loadTimeOfDayData();
-                    this.loadTopicDistributionData();
-                    this.generateStudyHeatmap();
+            initCharts() {
+                // Lazy-load charts only when Analytics view is active
+                // This prevents unnecessary chart initialization on page load
+                // Allow charts on home view (dashboard) or analytics view
+                if (this.currentView !== 'analytics' && this.currentView !== 'home') {
+                    return;
                 }
-            }, 300);
-        },
+
+                // TODO: Consider using Intersection Observer for even better lazy loading
+                // For now, load charts when Analytics view becomes active
+                setTimeout(() => {
+                    if (this.currentView === 'analytics' || this.currentView === 'home') {
+                        this.loadForgettingCurveData();
+                        this.loadMasteryProgressData();
+                        this.loadTimeOfDayData();
+                        this.loadTopicDistributionData();
+                        this.generateStudyHeatmap();
+                        this.initRetentionChart();
+                    }
+                }, 300);
+            },
 
         async initRetentionChart() {
-            const canvas = document.getElementById('retention-chart');
-            if (!canvas || !window.Chart) return;
+                const canvas = document.getElementById('retention-chart');
+                if (!canvas || !window.Chart) return;
 
-            const ctx = canvas.getContext('2d');
-            if (this.retentionChart) {
-                this.retentionChart.destroy();
-            }
-
-            try {
-                // Fetch real retention data
-                const response = await fetch('/api/retention-history');
-                const data = await response.json();
-
-                if (data.labels && data.labels.length > 0) {
-                    this.hasRetentionData = true;
-                    // Ensure the canvas is visible before rendering
-                    canvas.classList.remove('hidden');
-
-                    this.retentionChart = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: data.labels,
-                            datasets: [{
-                                label: 'Retention %',
-                                data: data.data,
-                                borderColor: '#D0B991', // Gold
-                                backgroundColor: 'rgba(208, 185, 145, 0.1)',
-                                borderWidth: 3,
-                                tension: 0.4,
-                                fill: true,
-                                pointBackgroundColor: '#000000',
-                                pointBorderColor: '#D0B991',
-                                pointBorderWidth: 2
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    display: false
-                                },
-                                tooltip: {
-                                    mode: 'index',
-                                    intersect: false,
-                                    callbacks: {
-                                        label: function (context) {
-                                            return `Retention: ${context.parsed.y}%`;
-                                        }
-                                    }
-                                }
-                            },
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    max: 100,
-                                    grid: {
-                                        color: 'rgba(255, 255, 255, 0.05)'
-                                    },
-                                    ticks: {
-                                        color: '#9D9796', // Silver
-                                        callback: function (value) {
-                                            return value + '%';
-                                        }
-                                    }
-                                },
-                                x: {
-                                    grid: {
-                                        display: false
-                                    },
-                                    ticks: {
-                                        color: '#9D9796' // Silver
-                                    }
-                                }
-                            },
-                            interaction: {
-                                mode: 'nearest',
-                                axis: 'x',
-                                intersect: false
-                            }
-                        }
-                    });
-                } else {
-                    this.hasRetentionData = false;
+                const ctx = canvas.getContext('2d');
+                if (this.retentionChart) {
+                    this.retentionChart.destroy();
                 }
-            } catch (err) {
-                console.error('Error loading retention chart:', err);
-                this.hasRetentionData = false;
-            }
-        },
-
-        loadForgettingCurveData() {
-            fetch('/forgetting-curve-data')
-                .then(response => response.json())
-                .then(data => {
-                    this.renderForgettingCurveChart(data);
-                })
-                .catch(err => console.error('Error loading forgetting curve:', err));
-        },
-
-        renderForgettingCurveChart(data) {
-            const ctx = document.getElementById('forgettingCurveChart');
-            if (!ctx) return;
-
-            if (this.forgettingCurveChart) {
-                this.forgettingCurveChart.destroy();
-            }
-
-            const datasets = data.topics?.map((topic, idx) => {
-                const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
-                const color = colors[idx % colors.length];
-
-                return {
-                    label: topic.name,
-                    data: topic.retention_data,
-                    borderColor: color,
-                    backgroundColor: color + '20',
-                    tension: 0.4,
-                    fill: false
-                };
-            }) || [];
-
-            this.forgettingCurveChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['Now', '1d', '2d', '3d', '5d', '7d', '14d', '30d'],
-                    datasets: datasets
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            labels: { color: '#f1f5f9', font: { size: 11 } }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: (context) => `${context.dataset.label}: ${context.parsed.y.toFixed(1)}%`
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100,
-                            grid: { color: '#334155' },
-                            ticks: {
-                                color: '#94a3b8',
-                                callback: (value) => value + '%'
-                            }
-                        },
-                        x: {
-                            grid: { color: '#334155' },
-                            ticks: { color: '#94a3b8' }
-                        }
-                    }
-                }
-            });
-        },
-
-        loadMasteryProgressData() {
-            fetch('/performance-dashboard')
-                .then(response => response.json())
-                .then(data => {
-                    this.renderMasteryProgressChart(data.mastery_over_time || {});
-                })
-                .catch(err => console.error('Error loading mastery progress:', err));
-        },
-
-        renderMasteryProgressChart(data) {
-            const ctx = document.getElementById('masteryProgressChart');
-            if (!ctx) return;
-
-            if (this.masteryProgressChart) {
-                this.masteryProgressChart.destroy();
-            }
-
-            // Sample data if none provided
-            const labels = data.labels || ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-            const datasets = data.datasets || [{
-                label: 'Average Mastery',
-                data: [0, 45, 60, 75],
-                borderColor: '#3b82f6',
-                backgroundColor: '#3b82f620',
-                tension: 0.4,
-                fill: true
-            }];
-
-            this.masteryProgressChart = new Chart(ctx, {
-                type: 'line',
-                data: { labels, datasets },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            labels: { color: '#f1f5f9', font: { size: 11 } }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100,
-                            grid: { color: '#334155' },
-                            ticks: {
-                                color: '#94a3b8',
-                                callback: (value) => value + '%'
-                            }
-                        },
-                        x: {
-                            grid: { color: '#334155' },
-                            ticks: { color: '#94a3b8' }
-                        }
-                    }
-                }
-            });
-        },
-
-        loadTimeOfDayData() {
-            fetch('/time-of-day-stats')
-                .then(response => response.json())
-                .then(data => {
-                    this.renderTimeOfDayChart(data);
-                })
-                .catch(err => console.error('Error loading time of day stats:', err));
-        },
-
-        renderTimeOfDayChart(data) {
-            const ctx = document.getElementById('timeOfDayChart');
-            if (!ctx) return;
-
-            if (this.timeOfDayChart) {
-                this.timeOfDayChart.destroy();
-            }
-
-            const labels = data.labels || ['6-9 AM', '9-12 PM', '12-3 PM', '3-6 PM', '6-9 PM', '9 PM+'];
-            const accuracyData = data.accuracy || [0, 0, 0, 0, 0, 0];
-
-            this.timeOfDayChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels,
-                    datasets: [{
-                        label: 'Accuracy (%)',
-                        data: accuracyData,
-                        backgroundColor: '#3b82f6',
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100,
-                            grid: { color: '#334155' },
-                            ticks: {
-                                color: '#94a3b8',
-                                callback: (value) => value + '%'
-                            }
-                        },
-                        x: {
-                            grid: { display: false },
-                            ticks: { color: '#94a3b8' }
-                        }
-                    }
-                }
-            });
-        },
-
-        loadTopicDistributionData() {
-            fetch('/performance-dashboard')
-                .then(response => response.json())
-                .then(data => {
-                    this.renderTopicDistributionChart(data.topic_distribution || {});
-                })
-                .catch(err => console.error('Error loading topic distribution:', err));
-        },
-
-        renderTopicDistributionChart(data) {
-            const ctx = document.getElementById('topicDistributionChart');
-            if (!ctx) return;
-
-            if (this.topicDistributionChart) {
-                this.topicDistributionChart.destroy();
-            }
-
-            const labels = data.labels || [];
-            const values = data.values || [];
-
-            this.topicDistributionChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels,
-                    datasets: [{
-                        data: values,
-                        backgroundColor: [
-                            '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
-                            '#06b6d4', '#ec4899', '#14b8a6'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: { color: '#f1f5f9', font: { size: 11 } }
-                        }
-                    }
-                }
-            });
-        },
-
-        generateStudyHeatmap() {
-            const container = document.getElementById('studyHeatmap');
-            if (!container) return;
-
-            // Generate 8 weeks of data
-            const weeks = 8;
-            const days = 7;
-            let html = '<div class="flex space-x-1">';
-
-            for (let week = 0; week < weeks; week++) {
-                html += '<div class="flex flex-col space-y-1">';
-                for (let day = 0; day < days; day++) {
-                    const intensity = Math.floor(Math.random() * 5);
-                    html += `<div class="heatmap-cell intensity-${intensity}" title="Week ${week + 1}, Day ${day + 1}"></div>`;
-                }
-                html += '</div>';
-            }
-            html += '</div>';
-
-            container.innerHTML = html;
-        },
-
-        setupEventListeners() {
-            this.setupUploadForm();
-            this.setupQuizButtons();
-            // Guide Me now uses Alpine.js, no setup needed
-            this.setupExamPrepForm();
-            this.setupSettingsButtons();
-        },
-
-        setupUploadForm() {
-            const form = document.getElementById('upload-form');
-            if (!form) return;
-
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const fileInput = document.getElementById('file-input');
-                const statusDiv = document.getElementById('upload-status');
-
-                if (!fileInput.files.length) {
-                    statusDiv.textContent = 'Please select a file';
-                    return;
-                }
-
-                const formData = new FormData();
-                formData.append('file', fileInput.files[0]);
-
-                statusDiv.textContent = 'Uploading and extracting topics...';
 
                 try {
-                    const response = await fetch('/upload', {
-                        method: 'POST',
-                        body: formData
+                    // Fetch real retention data
+                    const response = await fetch('/api/retention-history');
+                    const data = await response.json();
+
+                    if (data.labels && data.labels.length > 0) {
+                        this.hasRetentionData = true;
+                        // Ensure the canvas is visible before rendering
+                        canvas.classList.remove('hidden');
+
+                        this.retentionChart = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: data.labels,
+                                datasets: [{
+                                    label: 'Retention %',
+                                    data: data.data,
+                                    borderColor: '#D0B991', // Gold
+                                    backgroundColor: 'rgba(208, 185, 145, 0.1)',
+                                    borderWidth: 3,
+                                    tension: 0.4,
+                                    fill: true,
+                                    pointBackgroundColor: '#000000',
+                                    pointBorderColor: '#D0B991',
+                                    pointBorderWidth: 2
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    },
+                                    tooltip: {
+                                        mode: 'index',
+                                        intersect: false,
+                                        callbacks: {
+                                            label: function (context) {
+                                                return `Retention: ${context.parsed.y}%`;
+                                            }
+                                        }
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        max: 100,
+                                        grid: {
+                                            color: 'rgba(255, 255, 255, 0.05)'
+                                        },
+                                        ticks: {
+                                            color: '#9D9796', // Silver
+                                            callback: function (value) {
+                                                return value + '%';
+                                            }
+                                        }
+                                    },
+                                    x: {
+                                        grid: {
+                                            display: false
+                                        },
+                                        ticks: {
+                                            color: '#9D9796' // Silver
+                                        }
+                                    }
+                                },
+                                interaction: {
+                                    mode: 'nearest',
+                                    axis: 'x',
+                                    intersect: false
+                                }
+                            }
+                        });
+                    } else {
+                        this.hasRetentionData = false;
+                    }
+                } catch (err) {
+                    console.error('Error loading retention chart:', err);
+                    this.hasRetentionData = false;
+                }
+            },
+
+            loadForgettingCurveData() {
+                fetch('/forgetting-curve-data')
+                    .then(response => response.json())
+                    .then(data => {
+                        this.renderForgettingCurveChart(data);
+                    })
+                    .catch(err => console.error('Error loading forgetting curve:', err));
+            },
+
+            renderForgettingCurveChart(data) {
+                const ctx = document.getElementById('forgettingCurveChart');
+                if (!ctx) return;
+
+                if (this.forgettingCurveChart) {
+                    this.forgettingCurveChart.destroy();
+                }
+
+                const datasets = data.topics?.map((topic, idx) => {
+                    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+                    const color = colors[idx % colors.length];
+
+                    return {
+                        label: topic.name,
+                        data: topic.retention_data,
+                        borderColor: color,
+                        backgroundColor: color + '20',
+                        tension: 0.4,
+                        fill: false
+                    };
+                }) || [];
+
+                this.forgettingCurveChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Now', '1d', '2d', '3d', '5d', '7d', '14d', '30d'],
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                labels: { color: '#f1f5f9', font: { size: 11 } }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: (context) => `${context.dataset.label}: ${context.parsed.y.toFixed(1)}%`
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                grid: { color: '#334155' },
+                                ticks: {
+                                    color: '#94a3b8',
+                                    callback: (value) => value + '%'
+                                }
+                            },
+                            x: {
+                                grid: { color: '#334155' },
+                                ticks: { color: '#94a3b8' }
+                            }
+                        }
+                    }
+                });
+            },
+
+            loadMasteryProgressData() {
+                fetch('/performance-dashboard')
+                    .then(response => response.json())
+                    .then(data => {
+                        this.renderMasteryProgressChart(data.mastery_over_time || {});
+                    })
+                    .catch(err => console.error('Error loading mastery progress:', err));
+            },
+
+            renderMasteryProgressChart(data) {
+                const ctx = document.getElementById('masteryProgressChart');
+                if (!ctx) return;
+
+                if (this.masteryProgressChart) {
+                    this.masteryProgressChart.destroy();
+                }
+
+                // Sample data if none provided
+                const labels = data.labels || ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+                const datasets = data.datasets || [{
+                    label: 'Average Mastery',
+                    data: [0, 45, 60, 75],
+                    borderColor: '#3b82f6',
+                    backgroundColor: '#3b82f620',
+                    tension: 0.4,
+                    fill: true
+                }];
+
+                this.masteryProgressChart = new Chart(ctx, {
+                    type: 'line',
+                    data: { labels, datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                labels: { color: '#f1f5f9', font: { size: 11 } }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                grid: { color: '#334155' },
+                                ticks: {
+                                    color: '#94a3b8',
+                                    callback: (value) => value + '%'
+                                }
+                            },
+                            x: {
+                                grid: { color: '#334155' },
+                                ticks: { color: '#94a3b8' }
+                            }
+                        }
+                    }
+                });
+            },
+
+            loadTimeOfDayData() {
+                fetch('/time-of-day-stats')
+                    .then(response => response.json())
+                    .then(data => {
+                        this.renderTimeOfDayChart(data);
+                    })
+                    .catch(err => console.error('Error loading time of day stats:', err));
+            },
+
+            renderTimeOfDayChart(data) {
+                const ctx = document.getElementById('timeOfDayChart');
+                if (!ctx) return;
+
+                if (this.timeOfDayChart) {
+                    this.timeOfDayChart.destroy();
+                }
+
+                const labels = data.labels || ['6-9 AM', '9-12 PM', '12-3 PM', '3-6 PM', '6-9 PM', '9 PM+'];
+                const accuracyData = data.accuracy || [0, 0, 0, 0, 0, 0];
+
+                this.timeOfDayChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: 'Accuracy (%)',
+                            data: accuracyData,
+                            backgroundColor: '#3b82f6',
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                grid: { color: '#334155' },
+                                ticks: {
+                                    color: '#94a3b8',
+                                    callback: (value) => value + '%'
+                                }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: '#94a3b8' }
+                            }
+                        }
+                    }
+                });
+            },
+
+            loadTopicDistributionData() {
+                fetch('/performance-dashboard')
+                    .then(response => response.json())
+                    .then(data => {
+                        this.renderTopicDistributionChart(data.topic_distribution || {});
+                    })
+                    .catch(err => console.error('Error loading topic distribution:', err));
+            },
+
+            renderTopicDistributionChart(data) {
+                const ctx = document.getElementById('topicDistributionChart');
+                if (!ctx) return;
+
+                if (this.topicDistributionChart) {
+                    this.topicDistributionChart.destroy();
+                }
+
+                const labels = data.labels || [];
+                const values = data.values || [];
+
+                this.topicDistributionChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels,
+                        datasets: [{
+                            data: values,
+                            backgroundColor: [
+                                '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+                                '#06b6d4', '#ec4899', '#14b8a6'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: { color: '#f1f5f9', font: { size: 11 } }
+                            }
+                        }
+                    }
+                });
+            },
+
+            generateStudyHeatmap() {
+                const container = document.getElementById('studyHeatmap');
+                if (!container) return;
+
+                // Generate 8 weeks of data
+                const weeks = 8;
+                const days = 7;
+                let html = '<div class="flex space-x-1">';
+
+                for (let week = 0; week < weeks; week++) {
+                    html += '<div class="flex flex-col space-y-1">';
+                    for (let day = 0; day < days; day++) {
+                        const intensity = Math.floor(Math.random() * 5);
+                        html += `<div class="heatmap-cell intensity-${intensity}" title="Week ${week + 1}, Day ${day + 1}"></div>`;
+                    }
+                    html += '</div>';
+                }
+                html += '</div>';
+
+                container.innerHTML = html;
+            },
+
+            setupEventListeners() {
+                this.setupUploadForm();
+                this.setupQuizButtons();
+                // Guide Me now uses Alpine.js, no setup needed
+                this.setupExamPrepForm();
+                this.setupSettingsButtons();
+            },
+
+            setupUploadForm() {
+                const form = document.getElementById('upload-form');
+                if (!form) return;
+
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const fileInput = document.getElementById('file-input');
+                    const statusDiv = document.getElementById('upload-status');
+
+                    if (!fileInput.files.length) {
+                        statusDiv.textContent = 'Please select a file';
+                        return;
+                    }
+
+                    const formData = new FormData();
+                    formData.append('file', fileInput.files[0]);
+
+                    statusDiv.textContent = 'Uploading and extracting topics...';
+
+                    try {
+                        const response = await fetch('/upload', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json().catch(() => ({ error: 'Unknown error occurred' }));
+                            statusDiv.textContent = 'Error: ' + (errorData.error || `Server error: ${response.status}`);
+                            console.error('Upload error:', errorData);
+                            return;
+                        }
+
+                        const data = await response.json();
+                        console.log('Upload response:', data); // Debug log
+
+                        if (data.error) {
+                            statusDiv.textContent = 'Error: ' + data.error;
+                            return;
+                        }
+
+                        if (!data.topics || !Array.isArray(data.topics)) {
+                            statusDiv.textContent = 'Error: Invalid response from server. Topics not found.';
+                            console.error('Invalid topics data:', data);
+                            console.error('Response status:', response.status);
+                            console.error('Full response:', await response.clone().json());
+                            return;
+                        }
+
+                        statusDiv.textContent = 'Topics extracted successfully!';
+                        this.allTopics = data.topics;
+                        this.displayTopics(data.topics);
+                        this.populateExamTopics(data.topics);
+                        // Reload documents list
+                        this.loadDocuments();
+                    } catch (err) {
+                        statusDiv.textContent = 'Error: ' + err.message;
+                    }
+                });
+            },
+
+            displayTopics(topics) {
+                const topicsList = document.getElementById('topics-list');
+                const section = document.getElementById('topics-section');
+
+                if (!topicsList || !section) return;
+
+                // Safety check
+                if (!topics || !Array.isArray(topics) || topics.length === 0) {
+                    topicsList.innerHTML = '<li class="text-slate-400">No topics found</li>';
+                    section.style.display = 'block';
+                    return;
+                }
+
+                topicsList.innerHTML = '';
+
+                topics.forEach((topic, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'topic-item';
+
+                    const header = document.createElement('div');
+                    header.className = 'topic-header';
+
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = 'topic-name';
+                    nameSpan.textContent = topic.name;
+                    nameSpan.addEventListener('click', () => this.toggleExplanation(index));
+
+                    const testBtn = document.createElement('button');
+                    testBtn.className = 'test-topic-btn';
+                    testBtn.innerHTML = '📝 Practice';
+                    testBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.generateQuestionForTopic(topic.topic_id);
                     });
 
-                    if (!response.ok) {
-                        const errorData = await response.json().catch(() => ({ error: 'Unknown error occurred' }));
-                        statusDiv.textContent = 'Error: ' + (errorData.error || `Server error: ${response.status}`);
-                        console.error('Upload error:', errorData);
-                        return;
-                    }
+                    header.appendChild(nameSpan);
+                    header.appendChild(testBtn);
 
-                    const data = await response.json();
-                    console.log('Upload response:', data); // Debug log
+                    const explanation = document.createElement('div');
+                    explanation.className = 'topic-explanation';
+                    explanation.id = `explanation-${index}`;
+                    explanation.textContent = topic.explanation || 'No explanation available.';
+                    explanation.style.display = 'none';
 
-                    if (data.error) {
-                        statusDiv.textContent = 'Error: ' + data.error;
-                        return;
-                    }
+                    li.appendChild(header);
+                    li.appendChild(explanation);
+                    topicsList.appendChild(li);
+                });
 
-                    if (!data.topics || !Array.isArray(data.topics)) {
-                        statusDiv.textContent = 'Error: Invalid response from server. Topics not found.';
-                        console.error('Invalid topics data:', data);
-                        console.error('Response status:', response.status);
-                        console.error('Full response:', await response.clone().json());
-                        return;
-                    }
-
-                    statusDiv.textContent = 'Topics extracted successfully!';
-                    this.allTopics = data.topics;
-                    this.displayTopics(data.topics);
-                    this.populateExamTopics(data.topics);
-                    // Reload documents list
-                    this.loadDocuments();
-                } catch (err) {
-                    statusDiv.textContent = 'Error: ' + err.message;
-                }
-            });
-        },
-
-        displayTopics(topics) {
-            const topicsList = document.getElementById('topics-list');
-            const section = document.getElementById('topics-section');
-
-            if (!topicsList || !section) return;
-
-            // Safety check
-            if (!topics || !Array.isArray(topics) || topics.length === 0) {
-                topicsList.innerHTML = '<li class="text-slate-400">No topics found</li>';
                 section.style.display = 'block';
-                return;
-            }
+            },
 
-            topicsList.innerHTML = '';
+            toggleExplanation(index) {
+                const explanation = document.getElementById(`explanation-${index}`);
+                if (explanation) {
+                    explanation.style.display = explanation.style.display === 'none' ? 'block' : 'none';
+                }
+            },
 
-            topics.forEach((topic, index) => {
-                const li = document.createElement('li');
-                li.className = 'topic-item';
+            setupQuizButtons() {
+                const startBtn = document.getElementById('start-quiz-btn');
+                if (startBtn) {
+                    startBtn.addEventListener('click', () => {
+                        this.currentView = 'study';
+                        this.loadNextQuestion();
+                    });
+                }
 
-                const header = document.createElement('div');
-                header.className = 'topic-header';
-
-                const nameSpan = document.createElement('span');
-                nameSpan.className = 'topic-name';
-                nameSpan.textContent = topic.name;
-                nameSpan.addEventListener('click', () => this.toggleExplanation(index));
-
-                const testBtn = document.createElement('button');
-                testBtn.className = 'test-topic-btn';
-                testBtn.innerHTML = '📝 Practice';
-                testBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    this.generateQuestionForTopic(topic.topic_id);
-                });
-
-                header.appendChild(nameSpan);
-                header.appendChild(testBtn);
-
-                const explanation = document.createElement('div');
-                explanation.className = 'topic-explanation';
-                explanation.id = `explanation-${index}`;
-                explanation.textContent = topic.explanation || 'No explanation available.';
-                explanation.style.display = 'none';
-
-                li.appendChild(header);
-                li.appendChild(explanation);
-                topicsList.appendChild(li);
-            });
-
-            section.style.display = 'block';
-        },
-
-        toggleExplanation(index) {
-            const explanation = document.getElementById(`explanation-${index}`);
-            if (explanation) {
-                explanation.style.display = explanation.style.display === 'none' ? 'block' : 'none';
-            }
-        },
-
-        setupQuizButtons() {
-            const startBtn = document.getElementById('start-quiz-btn');
-            if (startBtn) {
-                startBtn.addEventListener('click', () => {
-                    this.currentView = 'study';
-                    this.loadNextQuestion();
-                });
-            }
-
-            const nextBtn = document.getElementById('next-btn');
-            if (nextBtn) {
-                nextBtn.addEventListener('click', () => this.loadNextQuestion());
-            }
-        },
+                const nextBtn = document.getElementById('next-btn');
+                if (nextBtn) {
+                    nextBtn.addEventListener('click', () => this.loadNextQuestion());
+                }
+            },
 
         async generateQuestionForTopic(topicId) {
-            this.currentView = 'study';
-            await this.$nextTick();
+                this.currentView = 'study';
+                await this.$nextTick();
 
-            const quizSection = document.getElementById('quiz-section');
-            const noQuizMessage = document.getElementById('no-quiz-message');
+                const quizSection = document.getElementById('quiz-section');
+                const noQuizMessage = document.getElementById('no-quiz-message');
 
-            if (quizSection) quizSection.style.display = 'block';
-            if (noQuizMessage) noQuizMessage.style.display = 'none';
+                if (quizSection) quizSection.style.display = 'block';
+                if (noQuizMessage) noQuizMessage.style.display = 'none';
 
-            document.getElementById('question-text').textContent = 'Loading question...';
-            document.getElementById('options-container').innerHTML = '';
-            document.getElementById('feedback').style.display = 'none';
-            document.getElementById('next-btn').style.display = 'none';
-            document.getElementById('guide-me-container').style.display = 'block';
+                document.getElementById('question-text').textContent = 'Loading question...';
+                document.getElementById('options-container').innerHTML = '';
+                document.getElementById('feedback').style.display = 'none';
+                document.getElementById('next-btn').style.display = 'none';
+                document.getElementById('guide-me-container').style.display = 'block';
 
-            try {
-                const response = await fetch('/generate-question', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ topic_id: topicId })
-                });
-                const data = await response.json();
+                try {
+                    const response = await fetch('/generate-question', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ topic_id: topicId })
+                    });
+                    const data = await response.json();
 
-                if (data.error) {
-                    document.getElementById('question-text').textContent = 'Error: ' + data.error;
-                    return;
+                    if (data.error) {
+                        document.getElementById('question-text').textContent = 'Error: ' + data.error;
+                        return;
+                    }
+
+                    this.currentQuestion = data;
+                    this.displayQuestion(data);
+                } catch (err) {
+                    document.getElementById('question-text').textContent = 'Error: ' + err.message;
                 }
-
-                this.currentQuestion = data;
-                this.displayQuestion(data);
-            } catch (err) {
-                document.getElementById('question-text').textContent = 'Error: ' + err.message;
-            }
-        },
+            },
 
         async loadNextQuestion() {
-            const quizSection = document.getElementById('quiz-section');
-            const noQuizMessage = document.getElementById('no-quiz-message');
+                const quizSection = document.getElementById('quiz-section');
+                const noQuizMessage = document.getElementById('no-quiz-message');
 
-            if (quizSection) quizSection.style.display = 'block';
-            if (noQuizMessage) noQuizMessage.style.display = 'none';
+                if (quizSection) quizSection.style.display = 'block';
+                if (noQuizMessage) noQuizMessage.style.display = 'none';
 
-            document.getElementById('question-text').textContent = 'Loading question...';
-            document.getElementById('options-container').innerHTML = '';
-            document.getElementById('feedback').style.display = 'none';
-            document.getElementById('next-btn').style.display = 'none';
-            document.getElementById('guide-me-container').style.display = 'block';
+                document.getElementById('question-text').textContent = 'Loading question...';
+                document.getElementById('options-container').innerHTML = '';
+                document.getElementById('feedback').style.display = 'none';
+                document.getElementById('next-btn').style.display = 'none';
+                document.getElementById('guide-me-container').style.display = 'block';
 
-            try {
-                const response = await fetch('/generate-question', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({})
-                });
-                const data = await response.json();
+                try {
+                    const response = await fetch('/generate-question', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({})
+                    });
+                    const data = await response.json();
 
-                if (data.error) {
-                    document.getElementById('question-text').textContent = 'Error: ' + data.error;
-                    return;
+                    if (data.error) {
+                        document.getElementById('question-text').textContent = 'Error: ' + data.error;
+                        return;
+                    }
+
+                    this.currentQuestion = data;
+                    this.displayQuestion(data);
+                } catch (err) {
+                    document.getElementById('question-text').textContent = 'Error: ' + err.message;
+                }
+            },
+
+            displayQuestion(question) {
+                // Update topic name badge
+                const topicNameEl = document.getElementById('topic-name');
+                if (topicNameEl) topicNameEl.textContent = question.topic_name || 'General';
+
+                // Update question text
+                const questionTextEl = document.getElementById('question-text');
+                if (questionTextEl) questionTextEl.innerHTML = question.question || '';
+
+                // Show progress header and stepper
+                const progressHeader = document.getElementById('study-progress-header');
+                const stepStepper = document.getElementById('step-stepper');
+                const stuckButton = document.getElementById('stuck-button');
+                if (progressHeader) progressHeader.style.display = 'block';
+                if (stepStepper) stepStepper.style.display = 'block';
+                if (stuckButton) stuckButton.style.display = 'block';
+
+                // Initialize steps (placeholder for now)
+                this.initializeSteps();
+
+                // Clear previous state
+                const hintContainer = document.getElementById('hint-container');
+                if (hintContainer) hintContainer.style.display = 'none';
+                const feedback = document.getElementById('feedback');
+                if (feedback) feedback.style.display = 'none';
+                const nextBtn = document.getElementById('next-btn');
+                if (nextBtn) nextBtn.style.display = 'none';
+                const checkBtn = document.getElementById('check-answer-btn');
+                if (checkBtn) {
+                    checkBtn.disabled = true;
+                    this.selectedAnswerIndex = null;
                 }
 
-                this.currentQuestion = data;
-                this.displayQuestion(data);
-            } catch (err) {
-                document.getElementById('question-text').textContent = 'Error: ' + err.message;
-            }
-        },
+                // Render options (BoilerBuddy style)
+                const optionsContainer = document.getElementById('options-container');
+                if (optionsContainer) {
+                    optionsContainer.innerHTML = '';
 
-        displayQuestion(question) {
-            // Update topic name badge
-            const topicNameEl = document.getElementById('topic-name');
-            if (topicNameEl) topicNameEl.textContent = question.topic_name || 'General';
-
-            // Update question text
-            const questionTextEl = document.getElementById('question-text');
-            if (questionTextEl) questionTextEl.innerHTML = question.question || '';
-
-            // Show progress header and stepper
-            const progressHeader = document.getElementById('study-progress-header');
-            const stepStepper = document.getElementById('step-stepper');
-            const stuckButton = document.getElementById('stuck-button');
-            if (progressHeader) progressHeader.style.display = 'block';
-            if (stepStepper) stepStepper.style.display = 'block';
-            if (stuckButton) stuckButton.style.display = 'block';
-
-            // Initialize steps (placeholder for now)
-            this.initializeSteps();
-
-            // Clear previous state
-            const hintContainer = document.getElementById('hint-container');
-            if (hintContainer) hintContainer.style.display = 'none';
-            const feedback = document.getElementById('feedback');
-            if (feedback) feedback.style.display = 'none';
-            const nextBtn = document.getElementById('next-btn');
-            if (nextBtn) nextBtn.style.display = 'none';
-            const checkBtn = document.getElementById('check-answer-btn');
-            if (checkBtn) {
-                checkBtn.disabled = true;
-                this.selectedAnswerIndex = null;
-            }
-
-            // Render options (BoilerBuddy style)
-            const optionsContainer = document.getElementById('options-container');
-            if (optionsContainer) {
-                optionsContainer.innerHTML = '';
-
-                question.options.forEach((option, index) => {
-                    const btn = document.createElement('button');
-                    btn.className = 'w-full text-left p-4 rounded-2xl border-2 border-slate-600 hover:border-[#9B72CF]/50 hover:bg-[#9B72CF]/5 transition-all';
-                    btn.innerHTML = `
+                    question.options.forEach((option, index) => {
+                        const btn = document.createElement('button');
+                        btn.className = 'w-full text-left p-4 rounded-2xl border-2 border-slate-600 hover:border-[#9B72CF]/50 hover:bg-[#9B72CF]/5 transition-all';
+                        btn.innerHTML = `
                         <div class="flex items-center gap-3">
                             <span class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-sm">${String.fromCharCode(65 + index)}</span>
                             <span class="mathjax-process">${option}</span>
                         </div>
                     `;
-                    btn.addEventListener('click', () => {
-                        // Remove previous selection
-                        optionsContainer.querySelectorAll('button').forEach(b => {
-                            b.classList.remove('border-[#9B72CF]', 'bg-[#9B72CF]/10');
+                        btn.addEventListener('click', () => {
+                            // Remove previous selection
+                            optionsContainer.querySelectorAll('button').forEach(b => {
+                                b.classList.remove('border-[#9B72CF]', 'bg-[#9B72CF]/10');
+                            });
+                            // Add selection
+                            btn.classList.add('border-[#9B72CF]', 'bg-[#9B72CF]/10');
+                            this.selectedAnswerIndex = index;
+                            if (checkBtn) checkBtn.disabled = false;
                         });
-                        // Add selection
-                        btn.classList.add('border-[#9B72CF]', 'bg-[#9B72CF]/10');
-                        this.selectedAnswerIndex = index;
-                        if (checkBtn) checkBtn.disabled = false;
+                        optionsContainer.appendChild(btn);
                     });
-                    optionsContainer.appendChild(btn);
-                });
-            }
+                }
 
-            if (window.MathJax) {
-                setTimeout(() => {
-                    MathJax.typesetPromise();
-                }, 100);
-            }
-        },
+                if (window.MathJax) {
+                    setTimeout(() => {
+                        MathJax.typesetPromise();
+                    }, 100);
+                }
+            },
 
-        initializeSteps() {
-            // Create placeholder steps (can be enhanced with actual step data)
-            const stepsContainer = document.getElementById('steps-container');
-            if (!stepsContainer) return;
+            initializeSteps() {
+                // Create placeholder steps (can be enhanced with actual step data)
+                const stepsContainer = document.getElementById('steps-container');
+                if (!stepsContainer) return;
 
-            const steps = [
-                { id: 1, title: 'Understand the problem', completed: false },
-                { id: 2, title: 'Identify the rule', completed: false },
-                { id: 3, title: 'Apply the formula', completed: false },
-                { id: 4, title: 'Simplify the result', completed: false }
-            ];
+                const steps = [
+                    { id: 1, title: 'Understand the problem', completed: false },
+                    { id: 2, title: 'Identify the rule', completed: false },
+                    { id: 3, title: 'Apply the formula', completed: false },
+                    { id: 4, title: 'Simplify the result', completed: false }
+                ];
 
-            stepsContainer.innerHTML = steps.map((step, idx) => `
+                stepsContainer.innerHTML = steps.map((step, idx) => `
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 rounded-full flex items-center justify-center ${step.completed
-                    ? 'bg-green-500 text-white'
-                    : idx === 0
-                        ? 'bg-[#9B72CF] text-white'
-                        : 'bg-slate-700 text-slate-400'
-                }">
+                        ? 'bg-green-500 text-white'
+                        : idx === 0
+                            ? 'bg-[#9B72CF] text-white'
+                            : 'bg-slate-700 text-slate-400'
+                    }">
                         ${step.completed ? '✓' : step.id}
                     </div>
                     <span class="${step.completed
-                    ? 'text-green-400'
-                    : idx === 0
-                        ? 'text-white'
-                        : 'text-slate-400'
-                }">${step.title}</span>
+                        ? 'text-green-400'
+                        : idx === 0
+                            ? 'text-white'
+                            : 'text-slate-400'
+                    }">${step.title}</span>
                 </div>
             `).join('');
-        },
+            },
 
-        showHint() {
-            const hintContainer = document.getElementById('hint-container');
-            const hintText = document.getElementById('hint-text');
-            if (hintContainer && hintText) {
-                hintText.textContent = 'Remember: Break down the problem into smaller steps. Look for patterns and apply the relevant rules.';
-                hintContainer.style.display = 'block';
-            }
-        },
+            showHint() {
+                const hintContainer = document.getElementById('hint-container');
+                const hintText = document.getElementById('hint-text');
+                if (hintContainer && hintText) {
+                    hintText.textContent = 'Remember: Break down the problem into smaller steps. Look for patterns and apply the relevant rules.';
+                    hintContainer.style.display = 'block';
+                }
+            },
 
-        checkAnswer() {
-            if (this.selectedAnswerIndex === null || this.selectedAnswerIndex === undefined) return;
-            this.selectAnswer(this.selectedAnswerIndex);
-        },
+            checkAnswer() {
+                if (this.selectedAnswerIndex === null || this.selectedAnswerIndex === undefined) return;
+                this.selectAnswer(this.selectedAnswerIndex);
+            },
 
         async selectAnswer(selectedIndex) {
-            const isCorrect = selectedIndex === this.currentQuestion.correct_answer;
+                const isCorrect = selectedIndex === this.currentQuestion.correct_answer;
 
-            // Disable all options
-            const optionsContainer = document.getElementById('options-container');
-            if (optionsContainer) {
-                optionsContainer.querySelectorAll('button').forEach((btn, index) => {
-                    btn.disabled = true;
-                    if (index === this.currentQuestion.correct_answer) {
-                        btn.classList.remove('border-slate-600', 'bg-[#9B72CF]/10');
-                        btn.classList.add('border-green-500', 'bg-green-500/20');
-                        // Add checkmark
-                        const checkmark = document.createElement('span');
-                        checkmark.className = 'ml-auto text-green-500 text-xl';
-                        checkmark.textContent = '✓';
-                        btn.querySelector('.flex').appendChild(checkmark);
-                    } else if (index === selectedIndex && !isCorrect) {
-                        btn.classList.remove('border-[#9B72CF]', 'bg-[#9B72CF]/10');
-                        btn.classList.add('border-red-500', 'bg-red-500/20');
-                    }
-                });
-            }
+                // Disable all options
+                const optionsContainer = document.getElementById('options-container');
+                if (optionsContainer) {
+                    optionsContainer.querySelectorAll('button').forEach((btn, index) => {
+                        btn.disabled = true;
+                        if (index === this.currentQuestion.correct_answer) {
+                            btn.classList.remove('border-slate-600', 'bg-[#9B72CF]/10');
+                            btn.classList.add('border-green-500', 'bg-green-500/20');
+                            // Add checkmark
+                            const checkmark = document.createElement('span');
+                            checkmark.className = 'ml-auto text-green-500 text-xl';
+                            checkmark.textContent = '✓';
+                            btn.querySelector('.flex').appendChild(checkmark);
+                        } else if (index === selectedIndex && !isCorrect) {
+                            btn.classList.remove('border-[#9B72CF]', 'bg-[#9B72CF]/10');
+                            btn.classList.add('border-red-500', 'bg-red-500/20');
+                        }
+                    });
+                }
 
-            // Show feedback (BoilerBuddy style)
-            const feedbackDiv = document.getElementById('feedback');
-            const feedbackContent = document.getElementById('feedback-content');
-            const nextBtn = document.getElementById('next-btn');
-            const checkBtn = document.getElementById('check-answer-btn');
+                // Show feedback (BoilerBuddy style)
+                const feedbackDiv = document.getElementById('feedback');
+                const feedbackContent = document.getElementById('feedback-content');
+                const nextBtn = document.getElementById('next-btn');
+                const checkBtn = document.getElementById('check-answer-btn');
 
-            if (feedbackDiv && feedbackContent) {
-                feedbackContent.innerHTML = `
+                if (feedbackDiv && feedbackContent) {
+                    feedbackContent.innerHTML = `
                     <div class="${isCorrect ? 'bg-green-900/30 border border-green-500' : 'bg-red-900/30 border border-red-500'} rounded-2xl p-4">
                         <p class="${isCorrect ? 'text-green-400' : 'text-red-400'} font-semibold mb-2 text-lg">
                             ${isCorrect ? '✓ Correct!' : '✗ Incorrect'}
@@ -1475,98 +1475,98 @@ function app() {
                         <p class="text-slate-300 text-sm mathjax-process">${this.currentQuestion.explanation || ''}</p>
                     </div>
                 `;
-                feedbackDiv.style.display = 'block';
-            }
+                    feedbackDiv.style.display = 'block';
+                }
 
-            if (nextBtn) nextBtn.style.display = 'block';
-            if (checkBtn) checkBtn.disabled = true;
+                if (nextBtn) nextBtn.style.display = 'block';
+                if (checkBtn) checkBtn.disabled = true;
 
-            if (window.MathJax) {
-                setTimeout(() => {
-                    MathJax.typesetPromise();
-                }, 100);
-            }
+                if (window.MathJax) {
+                    setTimeout(() => {
+                        MathJax.typesetPromise();
+                    }, 100);
+                }
 
-            try {
-                const response = await fetch('/submit-answer', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        topic_id: this.currentQuestion.topic_id,
-                        is_correct: isCorrect
-                    })
-                });
+                try {
+                    const response = await fetch('/submit-answer', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            topic_id: this.currentQuestion.topic_id,
+                            is_correct: isCorrect
+                        })
+                    });
 
-                const data = await response.json();
+                    const data = await response.json();
 
-                if (data.success && data.user_state) {
-                    // Update stats directly from response
-                    this.updateStatsFromData({ user_state: data.user_state });
+                    if (data.success && data.user_state) {
+                        // Update stats directly from response
+                        this.updateStatsFromData({ user_state: data.user_state });
 
-                    // Update XP if provided
-                    if (data.xp_progress) {
-                        this.xpProgress = data.xp_progress;
+                        // Update XP if provided
+                        if (data.xp_progress) {
+                            this.xpProgress = data.xp_progress;
+                        }
+
+                        // Show achievements if any
+                        if (data.new_achievements && data.new_achievements.length > 0) {
+                            const achievementNames = data.new_achievements.map(a => a.achievement_name || a.name || 'Achievement').join(', ');
+                            alert(`🎉 Achievement Unlocked: ${achievementNames}!`);
+                        }
+                    } else {
+                        // Fallback to loading stats
+                        this.loadStats();
                     }
-
-                    // Show achievements if any
-                    if (data.new_achievements && data.new_achievements.length > 0) {
-                        const achievementNames = data.new_achievements.map(a => a.achievement_name || a.name || 'Achievement').join(', ');
-                        alert(`🎉 Achievement Unlocked: ${achievementNames}!`);
-                    }
-                } else {
-                    // Fallback to loading stats
+                } catch (err) {
+                    console.error('Error submitting answer:', err);
+                    // Still try to load stats on error
                     this.loadStats();
                 }
-            } catch (err) {
-                console.error('Error submitting answer:', err);
-                // Still try to load stats on error
-                this.loadStats();
-            }
-        },
+            },
         async openGuideMeModal() {
-            if (!this.currentQuestion) return;
+                if (!this.currentQuestion) return;
 
-            this.showGuideMeModal = true;
-            const content = document.getElementById('guide-me-content');
+                this.showGuideMeModal = true;
+                const content = document.getElementById('guide-me-content');
 
-            if (content) {
-                content.innerHTML = '<div class="spinner mx-auto"></div>';
-            }
-
-            try {
-                const response = await fetch('/guide-me', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        question: this.currentQuestion.question,
-                        topic: this.currentQuestion.topic_name,
-                        difficulty: this.currentQuestion.difficulty
-                    })
-                });
-                const data = await response.json();
-
-                if (data.error) {
-                    if (content) content.innerHTML = `<p class="text-red-400">Error: ${data.error}</p>`;
-                    return;
+                if (content) {
+                    content.innerHTML = '<div class="spinner mx-auto"></div>';
                 }
 
-                this.guideMeSteps = data.sub_questions || [];
-                this.currentGuideMeStep = 0;
-                this.renderGuideMeStep();
-            } catch (err) {
-                if (content) content.innerHTML = `<p class="text-red-400">Error: ${err.message}</p>`;
-            }
-        },
+                try {
+                    const response = await fetch('/guide-me', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            question: this.currentQuestion.question,
+                            topic: this.currentQuestion.topic_name,
+                            difficulty: this.currentQuestion.difficulty
+                        })
+                    });
+                    const data = await response.json();
 
-        renderGuideMeStep() {
-            const content = document.getElementById('guide-me-content');
-            if (!content || !this.guideMeSteps.length) return;
+                    if (data.error) {
+                        if (content) content.innerHTML = `<p class="text-red-400">Error: ${data.error}</p>`;
+                        return;
+                    }
 
-            const step = this.guideMeSteps[this.currentGuideMeStep];
-            const stepNum = this.currentGuideMeStep + 1;
-            const totalSteps = this.guideMeSteps.length;
+                    this.guideMeSteps = data.sub_questions || [];
+                    this.currentGuideMeStep = 0;
+                    this.renderGuideMeStep();
+                } catch (err) {
+                    if (content) content.innerHTML = `<p class="text-red-400">Error: ${err.message}</p>`;
+                }
+            },
 
-            content.innerHTML = `
+            renderGuideMeStep() {
+                const content = document.getElementById('guide-me-content');
+                if (!content || !this.guideMeSteps.length) return;
+
+                const step = this.guideMeSteps[this.currentGuideMeStep];
+                const stepNum = this.currentGuideMeStep + 1;
+                const totalSteps = this.guideMeSteps.length;
+
+                content.innerHTML = `
                 <div class="space-y-6">
                     ${this.guideMeSteps.map((s, idx) => `
                         <div class="bg-[#9B72CF]/10 rounded-2xl p-4 border border-[#9B72CF]/30">
@@ -1595,18 +1595,18 @@ function app() {
                 </div>
             `;
 
-            if (window.MathJax) {
-                MathJax.typesetPromise();
-            }
-        },
+                if (window.MathJax) {
+                    MathJax.typesetPromise();
+                }
+            },
 
-        checkGuideMeAnswer(selectedIdx) {
-            const step = this.guideMeSteps[this.currentGuideMeStep];
-            const isCorrect = selectedIdx === step.correct_answer;
-            const feedback = document.getElementById('guide-me-step-feedback');
+            checkGuideMeAnswer(selectedIdx) {
+                const step = this.guideMeSteps[this.currentGuideMeStep];
+                const isCorrect = selectedIdx === step.correct_answer;
+                const feedback = document.getElementById('guide-me-step-feedback');
 
-            if (isCorrect) {
-                feedback.innerHTML = `
+                if (isCorrect) {
+                    feedback.innerHTML = `
                     <div class="bg-green-900/50 border border-green-500 rounded-lg p-4">
                         <p class="text-green-400 font-semibold mb-2">✓ Correct!</p>
                         ${step.explanation ? `<p class="text-sm text-slate-300">${step.explanation}</p>` : ''}
@@ -1616,97 +1616,97 @@ function app() {
                         </button>
                     </div>
                 `;
-            } else {
-                feedback.innerHTML = `
+                } else {
+                    feedback.innerHTML = `
                     <div class="bg-red-900/50 border border-red-500 rounded-lg p-4">
                         <p class="text-red-400 font-semibold">✗ Not quite. Try again!</p>
                     </div>
                 `;
-            }
-        },
+                }
+            },
 
-        nextGuideMeStep() {
-            this.currentGuideMeStep++;
-            if (this.currentGuideMeStep >= this.guideMeSteps.length) {
-                this.closeGuideMeModal();
-                // Award bonus XP
-                alert('🎉 Great job! You earned +20% bonus XP for using Guide Me!');
-            } else {
-                this.renderGuideMeStep();
-            }
-        },
+            nextGuideMeStep() {
+                this.currentGuideMeStep++;
+                if (this.currentGuideMeStep >= this.guideMeSteps.length) {
+                    this.closeGuideMeModal();
+                    // Award bonus XP
+                    alert('🎉 Great job! You earned +20% bonus XP for using Guide Me!');
+                } else {
+                    this.renderGuideMeStep();
+                }
+            },
 
-        closeGuideMeModal() {
-            this.showGuideMeModal = false;
-            this.guideMeSteps = [];
-            this.currentGuideMeStep = 0;
-        },
+            closeGuideMeModal() {
+                this.showGuideMeModal = false;
+                this.guideMeSteps = [];
+                this.currentGuideMeStep = 0;
+            },
 
-        setupExamPrepForm() {
-            const form = document.getElementById('exam-prep-form');
-            if (form) {
-                form.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.createExamPlan();
-                });
-            }
-        },
+            setupExamPrepForm() {
+                const form = document.getElementById('exam-prep-form');
+                if (form) {
+                    form.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        this.createExamPlan();
+                    });
+                }
+            },
 
-        populateExamTopics(topics) {
-            const container = document.getElementById('exam-topics-selector');
-            if (!container) return;
+            populateExamTopics(topics) {
+                const container = document.getElementById('exam-topics-selector');
+                if (!container) return;
 
-            container.innerHTML = topics.map((topic, idx) => `
+                container.innerHTML = topics.map((topic, idx) => `
                 <label class="flex items-center space-x-2 p-2 hover:bg-slate-600 rounded cursor-pointer">
                     <input type="checkbox" value="${topic.topic_id}" 
                            class="exam-topic-checkbox rounded border-slate-500">
                     <span class="text-sm">${topic.name}</span>
                 </label>
             `).join('');
-        },
+            },
 
         async createExamPlan() {
-            const examName = document.getElementById('exam-name').value;
-            const examDate = document.getElementById('exam-date').value;
-            const selectedTopics = Array.from(document.querySelectorAll('.exam-topic-checkbox:checked'))
-                .map(cb => cb.value);
+                const examName = document.getElementById('exam-name').value;
+                const examDate = document.getElementById('exam-date').value;
+                const selectedTopics = Array.from(document.querySelectorAll('.exam-topic-checkbox:checked'))
+                    .map(cb => cb.value);
 
-            if (!examName || !examDate || selectedTopics.length === 0) {
-                alert('Please fill in all fields and select at least one topic');
-                return;
-            }
-
-            try {
-                const response = await fetch('/exam-prep/create', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        exam_name: examName,
-                        exam_date: examDate,
-                        topics: selectedTopics
-                    })
-                });
-                const data = await response.json();
-
-                if (data.error) {
-                    alert('Error: ' + data.error);
+                if (!examName || !examDate || selectedTopics.length === 0) {
+                    alert('Please fill in all fields and select at least one topic');
                     return;
                 }
 
-                this.displayExamReadiness(data);
-            } catch (err) {
-                alert('Error: ' + err.message);
-            }
-        },
+                try {
+                    const response = await fetch('/exam-prep/create', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            exam_name: examName,
+                            exam_date: examDate,
+                            topics: selectedTopics
+                        })
+                    });
+                    const data = await response.json();
 
-        displayExamReadiness(data) {
-            document.getElementById('exam-readiness-dashboard').style.display = 'block';
-            document.getElementById('overall-readiness').textContent = Math.round(data.overall_readiness || 0) + '%';
-            document.getElementById('days-until-exam').textContent = data.days_until_exam || 0;
-            document.getElementById('predicted-score').textContent = Math.round(data.predicted_score || 0) + '%';
+                    if (data.error) {
+                        alert('Error: ' + data.error);
+                        return;
+                    }
 
-            const topicsList = document.getElementById('topic-readiness-list');
-            topicsList.innerHTML = (data.topic_readiness || []).map(topic => `
+                    this.displayExamReadiness(data);
+                } catch (err) {
+                    alert('Error: ' + err.message);
+                }
+            },
+
+            displayExamReadiness(data) {
+                document.getElementById('exam-readiness-dashboard').style.display = 'block';
+                document.getElementById('overall-readiness').textContent = Math.round(data.overall_readiness || 0) + '%';
+                document.getElementById('days-until-exam').textContent = data.days_until_exam || 0;
+                document.getElementById('predicted-score').textContent = Math.round(data.predicted_score || 0) + '%';
+
+                const topicsList = document.getElementById('topic-readiness-list');
+                topicsList.innerHTML = (data.topic_readiness || []).map(topic => `
                 <div>
                     <div class="flex justify-between mb-1">
                         <span class="text-sm font-medium">${topic.topic_id}</span>
@@ -1718,141 +1718,141 @@ function app() {
                 </div>
             `).join('');
 
-            const goalsList = document.getElementById('daily-goals-list');
-            goalsList.innerHTML = (data.daily_goals || []).map(goal => `
+                const goalsList = document.getElementById('daily-goals-list');
+                goalsList.innerHTML = (data.daily_goals || []).map(goal => `
                 <div class="flex justify-between items-center p-3 bg-slate-700 rounded-lg">
                     <span class="text-sm">${goal.topic_id}</span>
                     <span class="text-sm font-medium text-blue-400">${goal.daily_questions} questions/day</span>
                 </div>
             `).join('');
-        },
+            },
 
-        setupSettingsButtons() {
-            const saveBtn = document.getElementById('save-progress-btn');
-            if (saveBtn) {
-                saveBtn.addEventListener('click', () => this.saveProgress());
-            }
+            setupSettingsButtons() {
+                const saveBtn = document.getElementById('save-progress-btn');
+                if (saveBtn) {
+                    saveBtn.addEventListener('click', () => this.saveProgress());
+                }
 
-            const loadBtn = document.getElementById('load-progress-btn');
-            if (loadBtn) {
-                loadBtn.addEventListener('click', () => this.loadProgress());
-            }
+                const loadBtn = document.getElementById('load-progress-btn');
+                if (loadBtn) {
+                    loadBtn.addEventListener('click', () => this.loadProgress());
+                }
 
-            const exportBtn = document.getElementById('export-report-btn');
-            if (exportBtn) {
-                exportBtn.addEventListener('click', () => this.exportReport());
-            }
-        },
+                const exportBtn = document.getElementById('export-report-btn');
+                if (exportBtn) {
+                    exportBtn.addEventListener('click', () => this.exportReport());
+                }
+            },
 
         async saveProgress() {
-            const status = document.getElementById('settings-status');
-            try {
-                const response = await fetch('/save-progress', { method: 'POST' });
-                const data = await response.json();
-                status.textContent = data.message || 'Progress saved!';
-                status.className = 'mt-3 text-sm text-green-400';
-            } catch (err) {
-                status.textContent = 'Error: ' + err.message;
-                status.className = 'mt-3 text-sm text-red-400';
-            }
-        },
+                const status = document.getElementById('settings-status');
+                try {
+                    const response = await fetch('/save-progress', { method: 'POST' });
+                    const data = await response.json();
+                    status.textContent = data.message || 'Progress saved!';
+                    status.className = 'mt-3 text-sm text-green-400';
+                } catch (err) {
+                    status.textContent = 'Error: ' + err.message;
+                    status.className = 'mt-3 text-sm text-red-400';
+                }
+            },
 
         async loadProgress() {
-            const status = document.getElementById('settings-status');
-            try {
-                const response = await fetch('/load-progress', { method: 'POST' });
-                const data = await response.json();
-                status.textContent = data.message || 'Progress loaded!';
-                status.className = 'mt-3 text-sm text-green-400';
-                this.loadStats();
-            } catch (err) {
-                status.textContent = 'Error: ' + err.message;
-                status.className = 'mt-3 text-sm text-red-400';
-            }
-        },
+                const status = document.getElementById('settings-status');
+                try {
+                    const response = await fetch('/load-progress', { method: 'POST' });
+                    const data = await response.json();
+                    status.textContent = data.message || 'Progress loaded!';
+                    status.className = 'mt-3 text-sm text-green-400';
+                    this.loadStats();
+                } catch (err) {
+                    status.textContent = 'Error: ' + err.message;
+                    status.className = 'mt-3 text-sm text-red-400';
+                }
+            },
 
         async exportReport() {
-            const status = document.getElementById('settings-status');
-            try {
-                const response = await fetch('/export-report', { method: 'POST' });
-                const data = await response.json();
-                status.textContent = data.message || 'Report exported!';
-                status.className = 'mt-3 text-sm text-green-400';
-            } catch (err) {
-                status.textContent = 'Error: ' + err.message;
-                status.className = 'mt-3 text-sm text-red-400';
-            }
-        },
+                const status = document.getElementById('settings-status');
+                try {
+                    const response = await fetch('/export-report', { method: 'POST' });
+                    const data = await response.json();
+                    status.textContent = data.message || 'Report exported!';
+                    status.className = 'mt-3 text-sm text-green-400';
+                } catch (err) {
+                    status.textContent = 'Error: ' + err.message;
+                    status.className = 'mt-3 text-sm text-red-400';
+                }
+            },
 
         async clearUserData() {
-            if (!confirm('Are you sure you want to delete all your progress? This cannot be undone.')) {
-                return;
-            }
+                if (!confirm('Are you sure you want to delete all your progress? This cannot be undone.')) {
+                    return;
+                }
 
-            // In production, this would call a backend endpoint
-            alert('Feature not yet implemented in this demo');
-        },
+                // In production, this would call a backend endpoint
+                alert('Feature not yet implemented in this demo');
+            },
 
         async loadLeaderboard() {
-            try {
-                const response = await fetch(
-                    `/leaderboard/${this.leaderboardType}?period=${this.leaderboardPeriod}`
-                );
-                const data = await response.json();
+                try {
+                    const response = await fetch(
+                        `/leaderboard/${this.leaderboardType}?period=${this.leaderboardPeriod}`
+                    );
+                    const data = await response.json();
 
-                if (data.leaderboard) {
-                    this.leaderboardData = data.leaderboard;
-                    this.renderLeaderboard(data.leaderboard);
+                    if (data.leaderboard) {
+                        this.leaderboardData = data.leaderboard;
+                        this.renderLeaderboard(data.leaderboard);
+                    }
+
+                    // Get my rank
+                    const rankResponse = await fetch(
+                        `/leaderboard/my-rank?type=${this.leaderboardType}&period=${this.leaderboardPeriod}`
+                    );
+                    const rankData = await rankResponse.json();
+
+                    if (rankData.user_rank) {
+                        this.myRank = rankData.user_rank.rank;
+                        this.totalUsers = rankData.total_users;
+                    }
+                } catch (err) {
+                    console.error('Error loading leaderboard:', err);
                 }
-
-                // Get my rank
-                const rankResponse = await fetch(
-                    `/leaderboard/my-rank?type=${this.leaderboardType}&period=${this.leaderboardPeriod}`
-                );
-                const rankData = await rankResponse.json();
-
-                if (rankData.user_rank) {
-                    this.myRank = rankData.user_rank.rank;
-                    this.totalUsers = rankData.total_users;
-                }
-            } catch (err) {
-                console.error('Error loading leaderboard:', err);
-            }
-        },
+            },
 
         async loadHeatmapData() {
-            try {
-                const response = await fetch(`/api/heatmap?filter=${this.heatmapTimeFilter}`);
-                const data = await response.json();
+                try {
+                    const response = await fetch(`/api/heatmap?filter=${this.heatmapTimeFilter}`);
+                    const data = await response.json();
 
-                if (data.locations) {
-                    this.studyLocations = data.locations;
+                    if (data.locations) {
+                        this.studyLocations = data.locations;
+                    }
+                } catch (err) {
+                    console.error('Error loading heatmap:', err);
                 }
-            } catch (err) {
-                console.error('Error loading heatmap:', err);
-            }
-        },
+            },
 
-        renderLeaderboard(leaderboard) {
-            const container = document.getElementById('leaderboard-list');
-            const podiumContainer = document.getElementById('podium-container');
-            if (!container) return;
+            renderLeaderboard(leaderboard) {
+                const container = document.getElementById('leaderboard-list');
+                const podiumContainer = document.getElementById('podium-container');
+                if (!container) return;
 
-            if (leaderboard.length === 0) {
-                container.innerHTML = '<div class="p-6 text-center text-slate-400">No data available</div>';
-                if (podiumContainer) podiumContainer.innerHTML = '<div class="col-span-3 text-center text-slate-500 py-8">Not enough data for podium</div>';
-                return;
-            }
+                if (leaderboard.length === 0) {
+                    container.innerHTML = '<div class="p-6 text-center text-slate-400">No data available</div>';
+                    if (podiumContainer) podiumContainer.innerHTML = '<div class="col-span-3 text-center text-slate-500 py-8">Not enough data for podium</div>';
+                    return;
+                }
 
-            // Clear podium if fewer than 3 users to remove "Loading..." or old content
-            if (podiumContainer && leaderboard.length < 3) {
-                podiumContainer.innerHTML = '<div class="col-span-3 text-center text-slate-500 text-sm py-4">Podium requires at least 3 participants. Check the list below!</div>';
-            }
+                // Clear podium if fewer than 3 users to remove "Loading..." or old content
+                if (podiumContainer && leaderboard.length < 3) {
+                    podiumContainer.innerHTML = '<div class="col-span-3 text-center text-slate-500 text-sm py-4">Podium requires at least 3 participants. Check the list below!</div>';
+                }
 
-            // Render top 3 podium (BoilerBuddy style)
-            if (podiumContainer && leaderboard.length >= 3) {
-                const top3 = leaderboard.slice(0, 3);
-                podiumContainer.innerHTML = `
+                // Render top 3 podium (BoilerBuddy style)
+                if (podiumContainer && leaderboard.length >= 3) {
+                    const top3 = leaderboard.slice(0, 3);
+                    podiumContainer.innerHTML = `
                     <!-- 2nd place -->
                     <div class="text-center">
                         <div class="surface-glass surface-glass-hover rounded-3xl p-6 relative group h-full flex flex-col justify-end">
@@ -1890,17 +1890,17 @@ function app() {
                         </div>
                     </div>
                 `;
-            }
+                }
 
-            // Render full leaderboard (skip top 3 if podium is shown)
-            const leaderboardToShow = leaderboard.length >= 3 ? leaderboard.slice(3) : leaderboard;
+                // Render full leaderboard (skip top 3 if podium is shown)
+                const leaderboardToShow = leaderboard.length >= 3 ? leaderboard.slice(3) : leaderboard;
 
-            container.innerHTML = leaderboardToShow.map(user => {
-                const isCurrentUser = user.user_id === this.currentUser.user_id;
+                container.innerHTML = leaderboardToShow.map(user => {
+                    const isCurrentUser = user.user_id === this.currentUser.user_id;
 
-                return `
+                    return `
                     <div class="px-6 py-4 flex items-center gap-4 transition-colors ${isCurrentUser ? 'bg-[#D0B991]/10 border-l-4 border-[#D0B991]' : 'hover:bg-slate-700/50'
-                    }">
+                        }">
                         <div class="w-12 flex items-center justify-center">
                             <span class="text-lg text-slate-400">#${user.rank}</span>
                         </div>
@@ -1923,627 +1923,627 @@ function app() {
                         </div>
                     </div>
                 `;
-            }).join('');
+                }).join('');
 
-            // Trigger staggered animations
-            this.$nextTick(() => {
-                this.animateStaggeredElements(container);
-            });
-        },
+                // Trigger staggered animations
+                this.$nextTick(() => {
+                    this.animateStaggeredElements(container);
+                });
+            },
 
         async loadDocuments() {
-            try {
-                const response = await fetch('/documents');
-                const data = await response.json();
-                if (response.ok) {
-                    this.documents = data.documents || [];
-                    // Trigger animations for document cards
-                    this.$nextTick(() => {
-                        const docContainer = document.querySelector('.animate-card-stagger');
-                        if (docContainer) {
-                            this.animateStaggeredElements(docContainer);
-                        }
-                    });
+                try {
+                    const response = await fetch('/documents');
+                    const data = await response.json();
+                    if (response.ok) {
+                        this.documents = data.documents || [];
+                        // Trigger animations for document cards
+                        this.$nextTick(() => {
+                            const docContainer = document.querySelector('.animate-card-stagger');
+                            if (docContainer) {
+                                this.animateStaggeredElements(docContainer);
+                            }
+                        });
+                    }
+                } catch (err) {
+                    console.error('Error loading documents:', err);
                 }
-            } catch (err) {
-                console.error('Error loading documents:', err);
-            }
-        },
+            },
 
         async loadDocument(documentId) {
-            try {
-                const response = await fetch(`/documents/${documentId}/load`, {
-                    method: 'POST'
-                });
-                const data = await response.json();
+                try {
+                    const response = await fetch(`/documents/${documentId}/load`, {
+                        method: 'POST'
+                    });
+                    const data = await response.json();
 
-                if (response.ok) {
-                    alert('Document loaded successfully! Topics are now available for study.');
-                    this.allTopics = data.topics || [];
-                    this.currentView = 'home';
-                    // Refresh topics display if on home view
-                    if (this.allTopics.length > 0) {
-                        this.displayTopics(this.allTopics);
+                    if (response.ok) {
+                        alert('Document loaded successfully! Topics are now available for study.');
+                        this.allTopics = data.topics || [];
+                        this.currentView = 'home';
+                        // Refresh topics display if on home view
+                        if (this.allTopics.length > 0) {
+                            this.displayTopics(this.allTopics);
+                        }
+                    } else {
+                        alert('Error: ' + (data.error || 'Failed to load document'));
                     }
-                } else {
-                    alert('Error: ' + (data.error || 'Failed to load document'));
+                } catch (err) {
+                    console.error('Error loading document:', err);
+                    alert('Error loading document');
                 }
-            } catch (err) {
-                console.error('Error loading document:', err);
-                alert('Error loading document');
-            }
-        },
+            },
 
         async deleteDocument(documentId) {
-            if (!confirm('Are you sure you want to delete this document?')) {
-                return;
-            }
-
-            try {
-                const response = await fetch(`/documents/${documentId}/delete`, {
-                    method: 'DELETE'
-                });
-                const data = await response.json();
-
-                if (response.ok) {
-                    // Remove from list
-                    this.documents = this.documents.filter(d => d.document_id !== documentId);
-                    alert('Document deleted successfully');
-                } else {
-                    alert('Error: ' + (data.error || 'Failed to delete document'));
+                if (!confirm('Are you sure you want to delete this document?')) {
+                    return;
                 }
-            } catch (err) {
-                console.error('Error deleting document:', err);
-                alert('Error deleting document');
-            }
-        },
 
-        formatFileSize(bytes) {
-            if (!bytes) return '0 B';
-            const k = 1024;
-            const sizes = ['B', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-        },
+                try {
+                    const response = await fetch(`/documents/${documentId}/delete`, {
+                        method: 'DELETE'
+                    });
+                    const data = await response.json();
 
-        formatDate(dateString) {
-            if (!dateString) return '';
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        },
+                    if (response.ok) {
+                        // Remove from list
+                        this.documents = this.documents.filter(d => d.document_id !== documentId);
+                        alert('Document deleted successfully');
+                    } else {
+                        alert('Error: ' + (data.error || 'Failed to delete document'));
+                    }
+                } catch (err) {
+                    console.error('Error deleting document:', err);
+                    alert('Error deleting document');
+                }
+            },
+
+            formatFileSize(bytes) {
+                if (!bytes) return '0 B';
+                const k = 1024;
+                const sizes = ['B', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+            },
+
+            formatDate(dateString) {
+                if (!dateString) return '';
+                const date = new Date(dateString);
+                return date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            },
 
         // Exam Questions Functions
         async loadExams() {
-            try {
-                const response = await fetch('/exam/list');
-                const data = await response.json();
-                if (response.ok) {
-                    this.exams = data.exams || [];
-                    // Trigger animations for exam cards
-                    this.$nextTick(() => {
-                        const examContainer = document.querySelector('.animate-card-stagger');
-                        if (examContainer) {
-                            this.animateStaggeredElements(examContainer);
-                        }
-                    });
-                } else {
-                    console.error('Error loading exams:', data.error);
-                }
-            } catch (err) {
-                console.error('Error loading exams:', err);
-            }
-        },
-
-        async uploadExam() {
-            const form = document.getElementById('exam-upload-form');
-            const fileInput = document.getElementById('exam-file-input');
-            const statusDiv = document.getElementById('exam-upload-status');
-
-            if (!fileInput.files.length) {
-                statusDiv.textContent = 'Please select a file';
-                return;
-            }
-
-            if (!this.examUploadForm.examName) {
-                statusDiv.textContent = 'Please enter an exam name';
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-            formData.append('exam_name', this.examUploadForm.examName);
-
-            statusDiv.textContent = 'Uploading and extracting questions...';
-
-            try {
-                statusDiv.textContent = 'Uploading and extracting questions...';
-                statusDiv.className = 'text-sm mt-2 text-center text-slate-400';
-
-                const response = await fetch('/exam/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                let data;
-                try {
-                    data = await response.json();
-                } catch (jsonErr) {
-                    console.error('Failed to parse response:', jsonErr);
-                    statusDiv.textContent = 'Error: Invalid response from server';
-                    statusDiv.className = 'text-sm mt-2 text-center text-red-400';
-                    return;
-                }
-
-                if (response.ok && data.success) {
-                    if (data.status === 'processing') {
-                        // Incremental processing started
-                        statusDiv.textContent = 'Upload started! Processing pages in background. Questions will appear as they are extracted...';
-                        statusDiv.className = 'text-sm mt-2 text-center text-blue-400';
-                        this.examUploadForm.examName = '';
-                        fileInput.value = '';
-                        this.loadExams();
-
-                        // Poll for progress
-                        this.pollExamProgress(data.exam_id);
-                    } else {
-                        // Completed immediately (single image)
-                        statusDiv.textContent = `Success! Extracted ${data.total_questions || 0} questions from ${data.total_pages || 0} pages.`;
-                        statusDiv.className = 'text-sm mt-2 text-center text-green-400';
-                        this.examUploadForm.examName = '';
-                        fileInput.value = '';
-                        this.loadExams();
-                    }
-                } else {
-                    const errorMsg = data.error || 'Upload failed';
-                    statusDiv.textContent = 'Error: ' + errorMsg;
-                    statusDiv.className = 'text-sm mt-2 text-center text-red-400';
-                    console.error('Upload error:', data);
-                }
-            } catch (err) {
-                statusDiv.textContent = 'Error: ' + (err.message || 'Network error. Please check your connection.');
-                statusDiv.className = 'text-sm mt-2 text-center text-red-400';
-                console.error('Upload error:', err);
-            }
-        },
-
-        async analyzeExam(examId) {
-            if (!confirm('This will analyze all questions using AI. This may take a while. Continue?')) {
-                return;
-            }
-
-            try {
-                const response = await fetch(`/exam/${examId}/analyze`, {
-                    method: 'POST'
-                });
-                const data = await response.json();
-
-                if (response.ok && data.success) {
-                    alert(data.message || `Analysis started for ${data.total} questions. This may take a while.`);
-                    this.loadExams();
-                    // Start polling for progress
-                    this.pollExamProgress(examId);
-                    if (this.selectedExamQuestions.length > 0) {
-                        // Refresh questions if viewing
-                        this.viewExamQuestions(examId);
-                    }
-                } else {
-                    alert('Error: ' + (data.error || 'Analysis failed'));
-                }
-            } catch (err) {
-                console.error('Analysis error:', err);
-                alert('Error analyzing exam');
-            }
-        },
-
-        pollExamProgress(examId) {
-            // Poll every 3 seconds for progress updates
-            const maxPolls = 200; // Poll for up to 10 minutes (for analysis)
-            let pollCount = 0;
-
-            const pollInterval = setInterval(async () => {
-                pollCount++;
-                if (pollCount > maxPolls) {
-                    clearInterval(pollInterval);
-                    const statusDiv = document.getElementById('exam-upload-status');
-                    if (statusDiv) {
-                        statusDiv.textContent = 'Processing is taking longer than expected. Please refresh the page.';
-                        statusDiv.className = 'text-sm mt-2 text-center text-yellow-400';
-                    }
-                    return;
-                }
-
                 try {
                     const response = await fetch('/exam/list');
                     const data = await response.json();
-                    if (response.ok && data.exams) {
-                        const exam = data.exams.find(e => e.exam_id === examId);
-                        if (exam) {
-                            // Update status display
-                            const statusDiv = document.getElementById('exam-upload-status');
-                            if (statusDiv) {
-                                if (exam.is_processing) {
-                                    if (exam.is_analyzing) {
-                                        statusDiv.textContent = `Analyzing questions... ${exam.analyzed_questions} of ${exam.total_questions} analyzed.`;
-                                    } else if (exam.current_page) {
-                                        statusDiv.textContent = `Extracting page ${exam.current_page} of ${exam.total_pages}... ${exam.total_questions} questions extracted so far.`;
+                    if (response.ok) {
+                        this.exams = data.exams || [];
+                        // Trigger animations for exam cards
+                        this.$nextTick(() => {
+                            const examContainer = document.querySelector('.animate-card-stagger');
+                            if (examContainer) {
+                                this.animateStaggeredElements(examContainer);
+                            }
+                        });
+                    } else {
+                        console.error('Error loading exams:', data.error);
+                    }
+                } catch (err) {
+                    console.error('Error loading exams:', err);
+                }
+            },
+
+        async uploadExam() {
+                const form = document.getElementById('exam-upload-form');
+                const fileInput = document.getElementById('exam-file-input');
+                const statusDiv = document.getElementById('exam-upload-status');
+
+                if (!fileInput.files.length) {
+                    statusDiv.textContent = 'Please select a file';
+                    return;
+                }
+
+                if (!this.examUploadForm.examName) {
+                    statusDiv.textContent = 'Please enter an exam name';
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+                formData.append('exam_name', this.examUploadForm.examName);
+
+                statusDiv.textContent = 'Uploading and extracting questions...';
+
+                try {
+                    statusDiv.textContent = 'Uploading and extracting questions...';
+                    statusDiv.className = 'text-sm mt-2 text-center text-slate-400';
+
+                    const response = await fetch('/exam/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    let data;
+                    try {
+                        data = await response.json();
+                    } catch (jsonErr) {
+                        console.error('Failed to parse response:', jsonErr);
+                        statusDiv.textContent = 'Error: Invalid response from server';
+                        statusDiv.className = 'text-sm mt-2 text-center text-red-400';
+                        return;
+                    }
+
+                    if (response.ok && data.success) {
+                        if (data.status === 'processing') {
+                            // Incremental processing started
+                            statusDiv.textContent = 'Upload started! Processing pages in background. Questions will appear as they are extracted...';
+                            statusDiv.className = 'text-sm mt-2 text-center text-blue-400';
+                            this.examUploadForm.examName = '';
+                            fileInput.value = '';
+                            this.loadExams();
+
+                            // Poll for progress
+                            this.pollExamProgress(data.exam_id);
+                        } else {
+                            // Completed immediately (single image)
+                            statusDiv.textContent = `Success! Extracted ${data.total_questions || 0} questions from ${data.total_pages || 0} pages.`;
+                            statusDiv.className = 'text-sm mt-2 text-center text-green-400';
+                            this.examUploadForm.examName = '';
+                            fileInput.value = '';
+                            this.loadExams();
+                        }
+                    } else {
+                        const errorMsg = data.error || 'Upload failed';
+                        statusDiv.textContent = 'Error: ' + errorMsg;
+                        statusDiv.className = 'text-sm mt-2 text-center text-red-400';
+                        console.error('Upload error:', data);
+                    }
+                } catch (err) {
+                    statusDiv.textContent = 'Error: ' + (err.message || 'Network error. Please check your connection.');
+                    statusDiv.className = 'text-sm mt-2 text-center text-red-400';
+                    console.error('Upload error:', err);
+                }
+            },
+
+        async analyzeExam(examId) {
+                if (!confirm('This will analyze all questions using AI. This may take a while. Continue?')) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/exam/${examId}/analyze`, {
+                        method: 'POST'
+                    });
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                        alert(data.message || `Analysis started for ${data.total} questions. This may take a while.`);
+                        this.loadExams();
+                        // Start polling for progress
+                        this.pollExamProgress(examId);
+                        if (this.selectedExamQuestions.length > 0) {
+                            // Refresh questions if viewing
+                            this.viewExamQuestions(examId);
+                        }
+                    } else {
+                        alert('Error: ' + (data.error || 'Analysis failed'));
+                    }
+                } catch (err) {
+                    console.error('Analysis error:', err);
+                    alert('Error analyzing exam');
+                }
+            },
+
+            pollExamProgress(examId) {
+                // Poll every 3 seconds for progress updates
+                const maxPolls = 200; // Poll for up to 10 minutes (for analysis)
+                let pollCount = 0;
+
+                const pollInterval = setInterval(async () => {
+                    pollCount++;
+                    if (pollCount > maxPolls) {
+                        clearInterval(pollInterval);
+                        const statusDiv = document.getElementById('exam-upload-status');
+                        if (statusDiv) {
+                            statusDiv.textContent = 'Processing is taking longer than expected. Please refresh the page.';
+                            statusDiv.className = 'text-sm mt-2 text-center text-yellow-400';
+                        }
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch('/exam/list');
+                        const data = await response.json();
+                        if (response.ok && data.exams) {
+                            const exam = data.exams.find(e => e.exam_id === examId);
+                            if (exam) {
+                                // Update status display
+                                const statusDiv = document.getElementById('exam-upload-status');
+                                if (statusDiv) {
+                                    if (exam.is_processing) {
+                                        if (exam.is_analyzing) {
+                                            statusDiv.textContent = `Analyzing questions... ${exam.analyzed_questions} of ${exam.total_questions} analyzed.`;
+                                        } else if (exam.current_page) {
+                                            statusDiv.textContent = `Extracting page ${exam.current_page} of ${exam.total_pages}... ${exam.total_questions} questions extracted so far.`;
+                                        } else {
+                                            statusDiv.textContent = `Processing... ${exam.total_questions} questions extracted so far from ${exam.total_pages} pages.`;
+                                        }
+                                        statusDiv.className = 'text-sm mt-2 text-center text-blue-400';
                                     } else {
-                                        statusDiv.textContent = `Processing... ${exam.total_questions} questions extracted so far from ${exam.total_pages} pages.`;
+                                        // Processing complete
+                                        statusDiv.textContent = `Complete! Extracted ${exam.total_questions} questions from ${exam.total_pages} pages. ${exam.analyzed_questions} analyzed.`;
+                                        statusDiv.className = 'text-sm mt-2 text-center text-green-400';
+                                        clearInterval(pollInterval);
                                     }
-                                    statusDiv.className = 'text-sm mt-2 text-center text-blue-400';
-                                } else {
-                                    // Processing complete
-                                    statusDiv.textContent = `Complete! Extracted ${exam.total_questions} questions from ${exam.total_pages} pages. ${exam.analyzed_questions} analyzed.`;
-                                    statusDiv.className = 'text-sm mt-2 text-center text-green-400';
+                                }
+
+                                // Refresh exam list to update analyzed count
+                                this.loadExams();
+
+                                // Refresh questions if viewing them
+                                if (this.selectedExamQuestions && this.selectedExamQuestions.length > 0) {
+                                    this.viewExamQuestions(examId);
+                                }
+
+                                // Stop polling if not processing
+                                if (!exam.is_processing) {
                                     clearInterval(pollInterval);
                                 }
                             }
-
-                            // Refresh exam list to update analyzed count
-                            this.loadExams();
-
-                            // Refresh questions if viewing them
-                            if (this.selectedExamQuestions && this.selectedExamQuestions.length > 0) {
-                                this.viewExamQuestions(examId);
-                            }
-
-                            // Stop polling if not processing
-                            if (!exam.is_processing) {
-                                clearInterval(pollInterval);
-                            }
                         }
+                    } catch (err) {
+                        console.error('Error polling exam progress:', err);
                     }
-                } catch (err) {
-                    console.error('Error polling exam progress:', err);
-                }
-            }, 3000); // Poll every 3 seconds
-        },
+                }, 3000); // Poll every 3 seconds
+            },
 
         async retryExamProcessing(examId) {
-            if (!confirm('This will re-process the exam file. Continue?')) {
-                return;
-            }
-            try {
-                const response = await fetch(`/exam/${examId}/retry`, {
-                    method: 'POST'
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    alert('Processing restarted. Questions will appear as they are extracted.');
-                    this.loadExams();
-                    this.pollExamProgress(examId);
-                } else {
-                    alert('Error: ' + (data.error || 'Failed to retry processing'));
+                if (!confirm('This will re-process the exam file. Continue?')) {
+                    return;
                 }
-            } catch (err) {
-                console.error('Retry error:', err);
-                alert('Error retrying exam processing');
-            }
-        },
+                try {
+                    const response = await fetch(`/exam/${examId}/retry`, {
+                        method: 'POST'
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        alert('Processing restarted. Questions will appear as they are extracted.');
+                        this.loadExams();
+                        this.pollExamProgress(examId);
+                    } else {
+                        alert('Error: ' + (data.error || 'Failed to retry processing'));
+                    }
+                } catch (err) {
+                    console.error('Retry error:', err);
+                    alert('Error retrying exam processing');
+                }
+            },
 
         async viewExamQuestions(examId) {
-            try {
-                console.log('[VIEW_QUESTIONS] Loading questions for exam:', examId);
+                try {
+                    console.log('[VIEW_QUESTIONS] Loading questions for exam:', examId);
 
-                // Set to empty array first to show loading state
-                this.selectedExamQuestions = [];
+                    // Set to empty array first to show loading state
+                    this.selectedExamQuestions = [];
 
-                const response = await fetch(`/exam/${examId}/questions`);
-                const data = await response.json();
+                    const response = await fetch(`/exam/${examId}/questions`);
+                    const data = await response.json();
 
-                console.log('[VIEW_QUESTIONS] Response:', data);
+                    console.log('[VIEW_QUESTIONS] Response:', data);
 
-                if (response.ok) {
-                    // Process questions with error handling
-                    this.selectedExamQuestions = (data.questions || []).map(q => {
-                        try {
-                            // Ensure all required fields exist
-                            const processed = {
-                                ...q,
-                                activeTab: 'question',  // Initialize tab state
-                                text: q.text || q.question_text || '',
-                                options: q.options || [],
-                                analyzed: q.analyzed || false
-                            };
-                            return processed;
-                        } catch (err) {
-                            console.error('[VIEW_QUESTIONS] Error processing question:', err, q);
-                            return {
-                                question_id: q.question_id || 0,
-                                text: 'Error loading question',
-                                activeTab: 'question',
-                                options: [],
-                                analyzed: false
-                            };
-                        }
-                    });
+                    if (response.ok) {
+                        // Process questions with error handling
+                        this.selectedExamQuestions = (data.questions || []).map(q => {
+                            try {
+                                // Ensure all required fields exist
+                                const processed = {
+                                    ...q,
+                                    activeTab: 'question',  // Initialize tab state
+                                    text: q.text || q.question_text || '',
+                                    options: q.options || [],
+                                    analyzed: q.analyzed || false
+                                };
+                                return processed;
+                            } catch (err) {
+                                console.error('[VIEW_QUESTIONS] Error processing question:', err, q);
+                                return {
+                                    question_id: q.question_id || 0,
+                                    text: 'Error loading question',
+                                    activeTab: 'question',
+                                    options: [],
+                                    analyzed: false
+                                };
+                            }
+                        });
 
-                    console.log('[VIEW_QUESTIONS] Loaded', this.selectedExamQuestions.length, 'questions');
+                        console.log('[VIEW_QUESTIONS] Loaded', this.selectedExamQuestions.length, 'questions');
 
-                    // Trigger card animations for newly loaded questions
-                    this.$nextTick(() => {
-                        // Animate cards in
-                        const questionContainer = document.querySelector('.animate-card-stagger');
-                        if (questionContainer) {
-                            this.animateStaggeredElements(questionContainer);
-                        }
+                        // Trigger card animations for newly loaded questions
+                        this.$nextTick(() => {
+                            // Animate cards in
+                            const questionContainer = document.querySelector('.animate-card-stagger');
+                            if (questionContainer) {
+                                this.animateStaggeredElements(questionContainer);
+                            }
 
-                        // Initialize lazy loading for MathJax after DOM updates
-                        setTimeout(() => {
-                            this.initMathJaxLazyLoading();
-                            // Re-initialize after a longer delay to catch all dynamically added content
+                            // Initialize lazy loading for MathJax after DOM updates
                             setTimeout(() => {
                                 this.initMathJaxLazyLoading();
-                            }, 500);
-                        }, 100);
-                    });
+                                // Re-initialize after a longer delay to catch all dynamically added content
+                                setTimeout(() => {
+                                    this.initMathJaxLazyLoading();
+                                }, 500);
+                            }, 100);
+                        });
 
-                    // Scroll to questions section (whether empty or not)
-                    setTimeout(() => {
-                        // Try to find the questions section or empty state
-                        const questionsSection = document.querySelector('[x-show*="selectedExamQuestions"]');
-                        if (questionsSection) {
-                            questionsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        } else {
-                            // Fallback: scroll to exam questions view
-                            const examView = document.querySelector('[x-show="currentView === \'exam-questions\'"]');
-                            if (examView) {
-                                examView.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        // Scroll to questions section (whether empty or not)
+                        setTimeout(() => {
+                            // Try to find the questions section or empty state
+                            const questionsSection = document.querySelector('[x-show*="selectedExamQuestions"]');
+                            if (questionsSection) {
+                                questionsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            } else {
+                                // Fallback: scroll to exam questions view
+                                const examView = document.querySelector('[x-show="currentView === \'exam-questions\'"]');
+                                if (examView) {
+                                    examView.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                }
                             }
-                        }
-                    }, 100);
-                } else {
-                    console.error('[VIEW_QUESTIONS] Error response:', data);
+                        }, 100);
+                    } else {
+                        console.error('[VIEW_QUESTIONS] Error response:', data);
+                        this.selectedExamQuestions = null; // Reset to null on error
+                        alert('Error: ' + (data.error || 'Failed to load questions'));
+                    }
+                } catch (err) {
+                    console.error('[VIEW_QUESTIONS] Exception:', err);
                     this.selectedExamQuestions = null; // Reset to null on error
-                    alert('Error: ' + (data.error || 'Failed to load questions'));
+                    alert('Error loading questions: ' + err.message);
                 }
-            } catch (err) {
-                console.error('[VIEW_QUESTIONS] Exception:', err);
-                this.selectedExamQuestions = null; // Reset to null on error
-                alert('Error loading questions: ' + err.message);
-            }
-        },
+            },
 
         async deleteExam(examId) {
-            if (!confirm('Are you sure you want to delete this exam? This will delete all questions and associated data.')) {
-                return;
-            }
-
-            try {
-                const response = await fetch(`/exam/${examId}/delete`, {
-                    method: 'DELETE'
-                });
-                const data = await response.json();
-
-                if (response.ok) {
-                    // Remove from list
-                    this.exams = this.exams.filter(e => e.exam_id !== examId);
-                    // Clear selected questions if viewing this exam
-                    if (this.selectedExamQuestions && this.selectedExamQuestions.length > 0) {
-                        // Check if we're viewing this exam's questions
-                        const firstQuestion = this.selectedExamQuestions[0];
-                        if (firstQuestion && this.exams.find(e => e.exam_id === examId) === undefined) {
-                            this.selectedExamQuestions = null;
-                        }
-                    }
-                    alert('Exam deleted successfully');
-                } else {
-                    alert('Error: ' + (data.error || 'Failed to delete exam'));
+                if (!confirm('Are you sure you want to delete this exam? This will delete all questions and associated data.')) {
+                    return;
                 }
-            } catch (err) {
-                console.error('Error deleting exam:', err);
-                alert('Error deleting exam');
-            }
-        },
 
-        formatQuestionText(text) {
-            if (!text) return '';
-            // Escape HTML and preserve line breaks
-            let formatted = text
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/\n/g, '<br>');
+                try {
+                    const response = await fetch(`/exam/${examId}/delete`, {
+                        method: 'DELETE'
+                    });
+                    const data = await response.json();
 
-            // MathJax will handle LaTeX rendering automatically
-            return formatted;
-        },
+                    if (response.ok) {
+                        // Remove from list
+                        this.exams = this.exams.filter(e => e.exam_id !== examId);
+                        // Clear selected questions if viewing this exam
+                        if (this.selectedExamQuestions && this.selectedExamQuestions.length > 0) {
+                            // Check if we're viewing this exam's questions
+                            const firstQuestion = this.selectedExamQuestions[0];
+                            if (firstQuestion && this.exams.find(e => e.exam_id === examId) === undefined) {
+                                this.selectedExamQuestions = null;
+                            }
+                        }
+                        alert('Exam deleted successfully');
+                    } else {
+                        alert('Error: ' + (data.error || 'Failed to delete exam'));
+                    }
+                } catch (err) {
+                    console.error('Error deleting exam:', err);
+                    alert('Error deleting exam');
+                }
+            },
 
-        renderMath(text) {
-            if (!text) return '';
-
-            try {
-                // Escape HTML but preserve LaTeX delimiters
-                let processed = String(text)
+            formatQuestionText(text) {
+                if (!text) return '';
+                // Escape HTML and preserve line breaks
+                let formatted = text
                     .replace(/&/g, '&amp;')
                     .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;');
+                    .replace(/>/g, '&gt;')
+                    .replace(/\n/g, '<br>');
 
-                // Convert newlines to <br>
-                processed = processed.replace(/\n/g, '<br>');
+                // MathJax will handle LaTeX rendering automatically
+                return formatted;
+            },
 
-                // Add class to mark for MathJax processing (lazy loading)
-                // MathJax will be triggered by Intersection Observer for visible elements
-                return processed;
-            } catch (err) {
-                console.error('Error in renderMath:', err);
-                return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            }
-        },
+            renderMath(text) {
+                if (!text) return '';
 
-        // Debounced MathJax rendering function
-        mathJaxRenderQueue: [],
-        mathJaxRenderTimer: null,
+                try {
+                    // Escape HTML but preserve LaTeX delimiters
+                    let processed = String(text)
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;');
 
-        queueMathJaxRender(element) {
-            // Add element to queue if not already queued
-            if (!this.mathJaxRenderQueue.includes(element)) {
-                this.mathJaxRenderQueue.push(element);
-            }
+                    // Convert newlines to <br>
+                    processed = processed.replace(/\n/g, '<br>');
 
-            // Debounce: wait 100ms before rendering to batch multiple calls
-            clearTimeout(this.mathJaxRenderTimer);
-            this.mathJaxRenderTimer = setTimeout(() => {
-                this.processMathJaxQueue();
-            }, 100);
-        },
+                    // Add class to mark for MathJax processing (lazy loading)
+                    // MathJax will be triggered by Intersection Observer for visible elements
+                    return processed;
+                } catch (err) {
+                    console.error('Error in renderMath:', err);
+                    return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                }
+            },
+
+            // Debounced MathJax rendering function
+            mathJaxRenderQueue: [],
+                mathJaxRenderTimer: null,
+
+                    queueMathJaxRender(element) {
+                // Add element to queue if not already queued
+                if (!this.mathJaxRenderQueue.includes(element)) {
+                    this.mathJaxRenderQueue.push(element);
+                }
+
+                // Debounce: wait 100ms before rendering to batch multiple calls
+                clearTimeout(this.mathJaxRenderTimer);
+                this.mathJaxRenderTimer = setTimeout(() => {
+                    this.processMathJaxQueue();
+                }, 100);
+            },
 
         async processMathJaxQueue() {
-            if (this.mathJaxRenderQueue.length === 0) return;
+                if (this.mathJaxRenderQueue.length === 0) return;
 
-            // Wait for MathJax to be ready
-            if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
+                // Wait for MathJax to be ready
+                if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
+                    try {
+                        await window.MathJax.startup.promise;
+                    } catch (e) {
+                        console.log('MathJax startup error:', e);
+                    }
+                }
+
+                if (!window.MathJax || !window.MathJax.typesetPromise) {
+                    console.log('MathJax not ready yet');
+                    return;
+                }
+
+                // Filter to only visible elements
+                const visibleElements = this.mathJaxRenderQueue.filter(el => {
+                    if (!el || !document.contains(el)) return false;
+                    const rect = el.getBoundingClientRect();
+                    return rect.top < window.innerHeight + 500 && rect.bottom > -500; // 500px buffer
+                });
+
+                if (visibleElements.length === 0) {
+                    this.mathJaxRenderQueue = [];
+                    return;
+                }
+
                 try {
-                    await window.MathJax.startup.promise;
-                } catch (e) {
-                    console.log('MathJax startup error:', e);
+                    // Render only visible elements
+                    await window.MathJax.typesetPromise(visibleElements);
+
+                    // Remove rendered elements from queue
+                    this.mathJaxRenderQueue = this.mathJaxRenderQueue.filter(
+                        el => !visibleElements.includes(el)
+                    );
+                } catch (err) {
+                    console.log('MathJax rendering error:', err);
+                    // Clear queue on error to prevent infinite retries
+                    this.mathJaxRenderQueue = [];
                 }
-            }
+            },
 
-            if (!window.MathJax || !window.MathJax.typesetPromise) {
-                console.log('MathJax not ready yet');
-                return;
-            }
-
-            // Filter to only visible elements
-            const visibleElements = this.mathJaxRenderQueue.filter(el => {
-                if (!el || !document.contains(el)) return false;
-                const rect = el.getBoundingClientRect();
-                return rect.top < window.innerHeight + 500 && rect.bottom > -500; // 500px buffer
-            });
-
-            if (visibleElements.length === 0) {
-                this.mathJaxRenderQueue = [];
-                return;
-            }
-
-            try {
-                // Render only visible elements
-                await window.MathJax.typesetPromise(visibleElements);
-
-                // Remove rendered elements from queue
-                this.mathJaxRenderQueue = this.mathJaxRenderQueue.filter(
-                    el => !visibleElements.includes(el)
-                );
-            } catch (err) {
-                console.log('MathJax rendering error:', err);
-                // Clear queue on error to prevent infinite retries
-                this.mathJaxRenderQueue = [];
-            }
-        },
-
-        // Initialize lazy loading for MathJax
-        initMathJaxLazyLoading() {
-            // Wait for MathJax to load
-            if (!window.MathJax) {
-                setTimeout(() => this.initMathJaxLazyLoading(), 100);
-                return;
-            }
-
-            // Clean up existing observer if any
-            if (this.mathJaxObserver) {
-                this.mathJaxObserver.disconnect();
-            }
-
-            // Create Intersection Observer for lazy loading
-            const observerOptions = {
-                root: null,
-                rootMargin: '200px', // Start rendering 200px before element is visible
-                threshold: 0.01
-            };
-
-            const self = this;
-            const mathObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const element = entry.target;
-                        // Mark as processed
-                        element.setAttribute('data-mathjax-processed', 'true');
-                        // Queue for rendering
-                        self.queueMathJaxRender(element);
-                        // Stop observing once processed
-                        mathObserver.unobserve(element);
-                    }
-                });
-            }, observerOptions);
-
-            // Observe all elements with math content
-            setTimeout(() => {
-                const mathElements = document.querySelectorAll('.mathjax-process');
-                mathElements.forEach(el => {
-                    if (!el.getAttribute('data-mathjax-processed')) {
-                        mathObserver.observe(el);
-                    }
-                });
-
-                // Also observe any new elements that might be added dynamically
-                // Re-run observer setup when questions are loaded
-                if (this.selectedExamQuestions && this.selectedExamQuestions.length > 0) {
-                    // Re-observe after a short delay to catch dynamically added content
-                    setTimeout(() => {
-                        const newMathElements = document.querySelectorAll('.mathjax-process:not([data-mathjax-processed])');
-                        newMathElements.forEach(el => {
-                            mathObserver.observe(el);
-                        });
-                    }, 500);
+            // Initialize lazy loading for MathJax
+            initMathJaxLazyLoading() {
+                // Wait for MathJax to load
+                if (!window.MathJax) {
+                    setTimeout(() => this.initMathJaxLazyLoading(), 100);
+                    return;
                 }
-            }, 200);
 
-            // Store observer for cleanup
-            this.mathJaxObserver = mathObserver;
-        },
+                // Clean up existing observer if any
+                if (this.mathJaxObserver) {
+                    this.mathJaxObserver.disconnect();
+                }
 
-        async loadAchievements() {
-            try {
-                const response = await fetch('/achievements');
-                const data = await response.json();
+                // Create Intersection Observer for lazy loading
+                const observerOptions = {
+                    root: null,
+                    rootMargin: '200px', // Start rendering 200px before element is visible
+                    threshold: 0.01
+                };
 
-                if (data.achievements) {
-                    this.allAchievements = data.achievements;
-                    // Trigger animations for achievement cards
-                    this.$nextTick(() => {
-                        const achievementContainer = document.querySelector('.animate-card-stagger');
-                        if (achievementContainer) {
-                            this.animateStaggeredElements(achievementContainer);
+                const self = this;
+                const mathObserver = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const element = entry.target;
+                            // Mark as processed
+                            element.setAttribute('data-mathjax-processed', 'true');
+                            // Queue for rendering
+                            self.queueMathJaxRender(element);
+                            // Stop observing once processed
+                            mathObserver.unobserve(element);
                         }
                     });
+                }, observerOptions);
+
+                // Observe all elements with math content
+                setTimeout(() => {
+                    const mathElements = document.querySelectorAll('.mathjax-process');
+                    mathElements.forEach(el => {
+                        if (!el.getAttribute('data-mathjax-processed')) {
+                            mathObserver.observe(el);
+                        }
+                    });
+
+                    // Also observe any new elements that might be added dynamically
+                    // Re-run observer setup when questions are loaded
+                    if (this.selectedExamQuestions && this.selectedExamQuestions.length > 0) {
+                        // Re-observe after a short delay to catch dynamically added content
+                        setTimeout(() => {
+                            const newMathElements = document.querySelectorAll('.mathjax-process:not([data-mathjax-processed])');
+                            newMathElements.forEach(el => {
+                                mathObserver.observe(el);
+                            });
+                        }, 500);
+                    }
+                }, 200);
+
+                // Store observer for cleanup
+                this.mathJaxObserver = mathObserver;
+            },
+
+        async loadAchievements() {
+                try {
+                    const response = await fetch('/achievements');
+                    const data = await response.json();
+
+                    if (data.achievements) {
+                        this.allAchievements = data.achievements;
+                        // Trigger animations for achievement cards
+                        this.$nextTick(() => {
+                            const achievementContainer = document.querySelector('.animate-card-stagger');
+                            if (achievementContainer) {
+                                this.animateStaggeredElements(achievementContainer);
+                            }
+                        });
+                    }
+                } catch (err) {
+                    console.error('Error loading achievements:', err);
                 }
-            } catch (err) {
-                console.error('Error loading achievements:', err);
-            }
-        },
+            },
 
         async loadActivityFeed() {
-            try {
-                const response = await fetch('/activity/recent?limit=10');
-                const data = await response.json();
+                try {
+                    const response = await fetch('/activity/recent?limit=10');
+                    const data = await response.json();
 
-                if (data.activities) {
-                    this.renderActivityFeed(data.activities);
+                    if (data.activities) {
+                        this.renderActivityFeed(data.activities);
+                    }
+                } catch (err) {
+                    console.error('Error loading activity feed:', err);
                 }
-            } catch (err) {
-                console.error('Error loading activity feed:', err);
-            }
-        },
+            },
 
-        renderActivityFeed(activities) {
-            const container = document.getElementById('activity-feed');
-            if (!container) return;
+            renderActivityFeed(activities) {
+                const container = document.getElementById('activity-feed');
+                if (!container) return;
 
-            if (activities.length === 0) {
-                container.innerHTML = '<div class="text-xs text-slate-400">No recent activity</div>';
-                return;
-            }
+                if (activities.length === 0) {
+                    container.innerHTML = '<div class="text-xs text-slate-400">No recent activity</div>';
+                    return;
+                }
 
-            container.innerHTML = activities.map(activity => {
-                const timeAgo = this.formatTimeAgo(activity.timestamp);
+                container.innerHTML = activities.map(activity => {
+                    const timeAgo = this.formatTimeAgo(activity.timestamp);
 
-                return `
+                    return `
                     <div class="flex items-start space-x-2 text-xs">
                         <span class="text-lg">${activity.icon}</span>
                         <div class="flex-1">
@@ -2552,68 +2552,68 @@ function app() {
                         </div>
                     </div>
                 `;
-            }).join('');
-        },
+                }).join('');
+            },
 
-        formatTimeAgo(timestamp) {
-            const now = new Date();
-            const past = new Date(timestamp);
-            const seconds = Math.floor((now - past) / 1000);
+            formatTimeAgo(timestamp) {
+                const now = new Date();
+                const past = new Date(timestamp);
+                const seconds = Math.floor((now - past) / 1000);
 
-            if (seconds < 60) return 'Just now';
-            if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-            if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-            return `${Math.floor(seconds / 86400)}d ago`;
-        },
+                if (seconds < 60) return 'Just now';
+                if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+                if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+                return `${Math.floor(seconds / 86400)}d ago`;
+            },
 
-        // Animation helper: Animate staggered elements
-        animateStaggeredElements(container, delay = 50) {
-            if (!container) return;
-            const elements = Array.from(container.children);
-            elements.forEach((el, index) => {
-                // Only animate if element is visible
-                if (el.offsetParent === null && window.getComputedStyle(el).display === 'none') {
-                    return;
-                }
+            // Animation helper: Animate staggered elements
+            animateStaggeredElements(container, delay = 50) {
+                if (!container) return;
+                const elements = Array.from(container.children);
+                elements.forEach((el, index) => {
+                    // Only animate if element is visible
+                    if (el.offsetParent === null && window.getComputedStyle(el).display === 'none') {
+                        return;
+                    }
 
-                el.style.opacity = '0';
-                el.style.transform = 'translateY(20px) scale(0.95)';
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(20px) scale(0.95)';
+                    setTimeout(() => {
+                        requestAnimationFrame(() => {
+                            el.style.transition = 'opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                            el.style.opacity = '1';
+                            el.style.transform = 'translateY(0) scale(1)';
+                        });
+                    }, index * delay);
+                });
+            },
+
+            // Animation helper: Animate single element with fade-in-up
+            animateElement(element, delay = 0) {
+                if (!element) return;
+                element.style.opacity = '0';
+                element.style.transform = 'translateY(20px) scale(0.95)';
                 setTimeout(() => {
-                    requestAnimationFrame(() => {
-                        el.style.transition = 'opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-                        el.style.opacity = '1';
-                        el.style.transform = 'translateY(0) scale(1)';
-                    });
-                }, index * delay);
-            });
-        },
+                    element.style.transition = 'opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                    element.style.opacity = '1';
+                    element.style.transform = 'translateY(0) scale(1)';
+                }, delay);
+            }
+        };
+    }
 
-        // Animation helper: Animate single element with fade-in-up
-        animateElement(element, delay = 0) {
-            if (!element) return;
-            element.style.opacity = '0';
-            element.style.transform = 'translateY(20px) scale(0.95)';
-            setTimeout(() => {
-                element.style.transition = 'opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-                element.style.opacity = '1';
-                element.style.transform = 'translateY(0) scale(1)';
-            }, delay);
+    // Global functions for Guide Me
+    window.checkGuideMeAnswer = function (idx) {
+        const appEl = document.querySelector('[x-data]');
+        if (appEl && appEl.__x) {
+            appEl.__x.$data.checkGuideMeAnswer(idx);
         }
     };
-}
 
-// Global functions for Guide Me
-window.checkGuideMeAnswer = function (idx) {
-    const appEl = document.querySelector('[x-data]');
-    if (appEl && appEl.__x) {
-        appEl.__x.$data.checkGuideMeAnswer(idx);
-    }
-};
-
-window.nextGuideMeStep = function () {
-    const appEl = document.querySelector('[x-data]');
-    if (appEl && appEl.__x) {
-        appEl.__x.$data.nextGuideMeStep();
-    }
-};
+    window.nextGuideMeStep = function () {
+        const appEl = document.querySelector('[x-data]');
+        if (appEl && appEl.__x) {
+            appEl.__x.$data.nextGuideMeStep();
+        }
+    };
 
