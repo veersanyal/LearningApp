@@ -43,32 +43,32 @@
                 </div>
 
                 <a href="{{ url_for('dashboard') }}"
-                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'dashboard' %}bg-[#CBB87C]/10 text-slate-900 dark:text-[#CBB87C] ring-1 ring-[#CBB87C]/40{% else %}text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800{% endif %}"
+                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'dashboard' %}bg-[#CBB87C]/10 dark:bg-[#CBB87C]/20 text-slate-900 dark:text-[#CBB87C] border border-[#CBB87C]/30{% else %}text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-transparent{% endif %}"
                     aria-label="Go to Dashboard">
                     Home
                 </a>
 
                 <a href="{{ url_for('study') }}"
-                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'study' %}bg-[#CBB87C]/10 text-slate-900 dark:text-[#CBB87C] ring-1 ring-[#CBB87C]/40{% else %}text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800{% endif %}"
+                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'study' %}bg-[#CBB87C]/10 dark:bg-[#CBB87C]/20 text-slate-900 dark:text-[#CBB87C] border border-[#CBB87C]/30{% else %}text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-transparent{% endif %}"
                     aria-label="Go to Study">
                     Study
                 </a>
 
                 <a href="{{ url_for('group_study') }}"
-                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'group_study' %}bg-[#CBB87C]/10 text-slate-900 dark:text-[#CBB87C] ring-1 ring-[#CBB87C]/40{% else %}text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800{% endif %}"
+                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'group_study' %}bg-[#CBB87C]/10 dark:bg-[#CBB87C]/20 text-slate-900 dark:text-[#CBB87C] border border-[#CBB87C]/30{% else %}text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-transparent{% endif %}"
                     aria-label="Go to Group Study">
                     Group
                 </a>
 
                 <a href="{{ url_for('dashboard') }}#leaderboard-section"
-                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800"
+                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-transparent"
                     aria-label="Go to Leaderboard"
                     onclick="event.preventDefault(); document.getElementById('leaderboard-section').scrollIntoView({ behavior: 'smooth' });">
                     Leaderboard
                 </a>
 
                 <a href="{{ url_for('exams') }}"
-                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'exams' %}bg-[#CBB87C]/10 text-slate-900 dark:text-[#CBB87C] ring-1 ring-[#CBB87C]/40{% else %}text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800{% endif %}"
+                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'exams' %}bg-[#CBB87C]/10 dark:bg-[#CBB87C]/20 text-slate-900 dark:text-[#CBB87C] border border-[#CBB87C]/30{% else %}text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-transparent{% endif %}"
                     aria-label="Go to Exams">
                     Exams
                 </a>

@@ -39,14 +39,23 @@ html {
   --bg-card-hover: #FFFFFF;
   --border-card: rgba(226, 232, 240, 0.7);
   /* slate-200/70 */
-  --shadow-card: 0 12px 30px rgba(15, 15, 15, 0.06);
+  --shadow-card: 0 18px 40px rgba(15, 15, 15, 0.08);
+  /* Stronger, premium shadow */
 
   --text-heading: #1a1a1a;
   /* Near Black */
-  --text-body: #475569;
-  /* Neuatral Gray (Slate-600) */
+  --text-body: #334155;
+  /* Slate-700 (Darkened from Slate-600) */
   --text-muted: #64748b;
-  /* Slightly darker than slate-400 for contrast */
+  /* Slate-500 (Darkened from Slate-400) */
+
+  /* 3-Level Surface System (Light) */
+  --surface-page: #FBFBF8;
+  --surface-card: #FFFFFF;
+  --surface-inset: #F8FAFC;
+  /* Slate-50 */
+  --surface-inset-tint: rgba(206, 184, 136, 0.08);
+  /* Gold tint */
 
   --nav-item-color: var(--text-muted);
   --nav-item-active-color: var(--text-heading);
@@ -76,18 +85,27 @@ html {
 
 /* Dark Mode Overrides (Navy/Charcoal Base) */
 .dark {
-  /* Neutral Palette - Dark Mode */
-  --bg-page: #0B1120;
-  /* Very Dark Navy */
-  --bg-card: #151E28;
-  /* Slightly lighter (+6-10%) */
-  --bg-card-hover: #1E293B;
+  /* Neutral Palette - Dark Mode ("Paper Night") */
+  --bg-page: #020617;
+  /* Slate 950 - Very Dark Navy Base */
+  --bg-card: #1e293b;
+  /* Slate 800 - Noticeably lighter for depth */
+  --bg-card-hover: #334155;
+  /* Slate 700 */
+
+  --surface-page: #020617;
+  --surface-card: #1e293b;
+  --surface-inset: #0f172a;
+  /* Slate 900 - Darker than card for inset look */
+  --surface-inset-tint: rgba(206, 184, 136, 0.05);
+
   --border-card: rgba(255, 255, 255, 0.08);
   /* Subtle visible border */
-  --shadow-card: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  --shadow-card: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
 
-  --text-heading: #FFFFFF;
-  --text-body: #CBD5E1;
+  --text-heading: #f8fafc;
+  /* Slate-50 */
+  --text-body: #cbd5e1;
   /* Slate-300 */
   --text-muted: #94a3b8;
   /* Slate-400 */
