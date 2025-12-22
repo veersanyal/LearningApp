@@ -28,9 +28,18 @@
     <script>
         // Initialize lucide icons after page load
         document.addEventListener('DOMContentLoaded', function () {
-            if (window.lucide) {
-                lucide.createIcons();
+            try {
+                if (window.lucide) {
+                    lucide.createIcons();
+                }
+            } catch (e) {
+                console.warn('Lucide icons failed to load:', e);
             }
+
+            // Failsafe: Remove x-cloak after 3 seconds if Alpine fails
+            setTimeout(() => {
+                document.querySelectorAll('[x-cloak]').forEach(el => el.removeAttribute('x-cloak'));
+            }, 3000);
         });
 
         // Re-initialize icons when Alpine updates DOM

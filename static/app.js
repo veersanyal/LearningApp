@@ -125,109 +125,115 @@ function app() {
 
         // Initialize app
         async init() {
-            // Check authentication
-            await this.checkAuth();
+            try {
+                // Check authentication
+                await this.checkAuth();
 
-            // Initialize MathJax lazy loading
-            this.initMathJaxLazyLoading();
+                // Initialize MathJax lazy loading
+                this.initMathJaxLazyLoading();
 
-            // Initialize Dark Mode
-            this.initDarkMode();
+                // Initialize Dark Mode
+                this.initDarkMode();
 
-            // Set initial active view
-            if (this.isAuthenticated) {
-                // Ensure initial view is visible after Alpine loads
-                this.$nextTick(() => {
-                    const initialView = document.querySelector(`[data-view="${this.currentView}"]`);
-                    if (initialView) {
-                        initialView.classList.add('is-active');
-                        this.checkAuth();
-                        this.startTimers();
+                // Set initial active view
+                if (this.isAuthenticated) {
+                    // Ensure initial view is visible after Alpine loads
+                    this.$nextTick(() => {
+                        const initialView = document.querySelector(`[data-view="${this.currentView}"]`);
+                        if (initialView) {
+                            initialView.classList.add('is-active');
+                            this.checkAuth();
+                            this.startTimers();
 
-                        // Initialize charts after a short delay to ensure DOM is ready
-                        setTimeout(() => {
-                            this.initCharts();
-                            this.loadLeaderboard();
-                        }, 500);
-
-                        if (this.isAuthenticated) {
-                            this.loadStats();
-                            this.setupEventListeners();
-                            this.loadSocialProof();
-                            this.loadAchievements();
-                            this.loadDocuments();
-                        }
-                        // Poll for updates every 60 seconds
-                        setInterval(() => {
-                            this.loadSocialProof();
-                            this.loadActivityFeed();
-                            if (this.currentView === 'leaderboards') {
-                                this.loadLeaderboard();
-                            }
-                        }, 60000);
-
-                        // Trigger initial animations on page load
-                        this.$nextTick(() => {
-                            // Wait for Alpine to finish rendering
+                            // Initialize charts after a short delay to ensure DOM is ready
                             setTimeout(() => {
-                                // Animate stats cards on the current view
-                                this.animateStatsCards();
-                                // Animate any card lists
-                                this.animateCardLists();
-                            }, 300);
-                        });
+                                this.initCharts();
+                                this.loadLeaderboard();
+                            }, 500);
 
-                        // Watch for view changes - showView() is called via x-init on body
-                        this.$watch('currentView', (newView, oldView) => {
-                            // showView() is called automatically via x-init="$watch('currentView', value => showView(value))"
-                            // Wait for view transition to complete before animating content
+                            if (this.isAuthenticated) {
+                                this.loadStats();
+                                this.setupEventListeners();
+                                this.loadSocialProof();
+                                this.loadAchievements();
+                                this.loadDocuments();
+                            }
+                            // Poll for updates every 60 seconds
+                            setInterval(() => {
+                                this.loadSocialProof();
+                                this.loadActivityFeed();
+                                if (this.currentView === 'leaderboards') {
+                                    this.loadLeaderboard();
+                                }
+                            }, 60000);
+
+                            // Trigger initial animations on page load
                             this.$nextTick(() => {
+                                // Wait for Alpine to finish rendering
                                 setTimeout(() => {
-                                    // Animate stats cards in the new view
+                                    // Animate stats cards on the current view
                                     this.animateStatsCards();
-                                    // Animate card lists
+                                    // Animate any card lists
                                     this.animateCardLists();
-                                }, 250); // Reduced delay since CSS handles transition
+                                }, 300);
                             });
 
-                            if (newView === 'leaderboards') {
-                                this.loadLeaderboard();
-                            } else if (newView === 'achievements') {
-                                this.loadAchievements();
-                            } else if (newView === 'documents') {
-                                this.loadDocuments();
-                            } else if (newView === 'exam-questions') {
-                                this.loadExams();
-                            } else if (newView === 'analytics') {
-                                // Lazy-load charts only when Analytics view is active
-                                setTimeout(() => {
-                                    this.initCharts();
-                                }, 100);
-                            } else if (newView === 'home') {
-                                // Initialize retention chart on dashboard
-                                setTimeout(() => {
-                                    this.initRetentionChart();
-                                }, 100);
-                            }
+                            // Watch for view changes - showView() is called via x-init on body
+                            this.$watch('currentView', (newView, oldView) => {
+                                // showView() is called automatically via x-init="$watch('currentView', value => showView(value))"
+                                // Wait for view transition to complete before animating content
+                                this.$nextTick(() => {
+                                    setTimeout(() => {
+                                        // Animate stats cards in the new view
+                                        this.animateStatsCards();
+                                        // Animate card lists
+                                        this.animateCardLists();
+                                    }, 250); // Reduced delay since CSS handles transition
+                                });
 
-                            // Close mobile nav when switching views
-                            this.mobileNavOpen = false;
+                                if (newView === 'leaderboards') {
+                                    this.loadLeaderboard();
+                                } else if (newView === 'achievements') {
+                                    this.loadAchievements();
+                                } else if (newView === 'documents') {
+                                    this.loadDocuments();
+                                } else if (newView === 'exam-questions') {
+                                    this.loadExams();
+                                } else if (newView === 'analytics') {
+                                    // Lazy-load charts only when Analytics view is active
+                                    setTimeout(() => {
+                                        this.initCharts();
+                                    }, 100);
+                                } else if (newView === 'home') {
+                                    // Initialize retention chart on dashboard
+                                    setTimeout(() => {
+                                        this.initRetentionChart();
+                                    }, 100);
+                                }
+
+                                // Close mobile nav when switching views
+                                this.mobileNavOpen = false;
+                            });
+                        } else {
+                            // Load social proof for login screen
+                            this.loadSocialProof();
+                        }
+
+                        // Watch for heatmap filter changes
+                        this.$watch('heatmapTimeFilter', () => {
+                            this.loadHeatmapData();
                         });
-                    } else {
-                        // Load social proof for login screen
-                        this.loadSocialProof();
-                    }
 
-                    // Watch for heatmap filter changes
-                    this.$watch('heatmapTimeFilter', () => {
-                        this.loadHeatmapData();
+                        // Initial load if authenticated
+                        if (this.isAuthenticated) {
+                            this.loadHeatmapData();
+                        }
                     });
-
-                    // Initial load if authenticated
-                    if (this.isAuthenticated) {
-                        this.loadHeatmapData();
-                    }
-                });
+                }
+            } catch (err) {
+                console.error("Critical: Alpine.js init failed", err);
+                // Failsafe: Remove x-cloak so app is at least visible
+                document.querySelectorAll('[x-cloak]').forEach(el => el.removeAttribute('x-cloak'));
             }
         },
 

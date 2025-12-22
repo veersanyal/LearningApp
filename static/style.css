@@ -1,4 +1,7 @@
 /* Custom styles to complement Tailwind CSS */
+[x-cloak] {
+  display: none !important;
+}
 
 /* ============================================
    MOTION TOKENS & ANIMATION SYSTEM
