@@ -5,16 +5,18 @@
 
     <!-- App Header with Navigation (BoilerBuddy Style) -->
     <!-- App Header with Navigation (Paper Header) -->
-    <header class="app-header bg-white border-b border-slate-200/60" role="banner">
+    <!-- App Header with Navigation (Paper Header) -->
+    <header class="app-header bg-white dark:bg-[#0f172a] border-b border-slate-200/60 dark:border-white/5"
+        role="banner">
         <div class="app-header-content">
             <!-- Left: Logo -->
             <div class="app-header-left flex items-center gap-3">
                 <a href="{{ url_for('dashboard') }}" class="flex items-center gap-3 group">
                     <div
-                        class="w-10 h-10 rounded-xl flex items-center justify-center bg-black group-hover:bg-slate-900 transition-colors">
+                        class="w-10 h-10 rounded-xl flex items-center justify-center bg-black dark:bg-slate-800 group-hover:bg-slate-900 dark:group-hover:bg-slate-700 transition-colors">
                         <i data-lucide="book-open" class="w-5 h-5 text-[#CBB87C]"></i>
                     </div>
-                    <h1 class="text-xl font-bold tracking-tight text-slate-900">
+                    <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
                         Boiler<span class="text-slate-400 font-normal">Buddy</span>
                     </h1>
                 </a>
@@ -33,40 +35,40 @@
                 <!-- Search Bar -->
                 <div class="mr-6 hidden lg:block">
                     <div
-                        class="nav-search flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-full border border-slate-200 focus-within:border-slate-300 focus-within:bg-white transition-all w-64">
+                        class="nav-search flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-slate-800/50 rounded-full border border-slate-200 dark:border-slate-700 focus-within:border-slate-300 dark:focus-within:border-slate-600 focus-within:bg-white dark:focus-within:bg-slate-800 transition-all w-64">
                         <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
                         <input type="text" placeholder="Search topics..."
-                            class="bg-transparent border-none outline-none text-sm w-full placeholder-slate-400 text-slate-700">
+                            class="bg-transparent border-none outline-none text-sm w-full placeholder-slate-400 text-slate-700 dark:text-slate-200">
                     </div>
                 </div>
 
                 <a href="{{ url_for('dashboard') }}"
-                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'dashboard' %}bg-[#CBB87C]/10 text-slate-900 ring-1 ring-[#CBB87C]/40{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}"
+                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'dashboard' %}bg-[#CBB87C]/10 text-slate-900 dark:text-[#CBB87C] ring-1 ring-[#CBB87C]/40{% else %}text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800{% endif %}"
                     aria-label="Go to Dashboard">
                     Home
                 </a>
 
                 <a href="{{ url_for('study') }}"
-                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'study' %}bg-[#CBB87C]/10 text-slate-900 ring-1 ring-[#CBB87C]/40{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}"
+                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'study' %}bg-[#CBB87C]/10 text-slate-900 dark:text-[#CBB87C] ring-1 ring-[#CBB87C]/40{% else %}text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800{% endif %}"
                     aria-label="Go to Study">
                     Study
                 </a>
 
                 <a href="{{ url_for('group_study') }}"
-                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'group_study' %}bg-[#CBB87C]/10 text-slate-900 ring-1 ring-[#CBB87C]/40{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}"
+                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'group_study' %}bg-[#CBB87C]/10 text-slate-900 dark:text-[#CBB87C] ring-1 ring-[#CBB87C]/40{% else %}text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800{% endif %}"
                     aria-label="Go to Group Study">
                     Group
                 </a>
 
                 <a href="{{ url_for('dashboard') }}#leaderboard-section"
-                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800"
                     aria-label="Go to Leaderboard"
                     onclick="event.preventDefault(); document.getElementById('leaderboard-section').scrollIntoView({ behavior: 'smooth' });">
                     Leaderboard
                 </a>
 
                 <a href="{{ url_for('exams') }}"
-                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'exams' %}bg-[#CBB87C]/10 text-slate-900 ring-1 ring-[#CBB87C]/40{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}"
+                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'exams' %}bg-[#CBB87C]/10 text-slate-900 dark:text-[#CBB87C] ring-1 ring-[#CBB87C]/40{% else %}text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800{% endif %}"
                     aria-label="Go to Exams">
                     Exams
                 </a>

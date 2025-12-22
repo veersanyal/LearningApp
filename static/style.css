@@ -164,6 +164,18 @@ body {
   min-height: 100vh;
 }
 
+.dark .page-bg {
+  background:
+    radial-gradient(900px 500px at 50% 120px, rgba(207, 184, 124, 0.05), transparent 60%),
+    linear-gradient(#0f172a, #0f172a);
+  /* Slate 900 */
+}
+
+.dark .page-bg::after {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  opacity: 0.15;
+}
+
 .page-bg::after {
   content: "";
   position: absolute;
@@ -189,6 +201,13 @@ body {
   /* Specific soft shadow */
   border-radius: 1rem;
   /* rounded-2xl */
+}
+
+.dark .surface-card {
+  background-color: #1e293b;
+  /* Slate 800 */
+  border-color: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
 }
 
 /* Button Utilities - Paper UI */
@@ -235,6 +254,18 @@ body {
   /* slate-50 */
 }
 
+.dark .btn-secondary-outline {
+  background-color: transparent;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  /* slate-200 */
+}
+
+.dark .btn-secondary-outline:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
 /* Chip Component */
 .chip {
   border-radius: 9999px;
@@ -251,6 +282,20 @@ body {
   border-color: #CBB87C;
   background-color: rgba(203, 184, 124, 0.1);
   color: #1a1a1a;
+}
+
+.dark .chip {
+  background-color: #1e293b;
+  /* Slate 800 */
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  /* Slate 400 */
+}
+
+.dark .chip[data-active="true"] {
+  background-color: rgba(203, 184, 124, 0.15);
+  border-color: #CBB87C;
+  color: #CBB87C;
 }
 
 /* Main View Transitions */
