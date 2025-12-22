@@ -1,37 +1,38 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StudyBoiler - Advanced Learning Platform</title>
-    
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <!-- Load app.js first so app() function is available when Alpine.js initializes -->
     <script src="/static/app.js"></script>
-    
+
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    
+
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+
     <!-- Lucide Icons (lucide-react) -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    
+
     <!-- Google Identity Services -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    
+
     <!-- Initialize Lucide Icons -->
     <script>
         // Initialize lucide icons after page load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             if (window.lucide) {
                 lucide.createIcons();
             }
         });
-        
+
         // Re-initialize icons when Alpine updates DOM
         document.addEventListener('alpine:init', () => {
             Alpine.effect(() => {
@@ -43,7 +44,7 @@
             });
         });
     </script>
-    
+
     <!-- MathJax for rendering mathematical equations -->
     <script>
         MathJax = {
@@ -77,7 +78,7 @@
         };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
-    
+
     <!-- Custom Tailwind Config -->
     <script>
         tailwind.config = {
@@ -96,25 +97,28 @@
             }
         }
     </script>
-    
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
     <link rel="stylesheet" href="/static/style.css">
 </head>
 
-<body class="bg-slate-900 text-slate-100 font-sans antialiased" x-data="app()" x-init="init(); $watch('currentView', value => showView(value))">
-    
+<body class="bg-slate-900 text-slate-100 font-sans antialiased" x-data="app()"
+    x-init="init(); $watch('currentView', value => showView(value))">
+
     <!-- Login/Register Modal (BoilerBuddy Style) -->
-    <div x-show="!isAuthenticated" x-cloak 
-         class="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900/20 to-amber-900/20 flex items-center justify-center z-50">
+    <div x-show="!isAuthenticated" x-cloak
+        class="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900/20 to-amber-900/20 flex items-center justify-center z-50">
         <!-- Background decoration -->
         <div class="absolute inset-0 overflow-hidden pointer-events-none">
-            <div class="absolute top-20 right-20 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
-            <div class="absolute bottom-20 left-20 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
+            <div class="absolute top-20 right-20 w-96 h-96 bg-[#CFB991]/10 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-20 left-20 w-96 h-96 bg-black/5 rounded-full blur-3xl"></div>
         </div>
-        
+
         <div class="relative z-10 bg-slate-800 rounded-3xl p-8 max-w-md w-full mx-4 border border-slate-700 shadow-2xl">
             <!-- Logo and branding -->
             <div class="text-center mb-8">
@@ -126,45 +130,46 @@
                 </h2>
                 <p class="text-slate-400 text-sm">Your AI-powered study companion for acing exams at Purdue</p>
             </div>
-            
+
             <!-- Toggle between Login and Register -->
             <div class="flex mb-6 bg-slate-700 rounded-2xl p-1">
-                <button @click="authMode = 'login'; authError = ''" 
-                        :class="authMode === 'login' ? 'bg-[#9B72CF] text-white' : 'bg-transparent text-slate-400'"
-                        class="flex-1 py-2.5 rounded-xl transition-all font-medium">
+                <button @click="authMode = 'login'; authError = ''"
+                    :class="authMode === 'login' ? 'bg-[#CFB991] text-black font-bold' : 'bg-transparent text-slate-400'"
+                    class="flex-1 py-2.5 rounded-xl transition-all font-medium">
                     Login
                 </button>
                 <button @click="authMode = 'register'; authError = ''"
-                        :class="authMode === 'register' ? 'bg-[#9B72CF] text-white' : 'bg-transparent text-slate-400'"
-                        class="flex-1 py-2.5 rounded-xl transition-all font-medium">
+                    :class="authMode === 'register' ? 'bg-[#CFB991] text-black font-bold' : 'bg-transparent text-slate-400'"
+                    class="flex-1 py-2.5 rounded-xl transition-all font-medium">
                     Register
                 </button>
             </div>
-            
+
             <!-- Login Form -->
             <form x-show="authMode === 'login'" @submit.prevent="login()" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium mb-2">Username</label>
                     <input x-model="loginForm.username" type="text" required
-                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500">
+                        class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500">
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-2">Password</label>
                     <input x-model="loginForm.password" type="password" required
-                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500">
-            </div>
+                        class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500">
+                </div>
                 <div class="flex items-center">
                     <input type="checkbox" x-model="loginForm.remember" id="remember-me"
-                           class="w-4 h-4 bg-slate-700 border-slate-600 rounded text-blue-600 focus:ring-blue-500">
+                        class="w-4 h-4 bg-slate-700 border-slate-600 rounded text-blue-600 focus:ring-blue-500">
                     <label for="remember-me" class="ml-2 text-sm text-slate-300 cursor-pointer">
                         Remember me on this device
                     </label>
-            </div>
+                </div>
                 <div x-show="authError" class="text-red-400 text-sm mb-2" x-text="authError"></div>
-                <button type="submit" class="w-full py-3.5 bg-[#9B72CF] hover:opacity-90 rounded-2xl font-medium transition-all text-white shadow-lg">
+                <button type="submit"
+                    class="w-full py-3.5 bg-[#CFB991] hover:bg-[#bfa378] text-black font-bold rounded-2xl transition-all shadow-lg">
                     Login
                 </button>
-                
+
                 <!-- Divider -->
                 <div class="relative my-4">
                     <div class="absolute inset-0 flex items-center">
@@ -174,56 +179,61 @@
                         <span class="px-2 bg-slate-800 text-slate-400">Or continue with</span>
                     </div>
                 </div>
-                
+
                 <!-- OAuth Buttons -->
                 <div class="space-y-3">
                     <button @click="loginWithGoogle()" type="button"
-                            class="w-full py-3 bg-white hover:bg-gray-100 text-gray-900 rounded-lg font-medium transition flex items-center justify-center space-x-2">
+                        class="w-full py-3 bg-white hover:bg-gray-100 text-gray-900 rounded-lg font-medium transition flex items-center justify-center space-x-2">
                         <svg class="w-5 h-5" viewBox="0 0 24 24">
-                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            <path fill="#4285F4"
+                                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                            <path fill="#34A853"
+                                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                            <path fill="#FBBC05"
+                                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                            <path fill="#EA4335"
+                                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                         </svg>
                         <span>Continue with Google</span>
                     </button>
                 </div>
             </form>
-            
+
             <!-- Register Form -->
             <form x-show="authMode === 'register'" @submit.prevent="register()" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium mb-2">Username</label>
                     <input x-model="registerForm.username" type="text" required minlength="3"
-                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500">
+                        class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500">
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-2">Password</label>
                     <input x-model="registerForm.password" type="password" required minlength="6"
-                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500">
+                        class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500">
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-2">Major (optional)</label>
                     <input x-model="registerForm.major" type="text"
-                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500">
+                        class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500">
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-2">Graduation Year (optional)</label>
                     <input x-model="registerForm.graduation_year" type="number" min="2024" max="2030"
-                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500">
+                        class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500">
                 </div>
                 <div class="flex items-center">
                     <input type="checkbox" x-model="registerForm.remember" id="remember-me-register"
-                           class="w-4 h-4 bg-slate-700 border-slate-600 rounded text-blue-600 focus:ring-blue-500">
+                        class="w-4 h-4 bg-slate-700 border-slate-600 rounded text-blue-600 focus:ring-blue-500">
                     <label for="remember-me-register" class="ml-2 text-sm text-slate-300 cursor-pointer">
                         Remember me on this device
                     </label>
                 </div>
                 <div x-show="authError" class="text-red-400 text-sm mb-2" x-text="authError"></div>
-                <button type="submit" class="w-full py-3.5 bg-[#9B72CF] hover:opacity-90 rounded-2xl font-medium transition-all text-white shadow-lg">
+                <button type="submit"
+                    class="w-full py-3.5 bg-[#CFB991] hover:bg-[#bfa378] text-black font-bold rounded-2xl transition-all shadow-lg">
                     Register
                 </button>
-                
+
                 <!-- Divider -->
                 <div class="relative my-4">
                     <div class="absolute inset-0 flex items-center">
@@ -233,22 +243,26 @@
                         <span class="px-2 bg-slate-800 text-slate-400">Or continue with</span>
                     </div>
                 </div>
-                
+
                 <!-- OAuth Buttons -->
                 <div class="space-y-3">
                     <button @click="loginWithGoogle()" type="button"
-                            class="w-full py-3 bg-white hover:bg-gray-100 text-gray-900 rounded-lg font-medium transition flex items-center justify-center space-x-2">
+                        class="w-full py-3 bg-white hover:bg-gray-100 text-gray-900 rounded-lg font-medium transition flex items-center justify-center space-x-2">
                         <svg class="w-5 h-5" viewBox="0 0 24 24">
-                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            <path fill="#4285F4"
+                                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                            <path fill="#34A853"
+                                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                            <path fill="#FBBC05"
+                                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                            <path fill="#EA4335"
+                                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                         </svg>
                         <span>Continue with Google</span>
                     </button>
                 </div>
             </form>
-            
+
             <p class="mt-6 text-center text-xs text-slate-400">
                 <span x-show="!usersOnline">Join Purdue students</span>
                 <span x-show="usersOnline" x-text="`Join ${usersOnline} Purdue students online now`"></span>
@@ -260,13 +274,18 @@
     </div>
 
     <!-- Onboarding Views -->
-    <div x-show="isAuthenticated && onboardingStep !== null && onboardingStep !== 'checking'" x-cloak class="onboarding-bg min-h-screen flex items-center justify-center p-4 relative" style="background-color: #fbfbfe !important; background-image: radial-gradient(rgba(130, 140, 170, 0.14) 1px, transparent 1px), radial-gradient(900px 600px at 50% 40%, rgba(168, 120, 255, 0.24), transparent 60%), linear-gradient(180deg, #fbfbfe 0%, #f2f4fb 100%) !important; background-size: 22px 22px, auto, auto !important; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; z-index: 9999 !important;">
+    <div x-show="isAuthenticated && onboardingStep !== null && onboardingStep !== 'checking'" x-cloak
+        class="onboarding-bg min-h-screen flex items-center justify-center p-4 relative"
+        style="background-color: #fbfbfe !important; background-image: radial-gradient(rgba(130, 140, 170, 0.14) 1px, transparent 1px), radial-gradient(900px 600px at 50% 40%, rgba(207, 185, 145, 0.2), transparent 60%), linear-gradient(180deg, #fbfbfe 0%, #f2f4fb 100%) !important; background-size: 22px 22px, auto, auto !important; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; z-index: 9999 !important;">
         <div class="w-full max-w-2xl relative" style="z-index: 10000;">
             <!-- Main card -->
-            <div class="bg-white rounded-3xl shadow-2xl p-8 md:p-12 border border-gray-200/50 text-gray-900 relative overflow-hidden">
+            <div
+                class="bg-white rounded-3xl shadow-2xl p-8 md:p-12 border border-gray-200/50 text-gray-900 relative overflow-hidden">
                 <!-- Subtle header gradient strip -->
-                <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#9B72CF]/20 via-[#9B72CF]/10 to-transparent"></div>
-                
+                <div
+                    class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#CFB991]/40 via-[#CFB991]/20 to-transparent">
+                </div>
+
                 <!-- Progress indicator inside card -->
                 <div class="mb-8">
                     <div class="flex items-center justify-between mb-2">
@@ -280,8 +299,7 @@
                     </div>
                     <!-- Progress bar -->
                     <div class="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                        <div class="h-full bg-[#9B72CF] rounded-full transition-all duration-300"
-                             :style="{
+                        <div class="h-full bg-[#CFB991] rounded-full transition-all duration-300" :style="{
                                  width: onboardingStep === 'course' ? '33.33%' : (onboardingStep === 'exam-date' ? '66.66%' : '100%')
                              }">
                         </div>
@@ -292,10 +310,13 @@
                 <div class="mb-6">
                     <div class="flex items-center gap-3 mb-3">
                         <div class="relative">
-                            <div class="absolute -inset-2 bg-[#9B72CF]/10 rounded-2xl blur-sm"></div>
-                            <i x-show="onboardingStep === 'course'" data-lucide="book-open" class="w-8 h-8 text-[#9B72CF] relative z-10"></i>
-                            <i x-show="onboardingStep === 'exam-date'" data-lucide="calendar" class="w-8 h-8 text-[#9B72CF] relative z-10"></i>
-                            <i x-show="onboardingStep === 'topic-confidence'" data-lucide="brain" class="w-8 h-8 text-[#9B72CF] relative z-10"></i>
+                            <div class="absolute -inset-2 bg-[#CFB991]/20 rounded-2xl blur-sm"></div>
+                            <i x-show="onboardingStep === 'course'" data-lucide="book-open"
+                                class="w-8 h-8 text-[#CFB991] relative z-10"></i>
+                            <i x-show="onboardingStep === 'exam-date'" data-lucide="calendar"
+                                class="w-8 h-8 text-[#CFB991] relative z-10"></i>
+                            <i x-show="onboardingStep === 'topic-confidence'" data-lucide="brain"
+                                class="w-8 h-8 text-[#CFB991] relative z-10"></i>
                         </div>
                         <h2 class="text-[28px] font-semibold text-gray-900 leading-tight">
                             <span x-show="onboardingStep === 'course'">Pick your course</span>
@@ -305,17 +326,20 @@
                     </div>
                     <p class="text-[15px] text-gray-500 mt-4 ml-11">
                         <span x-show="onboardingStep === 'course'">Which math course are you studying for?</span>
-                        <span x-show="onboardingStep === 'exam-date'">When's your next exam? We'll build a study plan for you.</span>
-                        <span x-show="onboardingStep === 'topic-confidence'">Help us understand where you are so we can personalize your learning.</span>
+                        <span x-show="onboardingStep === 'exam-date'">When's your next exam? We'll build a study plan
+                            for you.</span>
+                        <span x-show="onboardingStep === 'topic-confidence'">Help us understand where you are so we can
+                            personalize your learning.</span>
                     </p>
                 </div>
 
                 <!-- Step 1: Course selection -->
                 <div x-show="onboardingStep === 'course'" class="space-y-3 mt-2">
-                    <template x-for="course in ['MA 161 – Calculus I', 'MA 162 – Calculus II', 'MA 165 – Analytic Geometry & Calculus I', 'MA 166 – Analytic Geometry & Calculus II', 'MA 261 – Multivariate Calculus', 'MA 265 – Linear Algebra']" :key="course">
-                        <button
-                            @click="selectedCourse = course"
-                            :class="selectedCourse === course ? 'border-[#9B72CF] bg-[#9B72CF]/10 text-gray-900 shadow-sm' : 'border-gray-200 hover:border-[#9B72CF]/50 hover:bg-[#9B72CF]/5 text-gray-900'"
+                    <template
+                        x-for="course in ['MA 161 – Calculus I', 'MA 162 – Calculus II', 'MA 165 – Analytic Geometry & Calculus I', 'MA 166 – Analytic Geometry & Calculus II', 'MA 261 – Multivariate Calculus', 'MA 265 – Linear Algebra']"
+                        :key="course">
+                        <button @click="selectedCourse = course"
+                            :class="selectedCourse === course ? 'border-[#CFB991] bg-[#CFB991]/10 text-black font-medium shadow-sm' : 'border-gray-200 hover:border-[#CFB991]/50 hover:bg-[#CFB991]/5 text-gray-900'"
                             class="w-full text-left p-4 rounded-2xl border-2 transition-all font-normal">
                             <span x-text="course"></span>
                         </button>
@@ -327,60 +351,53 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Exam date</label>
                         <div class="relative">
-                            <i data-lucide="calendar" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"></i>
-                            <input
-                                type="date"
-                                x-model="examDate"
-                                placeholder="mm/dd/yyyy"
-                                class="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-gray-200 bg-gray-50 text-gray-900 placeholder:text-gray-400 focus:border-[#9B72CF] focus:outline-none focus:ring-4 focus:ring-[#9B72CF]/10 transition-all"
-                            />
+                            <i data-lucide="calendar"
+                                class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"></i>
+                            <input type="date" x-model="examDate" placeholder="mm/dd/yyyy"
+                                class="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-gray-200 bg-gray-50 text-gray-900 placeholder:text-gray-400 focus:border-[#CFB991] focus:outline-none focus:ring-4 focus:ring-[#CFB991]/10 transition-all" />
                         </div>
                     </div>
-                    
+
                     <!-- Quick pick chips -->
                     <div class="flex flex-wrap gap-2">
-                        <button
-                            @click="setQuickDate('tomorrow')"
-                            class="px-4 py-2 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-[#9B72CF]/30 transition-colors text-sm font-medium">
+                        <button @click="setQuickDate('tomorrow')"
+                            class="px-4 py-2 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-[#CFB991]/30 transition-colors text-sm font-medium">
                             Tomorrow
                         </button>
-                        <button
-                            @click="setQuickDate('nextweek')"
-                            class="px-4 py-2 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-[#9B72CF]/30 transition-colors text-sm font-medium">
+                        <button @click="setQuickDate('nextweek')"
+                            class="px-4 py-2 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-[#CFB991]/30 transition-colors text-sm font-medium">
                             Next week
                         </button>
-                        <button
-                            @click="setQuickDate('twoweeks')"
-                            class="px-4 py-2 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-[#9B72CF]/30 transition-colors text-sm font-medium">
+                        <button @click="setQuickDate('twoweeks')"
+                            class="px-4 py-2 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-[#CFB991]/30 transition-colors text-sm font-medium">
                             2 weeks
                         </button>
                     </div>
-                    
+
                     <!-- Tip callout -->
-                    <div class="bg-[#9B72CF]/5 border border-[#9B72CF]/20 rounded-2xl p-4 flex items-start gap-3">
-                        <i data-lucide="info" class="w-5 h-5 text-[#9B72CF] flex-shrink-0 mt-0.5"></i>
+                    <div class="bg-[#CFB991]/10 border border-[#CFB991]/30 rounded-2xl p-4 flex items-start gap-3">
+                        <i data-lucide="info" class="w-5 h-5 text-[#CFB991] flex-shrink-0 mt-0.5"></i>
                         <p class="text-sm text-gray-700 leading-relaxed">
-                            <span class="font-medium text-gray-900">Tip:</span> We recommend starting at least 2 weeks before your exam for optimal results!
+                            <span class="font-medium text-gray-900">Tip:</span> We recommend starting at least 2 weeks
+                            before your exam for optimal results!
                         </p>
                     </div>
                 </div>
 
                 <!-- Step 3: Topic strengths -->
                 <div x-show="onboardingStep === 'topic-confidence'" class="space-y-6 mt-2">
-                    <template x-for="topic in [{id: 'limits', name: 'Limits'}, {id: 'derivatives', name: 'Derivatives'}, {id: 'integrals', name: 'Integrals'}, {id: 'series', name: 'Series'}, {id: 'vectorcalc', name: 'Vector Calculus'}, {id: 'diffeq', name: 'Differential Equations'}]" :key="topic.id">
+                    <template
+                        x-for="topic in [{id: 'limits', name: 'Limits'}, {id: 'derivatives', name: 'Derivatives'}, {id: 'integrals', name: 'Integrals'}, {id: 'series', name: 'Series'}, {id: 'vectorcalc', name: 'Vector Calculus'}, {id: 'diffeq', name: 'Differential Equations'}]"
+                        :key="topic.id">
                         <div>
                             <div class="flex justify-between items-center mb-3">
                                 <label class="text-sm font-medium text-gray-900" x-text="topic.name"></label>
-                                <span class="text-sm font-medium text-[#9B72CF]" x-text="(topicStrengths[topic.id] || 3) + '/5'"></span>
+                                <span class="text-sm font-medium text-[#CFB991]"
+                                    x-text="(topicStrengths[topic.id] || 3) + '/5'"></span>
                             </div>
-                            <input
-                                type="range"
-                                min="1"
-                                max="5"
-                                :value="topicStrengths[topic.id] || 3"
+                            <input type="range" min="1" max="5" :value="topicStrengths[topic.id] || 3"
                                 @input="topicStrengths[topic.id] = parseInt($event.target.value)"
-                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#9B72CF]"
-                            />
+                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#CFB991]" />
                             <div class="flex justify-between text-xs text-gray-400 mt-2">
                                 <span>Beginner</span>
                                 <span>Expert</span>
@@ -391,32 +408,28 @@
 
                 <!-- Navigation buttons -->
                 <div class="flex gap-3 mt-10">
-                    <button
-                        x-show="onboardingStep === 'exam-date' || onboardingStep === 'topic-confidence'"
+                    <button x-show="onboardingStep === 'exam-date' || onboardingStep === 'topic-confidence'"
                         @click="onboardingStep === 'exam-date' ? onboardingStep = 'course' : onboardingStep = 'exam-date'"
                         class="flex items-center gap-2 px-6 py-3 rounded-2xl border-2 border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors font-medium">
                         <i data-lucide="chevron-left" class="w-5 h-5"></i>
                         Back
                     </button>
-                    <button
-                        x-show="onboardingStep === 'exam-date'"
-                        @click="skipExamDate()"
+                    <button x-show="onboardingStep === 'exam-date'" @click="skipExamDate()"
                         class="px-6 py-3 rounded-2xl text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors font-medium">
                         Skip for now
                     </button>
-                    <button
-                        x-show="onboardingStep === 'topic-confidence'"
-                        @click="skipTopicConfidence()"
+                    <button x-show="onboardingStep === 'topic-confidence'" @click="skipTopicConfidence()"
                         class="px-6 py-3 rounded-2xl text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors font-medium">
                         Skip for now
                     </button>
                     <button
                         @click="onboardingStep === 'course' ? saveCourse() : (onboardingStep === 'exam-date' ? saveExamDate() : completeOnboarding())"
                         :disabled="(onboardingStep === 'course' && !selectedCourse) || (onboardingStep === 'exam-date' && !examDate)"
-                        class="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-[#9B72CF] text-white hover:bg-[#8B62BF] hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#9B72CF] font-medium shadow-md">
+                        class="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-black text-[#CFB991] hover:bg-gray-900 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-black font-bold shadow-md">
                         <span x-show="onboardingStep === 'course' || onboardingStep === 'exam-date'">Next</span>
                         <span x-show="onboardingStep === 'topic-confidence'">Let's go!</span>
-                        <i x-show="onboardingStep === 'course' || onboardingStep === 'exam-date'" data-lucide="chevron-right" class="w-5 h-5"></i>
+                        <i x-show="onboardingStep === 'course' || onboardingStep === 'exam-date'"
+                            data-lucide="chevron-right" class="w-5 h-5"></i>
                     </button>
                 </div>
             </div>
@@ -425,7 +438,7 @@
 
     <!-- Main Layout: Header + Main Content -->
     <div x-show="isAuthenticated && onboardingStep === null && onboardingStep !== 'checking'" x-cloak class="app-shell">
-        
+
         <!-- App Header with Navigation (BoilerBuddy Style) -->
         <header class="app-header" role="banner">
             <div class="app-header-content">
@@ -438,142 +451,103 @@
                         <span class="text-[#CEB888]">Boiler</span><span>Buddy</span>
                     </h1>
                 </div>
-                
+
                 <!-- Mobile Nav Toggle -->
-                <button 
-                    class="nav-toggle md:hidden"
-                    @click="mobileNavOpen = !mobileNavOpen"
-                    :aria-expanded="mobileNavOpen"
-                    aria-label="Toggle navigation menu"
-                    aria-controls="primary-nav">
+                <button class="nav-toggle md:hidden" @click="mobileNavOpen = !mobileNavOpen"
+                    :aria-expanded="mobileNavOpen" aria-label="Toggle navigation menu" aria-controls="primary-nav">
                     <i x-show="!mobileNavOpen" data-lucide="menu" class="w-6 h-6"></i>
                     <i x-show="mobileNavOpen" data-lucide="x" class="w-6 h-6"></i>
                 </button>
-                
+
                 <!-- Center: Navigation (Desktop) -->
                 <nav id="primary-nav" class="app-header-nav hidden md:flex" aria-label="Primary navigation">
-                    <button 
-                        @click="currentView = 'home'; mobileNavOpen = false" 
-                        class="nav-item"
-                        :class="{ 'nav-item--active': currentView === 'home' }"
-                        aria-label="Go to Dashboard">
+                    <button @click="currentView = 'home'; mobileNavOpen = false" class="nav-item"
+                        :class="{ 'nav-item--active': currentView === 'home' }" aria-label="Go to Dashboard">
                         <i data-lucide="home" class="w-5 h-5"></i>
                         <span class="font-medium">Dashboard</span>
                     </button>
-                    
-                    <button 
-                        @click="currentView = 'study'; mobileNavOpen = false" 
-                        class="nav-item"
-                        :class="{ 'nav-item--active': currentView === 'study' }"
-                        aria-label="Go to Study">
+
+                    <button @click="currentView = 'study'; mobileNavOpen = false" class="nav-item"
+                        :class="{ 'nav-item--active': currentView === 'study' }" aria-label="Go to Study">
                         <i data-lucide="book-open" class="w-5 h-5"></i>
                         <span class="font-medium">Study</span>
                     </button>
-                    
-                    <button 
-                        @click="currentView = 'group-study'; mobileNavOpen = false" 
-                        class="nav-item"
-                        :class="{ 'nav-item--active': currentView === 'group-study' }"
-                        aria-label="Go to Group Study">
+
+                    <button @click="currentView = 'group-study'; mobileNavOpen = false" class="nav-item"
+                        :class="{ 'nav-item--active': currentView === 'group-study' }" aria-label="Go to Group Study">
                         <i data-lucide="users" class="w-5 h-5"></i>
                         <span class="font-medium">Group</span>
                     </button>
-                    
-                    <button 
-                        @click="currentView = 'leaderboards'; mobileNavOpen = false" 
-                        class="nav-item"
-                        :class="{ 'nav-item--active': currentView === 'leaderboards' }"
-                        aria-label="Go to Leaderboard">
+
+                    <button @click="currentView = 'leaderboards'; mobileNavOpen = false" class="nav-item"
+                        :class="{ 'nav-item--active': currentView === 'leaderboards' }" aria-label="Go to Leaderboard">
                         <i data-lucide="trophy" class="w-5 h-5"></i>
                         <span class="font-medium">Leaderboard</span>
                     </button>
-                    
-                    <button 
-                        @click="currentView = 'heatmap'; mobileNavOpen = false" 
-                        class="nav-item"
-                        :class="{ 'nav-item--active': currentView === 'heatmap' }"
-                        aria-label="Go to Heatmap">
+
+                    <button @click="currentView = 'heatmap'; mobileNavOpen = false" class="nav-item"
+                        :class="{ 'nav-item--active': currentView === 'heatmap' }" aria-label="Go to Heatmap">
                         <i data-lucide="map" class="w-5 h-5"></i>
                         <span class="font-medium">Heatmap</span>
                     </button>
-                    
-                    <button 
-                        @click="currentView = 'documents'; mobileNavOpen = false" 
-                        class="nav-item"
-                        :class="{ 'nav-item--active': currentView === 'documents' }"
-                        aria-label="Upload">
+
+                    <button @click="currentView = 'documents'; mobileNavOpen = false" class="nav-item"
+                        :class="{ 'nav-item--active': currentView === 'documents' }" aria-label="Upload">
                         <i data-lucide="upload" class="w-5 h-5"></i>
                         <span class="font-medium">Upload</span>
                     </button>
                 </nav>
-                
+
                 <!-- Mobile Navigation Menu -->
-                <nav 
-                    class="nav-menu-mobile"
-                    :class="{ 'is-open': mobileNavOpen }"
-                    aria-label="Mobile navigation menu"
-                    x-show="mobileNavOpen"
-                    x-cloak>
-                    <button 
-                        @click="currentView = 'home'; mobileNavOpen = false" 
-                        class="nav-item"
+                <nav class="nav-menu-mobile" :class="{ 'is-open': mobileNavOpen }" aria-label="Mobile navigation menu"
+                    x-show="mobileNavOpen" x-cloak>
+                    <button @click="currentView = 'home'; mobileNavOpen = false" class="nav-item"
                         :class="{ 'nav-item--active': currentView === 'home' }">
                         <i data-lucide="home" class="w-5 h-5"></i>
                         <span class="font-medium">Dashboard</span>
                     </button>
-                    <button 
-                        @click="currentView = 'study'; mobileNavOpen = false" 
-                        class="nav-item"
+                    <button @click="currentView = 'study'; mobileNavOpen = false" class="nav-item"
                         :class="{ 'nav-item--active': currentView === 'study' }">
                         <i data-lucide="book-open" class="w-5 h-5"></i>
                         <span class="font-medium">Study</span>
                     </button>
-                    <button 
-                        @click="currentView = 'leaderboards'; mobileNavOpen = false" 
-                        class="nav-item"
+                    <button @click="currentView = 'leaderboards'; mobileNavOpen = false" class="nav-item"
                         :class="{ 'nav-item--active': currentView === 'leaderboards' }">
                         <i data-lucide="trophy" class="w-5 h-5"></i>
                         <span class="font-medium">Rank</span>
                     </button>
-                    <button 
-                        @click="currentView = 'group-study'; mobileNavOpen = false" 
-                        class="nav-item"
+                    <button @click="currentView = 'group-study'; mobileNavOpen = false" class="nav-item"
                         :class="{ 'nav-item--active': currentView === 'group-study' }">
                         <i data-lucide="users" class="w-5 h-5"></i>
                         <span class="font-medium">Groups</span>
                     </button>
                 </nav>
-                
+
                 <!-- Right: User Profile (BoilerBuddy Style) -->
                 <div class="app-header-right relative">
-                    <button
-                        @click="showUserMenu = !showUserMenu"
+                    <button @click="showUserMenu = !showUserMenu"
                         class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center hover:opacity-80 transition-opacity"
                         aria-label="User menu">
                         <i data-lucide="user" class="w-5 h-5 text-white"></i>
                     </button>
-                    <div x-show="showUserMenu" 
-                         @click.away="showUserMenu = false"
-                         x-cloak
-                         class="absolute right-0 top-12 bg-white text-black rounded-lg shadow-xl p-2 min-w-[160px] z-50">
+                    <div x-show="showUserMenu" @click.away="showUserMenu = false" x-cloak
+                        class="absolute right-0 top-12 bg-white text-black rounded-lg shadow-xl p-2 min-w-[160px] z-50">
                         <div class="px-3 py-2 border-b border-gray-200">
                             <p class="font-medium text-sm" x-text="currentUser.username || 'Student'"></p>
-                            <p class="text-xs text-gray-500">Level <span x-text="xpProgress.current_level || 1"></span></p>
+                            <p class="text-xs text-gray-500">Level <span x-text="xpProgress.current_level || 1"></span>
+                            </p>
                         </div>
-                        <button 
-                            @click="currentView = 'settings'; showUserMenu = false" 
+                        <button @click="currentView = 'settings'; showUserMenu = false"
                             class="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors text-sm">
                             <i data-lucide="settings" class="w-4 h-4"></i>
                             <span>Settings</span>
                         </button>
-                        <button 
-                            @click="currentView = 'achievements'; showUserMenu = false" 
+                        <button @click="currentView = 'achievements'; showUserMenu = false"
                             class="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors text-sm">
                             <i data-lucide="award" class="w-4 h-4"></i>
                             <span>Achievements</span>
                         </button>
-                        <button 
-                            @click="logout(); showUserMenu = false" 
+                        <button @click="logout(); showUserMenu = false"
                             class="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors text-sm">
                             <i data-lucide="log-out" class="w-4 h-4"></i>
                             <span>Logout</span>
@@ -582,125 +556,140 @@
                 </div>
             </div>
         </header>
-        
+
         <!-- Main Content Area -->
         <main class="app-main" role="main">
-                
-                <!-- HOME VIEW -->
-                <section class="view is-active" data-view="home">
-                    <div class="page">
-                        <!-- Welcome Section (BoilerBuddy Style) -->
-                        <div class="mb-8">
-                            <h1 class="text-3xl font-bold mb-2 text-white">
-                                Welcome back<span x-show="currentUser.username" x-text="`, ${currentUser.username || 'Student'}!`"></span><span x-show="!currentUser.username">!</span> 👋
-                            </h1>
-                            <p class="text-gray-400">You're crushing it! Keep up the momentum.</p>
-                        </div>
-                    
+
+            <!-- HOME VIEW -->
+            <section class="view is-active" data-view="home">
+                <div class="page">
+                    <!-- Welcome Section (BoilerBuddy Style) -->
+                    <div class="mb-8">
+                        <h1 class="text-3xl font-bold mb-2 text-white">
+                            Welcome back<span x-show="currentUser.username"
+                                x-text="`, ${currentUser.username || 'Student'}!`"></span><span
+                                x-show="!currentUser.username">!</span> 👋
+                        </h1>
+                        <p class="text-gray-400">You're crushing it! Keep up the momentum.</p>
+                    </div>
+
                     <!-- Main Content Grid (BoilerBuddy Style) -->
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <!-- Left Column - Next Review & Retention Graph -->
                         <div class="lg:col-span-2 space-y-6">
                             <!-- Next Review Card (BoilerBuddy Style) -->
-                            <div class="bg-white rounded-3xl shadow-lg p-6 border border-gray-200" x-show="allTopics.length > 0">
+                            <div class="bg-white rounded-3xl shadow-lg p-6 border border-gray-200"
+                                x-show="allTopics.length > 0">
                                 <div class="flex items-center justify-between mb-4">
                                     <h3 class="text-xl font-semibold">Next Review</h3>
-                                    <span class="text-sm text-[#9B72CF] bg-[#9B72CF]/10 px-3 py-1 rounded-full" x-text="currentQuestion ? currentQuestion.difficulty : 'Medium'"></span>
+                                    <span class="text-sm text-[#CEB888] bg-[#CEB888]/10 px-3 py-1 rounded-full"
+                                        x-text="currentQuestion ? currentQuestion.difficulty : 'Medium'"></span>
                                 </div>
                                 <div class="mb-4" x-show="currentQuestion">
-                                    <p class="text-sm text-gray-600 mb-2" x-text="currentQuestion.topic_name || 'General'"></p>
-                                    <p class="text-xl mb-4 text-gray-900" x-text="currentQuestion.question || 'No question available'"></p>
+                                    <p class="text-sm text-gray-600 mb-2"
+                                        x-text="currentQuestion.topic_name || 'General'"></p>
+                                    <p class="text-xl mb-4 text-gray-900"
+                                        x-text="currentQuestion.question || 'No question available'"></p>
                                     <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                        <div class="h-full w-3/5 bg-[#9B72CF] rounded-full"></div>
+                                        <div class="h-full w-3/5 bg-[#CEB888] rounded-full"></div>
                                     </div>
                                     <p class="text-xs text-gray-500 mt-2">Performance: Good • Due for review</p>
                                 </div>
-                                <button @click="currentView = 'study'; loadNextQuestion()" 
-                                        class="w-full bg-[#9B72CF] text-white py-3 rounded-2xl hover:opacity-90 transition-opacity font-medium">
+                                <button @click="currentView = 'study'; loadNextQuestion()"
+                                    class="w-full bg-[#CEB888] text-white py-3 rounded-2xl hover:opacity-90 transition-opacity font-medium">
                                     Start Review Session
                                 </button>
                             </div>
-                            
+
                             <!-- Retention Graph (BoilerBuddy Style) -->
                             <div class="bg-white rounded-3xl shadow-lg p-6 border border-gray-200">
                                 <div class="flex items-center gap-2 mb-6">
-                                    <i data-lucide="trending-up" class="w-5 h-5 text-[#9B72CF]"></i>
+                                    <i data-lucide="trending-up" class="w-5 h-5 text-[#CEB888]"></i>
                                     <h3 class="text-xl font-semibold">Your Retention Progress</h3>
                                 </div>
                                 <canvas id="retention-chart" width="400" height="200"></canvas>
                             </div>
                         </div>
-                        
+
                         <!-- Right Column - Brain Map & CTA -->
                         <div class="space-y-6">
                             <!-- Brain Map Card (BoilerBuddy Style) -->
-                            <div class="bg-white rounded-3xl shadow-lg p-6 border border-gray-200" x-show="allTopics.length > 0">
+                            <div class="bg-white rounded-3xl shadow-lg p-6 border border-gray-200"
+                                x-show="allTopics.length > 0">
                                 <h3 class="text-xl font-semibold mb-4">Brain Map</h3>
                                 <div class="space-y-3">
                                     <template x-for="(topic, idx) in allTopics.slice(0, 6)" :key="topic.topic_id">
                                         <div>
                                             <div class="flex justify-between items-center mb-1">
                                                 <span class="text-sm text-gray-900" x-text="topic.name"></span>
-                                                <span class="text-xs font-medium" 
-                                                      :class="(topic.mastery || 0) > 0.8 ? 'text-green-600' : 'text-amber-600'"
-                                                      x-text="Math.round((topic.mastery || 0) * 100) + '%'"></span>
+                                                <span class="text-xs font-medium"
+                                                    :class="(topic.mastery || 0) > 0.8 ? 'text-green-600' : 'text-amber-600'"
+                                                    x-text="Math.round((topic.mastery || 0) * 100) + '%'"></span>
                                             </div>
                                             <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
                                                 <div class="h-full rounded-full transition-all"
-                                                     :class="(topic.mastery || 0) > 0.8 ? 'bg-green-500' : 'bg-amber-400'"
-                                                     :style="'width: ' + Math.min((topic.mastery || 0) * 100, 100) + '%'"></div>
+                                                    :class="(topic.mastery || 0) > 0.8 ? 'bg-green-500' : 'bg-amber-400'"
+                                                    :style="'width: ' + Math.min((topic.mastery || 0) * 100, 100) + '%'">
+                                                </div>
                                             </div>
                                         </div>
                                     </template>
                                 </div>
                             </div>
-                            
+
                             <!-- Group Study CTA (BoilerBuddy Style) -->
-                            <div class="bg-gradient-to-br from-[#9B72CF]/20 to-[#9B72CF]/10 rounded-3xl shadow-lg p-6 border border-[#9B72CF]/30">
-                                <i data-lucide="users" class="w-10 h-10 text-[#9B72CF] mb-3"></i>
+                            <div
+                                class="bg-gradient-to-br from-[#CEB888]/20 to-[#CEB888]/10 rounded-3xl shadow-lg p-6 border border-[#CEB888]/30">
+                                <i data-lucide="users" class="w-10 h-10 text-[#CEB888] mb-3"></i>
                                 <h3 class="text-xl font-semibold mb-2">Study Together</h3>
                                 <p class="text-sm text-gray-600 mb-4">Join a group session and learn with your peers</p>
-                                <button @click="currentView = 'group-study'" 
-                                        class="w-full bg-[#9B72CF] text-white py-3 rounded-2xl hover:opacity-90 transition-opacity font-medium">
+                                <button @click="currentView = 'group-study'"
+                                    class="w-full bg-[#CEB888] text-white py-3 rounded-2xl hover:opacity-90 transition-opacity font-medium">
                                     Join Session
                                 </button>
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Topics Section -->
                     <div id="topics-section" style="display: none;" class="card mb-6">
                         <h2 class="text-xl font-semibold mb-4">Extracted Topics</h2>
                         <ul id="topics-list" class="space-y-2 mb-4"></ul>
-                        <button id="start-quiz-btn" class="w-full px-6 py-3 bg-gradient-to-r from-[#9B72CF] to-[#CEB888] hover:opacity-90 rounded-2xl font-medium transition text-white shadow-lg">
+                        <button id="start-quiz-btn"
+                            class="w-full px-6 py-3 bg-gradient-to-r from-[#CEB888] to-[#CEB888] hover:opacity-90 rounded-2xl font-medium transition text-white shadow-lg">
                             Start Adaptive Quiz
                         </button>
                     </div>
-                    
+
                     <!-- Quick Stats (BoilerBuddy Style - Light Mode) -->
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                        <div class="bg-gradient-to-br from-orange-50 to-orange-100/50 rounded-2xl p-6 border border-orange-200">
+                        <div
+                            class="bg-gradient-to-br from-orange-50 to-orange-100/50 rounded-2xl p-6 border border-orange-200">
                             <div class="flex items-center gap-3 mb-2">
                                 <i data-lucide="flame" class="w-6 h-6 text-orange-600"></i>
                                 <span class="text-sm text-orange-900 font-medium">Study Streak</span>
                             </div>
                             <p class="text-3xl font-bold text-orange-900" x-text="studyStreak + ' days'"></p>
                         </div>
-                        <div class="bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-2xl p-6 border border-purple-200">
+                        <div
+                            class="bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-2xl p-6 border border-purple-200">
                             <div class="flex items-center gap-3 mb-2">
                                 <i data-lucide="target" class="w-6 h-6 text-purple-600"></i>
                                 <span class="text-sm text-purple-900 font-medium">Accuracy</span>
                             </div>
                             <p class="text-3xl font-bold text-purple-900" x-text="accuracy + '%'"></p>
                         </div>
-                        <div class="bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-2xl p-6 border border-amber-200">
+                        <div
+                            class="bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-2xl p-6 border border-amber-200">
                             <div class="flex items-center gap-3 mb-2">
                                 <i data-lucide="trophy" class="w-6 h-6 text-amber-600"></i>
                                 <span class="text-sm text-amber-900 font-medium">Topics Mastered</span>
                             </div>
-                            <p class="text-3xl font-bold text-amber-900" x-text="masteredTopics + '/' + allTopics.length"></p>
+                            <p class="text-3xl font-bold text-amber-900"
+                                x-text="masteredTopics + '/' + allTopics.length"></p>
                         </div>
-                        <div class="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-2xl p-6 border border-blue-200" x-show="examDate">
+                        <div class="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-2xl p-6 border border-blue-200"
+                            x-show="examDate">
                             <div class="flex items-center gap-3 mb-2">
                                 <i data-lucide="clock" class="w-6 h-6 text-blue-600"></i>
                                 <span class="text-sm text-blue-900 font-medium">Until Exam</span>
@@ -708,88 +697,95 @@
                             <p class="text-3xl font-bold text-blue-900" x-text="daysUntilExam + ' days'"></p>
                         </div>
                     </div>
-                    
+
                     <!-- Main Content Grid (BoilerBuddy Style) -->
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <!-- Left Column - Next Review & Retention Graph -->
                         <div class="lg:col-span-2 space-y-6">
                             <!-- Next Review Card (BoilerBuddy Style) -->
-                            <div class="bg-white rounded-3xl shadow-lg p-6 border border-gray-200" x-show="allTopics.length > 0">
+                            <div class="bg-white rounded-3xl shadow-lg p-6 border border-gray-200"
+                                x-show="allTopics.length > 0">
                                 <div class="flex items-center justify-between mb-4">
                                     <h3 class="text-xl font-semibold">Next Review</h3>
-                                    <span class="text-sm text-[#9B72CF] bg-[#9B72CF]/10 px-3 py-1 rounded-full" x-text="currentQuestion ? currentQuestion.difficulty : 'Medium'"></span>
+                                    <span class="text-sm text-[#CEB888] bg-[#CEB888]/10 px-3 py-1 rounded-full"
+                                        x-text="currentQuestion ? currentQuestion.difficulty : 'Medium'"></span>
                                 </div>
                                 <div class="mb-4" x-show="currentQuestion">
-                                    <p class="text-sm text-gray-600 mb-2" x-text="currentQuestion.topic_name || 'General'"></p>
-                                    <p class="text-xl mb-4 text-gray-900" x-text="currentQuestion.question || 'No question available'"></p>
+                                    <p class="text-sm text-gray-600 mb-2"
+                                        x-text="currentQuestion.topic_name || 'General'"></p>
+                                    <p class="text-xl mb-4 text-gray-900"
+                                        x-text="currentQuestion.question || 'No question available'"></p>
                                     <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                        <div class="h-full w-3/5 bg-[#9B72CF] rounded-full"></div>
+                                        <div class="h-full w-3/5 bg-[#CEB888] rounded-full"></div>
                                     </div>
                                     <p class="text-xs text-gray-500 mt-2">Performance: Good • Due for review</p>
                                 </div>
-                                <button @click="currentView = 'study'; loadNextQuestion()" 
-                                        class="w-full bg-[#9B72CF] text-white py-3 rounded-2xl hover:opacity-90 transition-opacity font-medium">
+                                <button @click="currentView = 'study'; loadNextQuestion()"
+                                    class="w-full bg-[#CEB888] text-white py-3 rounded-2xl hover:opacity-90 transition-opacity font-medium">
                                     Start Review Session
                                 </button>
                             </div>
-                            
+
                             <!-- Retention Graph (BoilerBuddy Style) -->
                             <div class="bg-white rounded-3xl shadow-lg p-6 border border-gray-200">
                                 <div class="flex items-center gap-2 mb-6">
-                                    <i data-lucide="trending-up" class="w-5 h-5 text-[#9B72CF]"></i>
+                                    <i data-lucide="trending-up" class="w-5 h-5 text-[#CEB888]"></i>
                                     <h3 class="text-xl font-semibold">Your Retention Progress</h3>
                                 </div>
                                 <canvas id="retention-chart" width="400" height="200"></canvas>
                             </div>
                         </div>
-                        
+
                         <!-- Right Column - Brain Map & Group Study CTA -->
                         <div class="space-y-6">
                             <!-- Brain Map Card (BoilerBuddy Style) -->
-                            <div class="bg-white rounded-3xl shadow-lg p-6 border border-gray-200" x-show="allTopics.length > 0">
+                            <div class="bg-white rounded-3xl shadow-lg p-6 border border-gray-200"
+                                x-show="allTopics.length > 0">
                                 <h3 class="text-xl font-semibold mb-4">Brain Map</h3>
                                 <div class="space-y-3">
                                     <template x-for="(topic, idx) in allTopics.slice(0, 6)" :key="topic.topic_id">
                                         <div>
                                             <div class="flex justify-between items-center mb-1">
                                                 <span class="text-sm text-gray-900" x-text="topic.name"></span>
-                                                <span class="text-xs font-medium" 
-                                                      :class="(topic.mastery || 0) > 0.8 ? 'text-green-600' : 'text-amber-600'"
-                                                      x-text="Math.round((topic.mastery || 0) * 100) + '%'"></span>
+                                                <span class="text-xs font-medium"
+                                                    :class="(topic.mastery || 0) > 0.8 ? 'text-green-600' : 'text-amber-600'"
+                                                    x-text="Math.round((topic.mastery || 0) * 100) + '%'"></span>
                                             </div>
                                             <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
                                                 <div class="h-full rounded-full transition-all"
-                                                     :class="(topic.mastery || 0) > 0.8 ? 'bg-green-500' : 'bg-amber-400'"
-                                                     :style="'width: ' + Math.min((topic.mastery || 0) * 100, 100) + '%'"></div>
+                                                    :class="(topic.mastery || 0) > 0.8 ? 'bg-green-500' : 'bg-amber-400'"
+                                                    :style="'width: ' + Math.min((topic.mastery || 0) * 100, 100) + '%'">
+                                                </div>
                                             </div>
                                         </div>
                                     </template>
                                 </div>
                             </div>
-                            
+
                             <!-- Group Study CTA (BoilerBuddy Style) -->
-                            <div class="bg-gradient-to-br from-[#9B72CF]/20 to-[#9B72CF]/10 rounded-3xl shadow-lg p-6 border border-[#9B72CF]/30">
-                                <i data-lucide="users" class="w-10 h-10 text-[#9B72CF] mb-3"></i>
+                            <div
+                                class="bg-gradient-to-br from-[#CEB888]/20 to-[#CEB888]/10 rounded-3xl shadow-lg p-6 border border-[#CEB888]/30">
+                                <i data-lucide="users" class="w-10 h-10 text-[#CEB888] mb-3"></i>
                                 <h3 class="text-xl font-semibold mb-2">Study Together</h3>
                                 <p class="text-sm text-gray-600 mb-4">Join a group session and learn with your peers</p>
-                                <button @click="currentView = 'group-study'" 
-                                        class="w-full bg-[#9B72CF] text-white py-3 rounded-2xl hover:opacity-90 transition-opacity font-medium">
+                                <button @click="currentView = 'group-study'"
+                                    class="w-full bg-[#CEB888] text-white py-3 rounded-2xl hover:opacity-90 transition-opacity font-medium">
                                     Join Session
                                 </button>
                             </div>
                         </div>
                     </div>
+                </div>
+            </section>
+
+            <!-- DOCUMENTS VIEW -->
+            <section class="view" data-view="documents">
+                <div class="page">
+                    <div>
+                        <h1 class="text-3xl font-bold mb-2">My Documents</h1>
+                        <p class="text-slate-400 mb-6">View and manage your uploaded study materials</p>
                     </div>
-                </section>
-                
-                <!-- DOCUMENTS VIEW -->
-                <section class="view" data-view="documents">
-                    <div class="page">
-                        <div>
-                            <h1 class="text-3xl font-bold mb-2">My Documents</h1>
-                            <p class="text-slate-400 mb-6">View and manage your uploaded study materials</p>
-                        </div>
-                    
+
                     <!-- Documents List -->
                     <div class="space-y-4 animate-card-stagger">
                         <template x-for="doc in documents" :key="doc.document_id">
@@ -805,51 +801,53 @@
                                             <div>
                                                 <h2 class="text-lg font-semibold" x-text="doc.filename"></h2>
                                                 <p class="text-sm text-slate-400">
-                                                    <span x-text="doc.topics_count"></span> topics extracted • 
-                                                    <span x-text="formatFileSize(doc.file_size)"></span> • 
+                                                    <span x-text="doc.topics_count"></span> topics extracted •
+                                                    <span x-text="formatFileSize(doc.file_size)"></span> •
                                                     <span x-text="formatDate(doc.uploaded_at)"></span>
                                                 </p>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="flex space-x-2">
-                                        <button @click="loadDocument(doc.document_id)" 
-                                                class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition text-sm btn-animate">
+                                        <button @click="loadDocument(doc.document_id)"
+                                            class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition text-sm btn-animate">
                                             Load Topics
                                         </button>
-                                        <button @click="deleteDocument(doc.document_id)" 
-                                                class="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg font-medium transition text-sm btn-animate">
+                                        <button @click="deleteDocument(doc.document_id)"
+                                            class="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg font-medium transition text-sm btn-animate">
                                             Delete
                                         </button>
                                     </div>
                                 </div>
                             </div>
                         </template>
-                        
+
                         <div x-show="documents.length === 0" class="card empty-state-card">
                             <div class="empty-state-icon" aria-hidden="true">📄</div>
                             <h2 class="empty-state-title">No documents yet</h2>
-                            <p class="empty-state-description">Upload your first PDF, slide deck, or image to start extracting topics.</p>
-                            <button @click="currentView = 'home'" 
-                                    class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition btn-animate">
+                            <p class="empty-state-description">Upload your first PDF, slide deck, or image to start
+                                extracting topics.</p>
+                            <button @click="currentView = 'home'"
+                                class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition btn-animate">
                                 Upload Study Material
                             </button>
                         </div>
                     </div>
+                </div>
+            </section>
+
+            <!-- EXAM QUESTIONS VIEW -->
+            <section class="view" data-view="exam-questions">
+                <div class="page">
+                    <div>
+                        <h1 class="text-3xl font-bold mb-2">Exam Questions</h1>
+                        <p class="text-slate-400 mb-6">
+                            The program trains you to answer questions like these. Upload exam PDFs or images to extract
+                            questions,
+                            and we'll analyze them to identify the skills you need to master.
+                        </p>
                     </div>
-                </section>
-                
-                <!-- EXAM QUESTIONS VIEW -->
-                <section class="view" data-view="exam-questions">
-                    <div class="page">
-                        <div>
-                            <h1 class="text-3xl font-bold mb-2">Exam Questions</h1>
-                            <p class="text-slate-400 mb-6">
-                                The program trains you to answer questions like these. Upload exam PDFs or images to extract questions, 
-                                and we'll analyze them to identify the skills you need to master.
-                            </p>
-                        </div>
-                    
+
                     <!-- Upload Exam Section -->
                     <div class="card mb-6">
                         <h2 class="text-xl font-semibold mb-4">Upload Exam</h2>
@@ -857,317 +855,373 @@
                             <div>
                                 <label class="block text-sm font-medium mb-2">Exam Name</label>
                                 <input x-model="examUploadForm.examName" type="text" required
-                                       placeholder="e.g., Calc 3 Midterm 1"
-                                       class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500">
+                                    placeholder="e.g., Calc 3 Midterm 1"
+                                    class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium mb-2">Exam File (PDF or Image)</label>
-                                <input type="file" id="exam-file-input" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp" required
-                                       class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500">
+                                <input type="file" id="exam-file-input" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp"
+                                    required
+                                    class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500">
                             </div>
-                            <button type="submit" 
-                                    class="w-full px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition">
+                            <button type="submit"
+                                class="w-full px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition">
                                 Upload & Extract Questions
                             </button>
                             <div id="exam-upload-status" class="text-sm text-slate-400"></div>
                         </form>
                     </div>
-                    
+
                     <!-- Exams List -->
                     <div class="space-y-4">
                         <h2 class="text-xl font-semibold">My Exams</h2>
                         <div x-show="exams.length === 0" class="card empty-state-card">
                             <div class="empty-state-icon" aria-hidden="true">📝</div>
                             <h3 class="empty-state-title">No exams yet</h3>
-                            <p class="empty-state-description">Upload an exam PDF or image to generate practice questions.</p>
+                            <p class="empty-state-description">Upload an exam PDF or image to generate practice
+                                questions.</p>
                         </div>
                         <div class="space-y-4 animate-card-stagger">
                             <template x-for="exam in exams" :key="exam.exam_id">
                                 <div class="card hover:bg-slate-750 transition depth-1 lift-on-hover">
-                                <div class="flex items-start justify-between mb-4">
-                                    <div class="flex-1">
-                                        <h4 class="text-lg font-semibold mb-2" x-text="exam.exam_name"></h4>
-                                        <p class="text-sm text-slate-400">
-                                            <span x-text="exam.total_questions"></span> questions • 
-                                            <span x-text="exam.total_pages"></span> pages • 
-                                            <span x-text="exam.analyzed_questions"></span> analyzed
-                                        </p>
-                                    </div>
-                                    <div class="flex space-x-2">
-                                        <button @click="analyzeExam(exam.exam_id)" 
+                                    <div class="flex items-start justify-between mb-4">
+                                        <div class="flex-1">
+                                            <h4 class="text-lg font-semibold mb-2" x-text="exam.exam_name"></h4>
+                                            <p class="text-sm text-slate-400">
+                                                <span x-text="exam.total_questions"></span> questions •
+                                                <span x-text="exam.total_pages"></span> pages •
+                                                <span x-text="exam.analyzed_questions"></span> analyzed
+                                            </p>
+                                        </div>
+                                        <div class="flex space-x-2">
+                                            <button @click="analyzeExam(exam.exam_id)"
                                                 :disabled="exam.analyzed_questions >= exam.total_questions && exam.total_questions > 0"
                                                 :class="exam.analyzed_questions >= exam.total_questions && exam.total_questions > 0 ? 'bg-slate-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500'"
                                                 class="px-4 py-2 rounded-lg font-medium transition text-sm btn-animate">
-                                            <span x-text="exam.analyzed_questions >= exam.total_questions && exam.total_questions > 0 ? 'Analyzed' : 'Analyze Questions'"></span>
-                                        </button>
-                                        <button @click="viewExamQuestions(exam.exam_id)" 
+                                                <span
+                                                    x-text="exam.analyzed_questions >= exam.total_questions && exam.total_questions > 0 ? 'Analyzed' : 'Analyze Questions'"></span>
+                                            </button>
+                                            <button @click="viewExamQuestions(exam.exam_id)"
                                                 class="px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg font-medium transition text-sm btn-animate">
-                                            View Questions
-                                        </button>
-                                        <button @click="deleteExam(exam.exam_id)" 
+                                                View Questions
+                                            </button>
+                                            <button @click="deleteExam(exam.exam_id)"
                                                 class="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg font-medium transition text-sm btn-animate">
-                                            Delete
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
-                    
-                    <!-- Questions List (shown when viewing an exam) -->
-                    <div x-show="selectedExamQuestions !== null && selectedExamQuestions.length > 0" class="mt-8">
-                        <h2 class="text-xl font-semibold mb-4">Questions</h2>
-                        <div class="space-y-4 animate-card-stagger">
-                        <template x-for="(q, idx) in selectedExamQuestions" :key="q.question_id">
-                            <div class="card mb-4 depth-1 lift-on-hover">
-                                <div class="flex items-start justify-between mb-4">
-                                    <div>
-                                        <h4 class="text-lg font-semibold">
-                                            Question <span x-text="q.question_number"></span> 
-                                            <span class="text-sm text-slate-400">(Page <span x-text="q.page_number"></span>)</span>
-                                        </h4>
-                                        <div x-show="q.difficulty" class="mt-2">
-                                            <span class="text-sm text-slate-400">Difficulty: </span>
-                                            <span class="text-sm font-medium" 
-                                                  :class="q.difficulty <= 2 ? 'text-green-400' : q.difficulty <= 3 ? 'text-yellow-400' : 'text-red-400'"
-                                                  x-text="q.difficulty + '/5'"></span>
+                                                Delete
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <!-- Question Image -->
-                                <div x-show="q.image_path" class="mb-4">
-                                    <img :src="q.image_path ? '/uploads/exams/' + q.image_path : ''" 
-                                         alt="Question image" 
-                                         class="max-w-full rounded-lg border border-slate-700">
-                                </div>
-                                
-                                <!-- Question Text (with LaTeX support) -->
-                                <div class="mb-4 p-4 bg-slate-900 rounded-lg">
-                                    <div class="prose prose-invert max-w-none text-slate-300 mathjax-process" x-html="renderMath(q.text || q.question_text || '')"></div>
-                                </div>
-                                
-                                <!-- Diagram Description (if provided) -->
-                                <template x-if="q.diagram_description || q.diagram_note">
-                                    <div class="mb-4 p-4 bg-blue-900 bg-opacity-30 rounded-lg border border-blue-700">
-                                        <h5 class="font-semibold mb-2 text-blue-400">📊 Diagram/Image Description:</h5>
-                                        <div class="prose prose-invert max-w-none text-blue-300 text-sm mathjax-process" x-html="renderMath(q.diagram_description || q.diagram_note || '')"></div>
-                                    </div>
-                                </template>
-                                
-                                <!-- Options (if multiple choice) -->
-                                <template x-if="q.options && q.options.length > 0">
-                                    <div class="mb-4 p-4 bg-slate-700 rounded-lg">
-                                        <h5 class="font-semibold mb-2">Options:</h5>
-                                        <ol class="list-decimal list-inside space-y-2">
-                                            <template x-for="(option, optIdx) in q.options" :key="optIdx">
-                                                <li class="text-slate-300">
-                                                    <span class="mathjax-process" x-html="renderMath(option)"></span>
-                                                </li>
-                                            </template>
-                                        </ol>
-                                    </div>
-                                </template>
-                                
-                                <!-- Correct Answer (if provided) -->
-                                <template x-if="q.correct_answer">
-                                    <div class="mb-4 p-4 bg-green-900 bg-opacity-30 rounded-lg border border-green-700">
-                                        <h5 class="font-semibold mb-2 text-green-400">Correct Answer:</h5>
-                                        <div class="prose prose-invert max-w-none text-green-300 mathjax-process" x-html="renderMath(q.correct_answer)"></div>
-                                    </div>
-                                </template>
-                                
-                                <!-- Subparts (if any) -->
-                                <template x-if="q.subparts && q.subparts.length > 0">
-                                    <div class="mb-4 p-4 bg-slate-700 rounded-lg">
-                                        <h5 class="font-semibold mb-2">Subparts:</h5>
-                                        <template x-for="(subpart, subIdx) in q.subparts" :key="subIdx">
-                                            <div class="mb-3 p-3 bg-slate-800 rounded">
-                                                <h6 class="font-medium mb-1" x-text="subpart.subpart_number"></h6>
-                                                <div class="prose prose-invert max-w-none text-slate-300 text-sm mathjax-process" x-html="renderMath(subpart.subpart_text)"></div>
-                                                <template x-if="subpart.correct_answer">
-                                                    <div class="mt-2 text-green-400 text-sm mathjax-process" x-html="renderMath(subpart.correct_answer)"></div>
+                            </template>
+                        </div>
+
+                        <!-- Questions List (shown when viewing an exam) -->
+                        <div x-show="selectedExamQuestions !== null && selectedExamQuestions.length > 0" class="mt-8">
+                            <h2 class="text-xl font-semibold mb-4">Questions</h2>
+                            <div class="space-y-4 animate-card-stagger">
+                                <template x-for="(q, idx) in selectedExamQuestions" :key="q.question_id">
+                                    <div class="card mb-4 depth-1 lift-on-hover">
+                                        <div class="flex items-start justify-between mb-4">
+                                            <div>
+                                                <h4 class="text-lg font-semibold">
+                                                    Question <span x-text="q.question_number"></span>
+                                                    <span class="text-sm text-slate-400">(Page <span
+                                                            x-text="q.page_number"></span>)</span>
+                                                </h4>
+                                                <div x-show="q.difficulty" class="mt-2">
+                                                    <span class="text-sm text-slate-400">Difficulty: </span>
+                                                    <span class="text-sm font-medium"
+                                                        :class="q.difficulty <= 2 ? 'text-green-400' : q.difficulty <= 3 ? 'text-yellow-400' : 'text-red-400'"
+                                                        x-text="q.difficulty + '/5'"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Question Image -->
+                                        <div x-show="q.image_path" class="mb-4">
+                                            <img :src="q.image_path ? '/uploads/exams/' + q.image_path : ''"
+                                                alt="Question image"
+                                                class="max-w-full rounded-lg border border-slate-700">
+                                        </div>
+
+                                        <!-- Question Text (with LaTeX support) -->
+                                        <div class="mb-4 p-4 bg-slate-900 rounded-lg">
+                                            <div class="prose prose-invert max-w-none text-slate-300 mathjax-process"
+                                                x-html="renderMath(q.text || q.question_text || '')"></div>
+                                        </div>
+
+                                        <!-- Diagram Description (if provided) -->
+                                        <template x-if="q.diagram_description || q.diagram_note">
+                                            <div
+                                                class="mb-4 p-4 bg-blue-900 bg-opacity-30 rounded-lg border border-blue-700">
+                                                <h5 class="font-semibold mb-2 text-blue-400">📊 Diagram/Image
+                                                    Description:</h5>
+                                                <div class="prose prose-invert max-w-none text-blue-300 text-sm mathjax-process"
+                                                    x-html="renderMath(q.diagram_description || q.diagram_note || '')">
+                                                </div>
+                                            </div>
+                                        </template>
+
+                                        <!-- Options (if multiple choice) -->
+                                        <template x-if="q.options && q.options.length > 0">
+                                            <div class="mb-4 p-4 bg-slate-700 rounded-lg">
+                                                <h5 class="font-semibold mb-2">Options:</h5>
+                                                <ol class="list-decimal list-inside space-y-2">
+                                                    <template x-for="(option, optIdx) in q.options" :key="optIdx">
+                                                        <li class="text-slate-300">
+                                                            <span class="mathjax-process"
+                                                                x-html="renderMath(option)"></span>
+                                                        </li>
+                                                    </template>
+                                                </ol>
+                                            </div>
+                                        </template>
+
+                                        <!-- Correct Answer (if provided) -->
+                                        <template x-if="q.correct_answer">
+                                            <div
+                                                class="mb-4 p-4 bg-green-900 bg-opacity-30 rounded-lg border border-green-700">
+                                                <h5 class="font-semibold mb-2 text-green-400">Correct Answer:</h5>
+                                                <div class="prose prose-invert max-w-none text-green-300 mathjax-process"
+                                                    x-html="renderMath(q.correct_answer)"></div>
+                                            </div>
+                                        </template>
+
+                                        <!-- Subparts (if any) -->
+                                        <template x-if="q.subparts && q.subparts.length > 0">
+                                            <div class="mb-4 p-4 bg-slate-700 rounded-lg">
+                                                <h5 class="font-semibold mb-2">Subparts:</h5>
+                                                <template x-for="(subpart, subIdx) in q.subparts" :key="subIdx">
+                                                    <div class="mb-3 p-3 bg-slate-800 rounded">
+                                                        <h6 class="font-medium mb-1" x-text="subpart.subpart_number">
+                                                        </h6>
+                                                        <div class="prose prose-invert max-w-none text-slate-300 text-sm mathjax-process"
+                                                            x-html="renderMath(subpart.subpart_text)"></div>
+                                                        <template x-if="subpart.correct_answer">
+                                                            <div class="mt-2 text-green-400 text-sm mathjax-process"
+                                                                x-html="renderMath(subpart.correct_answer)"></div>
+                                                        </template>
+                                                    </div>
                                                 </template>
                                             </div>
                                         </template>
-                                    </div>
-                                </template>
-                                
-                                <!-- Tabs for Question and Info -->
-                                <div class="mb-4">
-                                    <div class="flex border-b border-slate-700 mb-4">
-                                        <button @click="$nextTick(() => { q.activeTab = 'question' })" 
-                                                :class="(q.activeTab || 'question') === 'question' ? 'border-b-2 border-blue-500 text-blue-400' : 'text-slate-400 hover:text-slate-300'"
-                                                class="px-4 py-2 font-medium transition">
-                                            Question
-                                        </button>
-                                        <button @click="$nextTick(() => { q.activeTab = 'info' })" 
-                                                :class="(q.activeTab || 'question') === 'info' ? 'border-b-2 border-blue-500 text-blue-400' : 'text-slate-400 hover:text-slate-300'"
-                                                class="px-4 py-2 font-medium transition">
-                                            Info & Solution
-                                        </button>
-                                    </div>
-                                    
-                                    <!-- Question Tab Content -->
-                                    <div x-show="(q.activeTab || 'question') === 'question'">
-                                        <!-- Solution (if analyzed) - shown in question tab too -->
-                                <div x-show="q.solution" class="mb-4 p-4 bg-green-900 bg-opacity-20 rounded-lg border border-green-700">
-                                    <h5 class="font-semibold text-green-400 mb-2">Solution:</h5>
-                                    <div class="text-slate-300 whitespace-pre-wrap" x-html="formatQuestionText(q.solution)"></div>
-                                    <div x-show="q.answer" class="mt-2">
-                                        <span class="font-semibold">Answer: </span>
-                                                <span class="text-green-400 mathjax-process" x-html="renderMath(q.answer)"></span>
+
+                                        <!-- Tabs for Question and Info -->
+                                        <div class="mb-4">
+                                            <div class="flex border-b border-slate-700 mb-4">
+                                                <button @click="$nextTick(() => { q.activeTab = 'question' })"
+                                                    :class="(q.activeTab || 'question') === 'question' ? 'border-b-2 border-blue-500 text-blue-400' : 'text-slate-400 hover:text-slate-300'"
+                                                    class="px-4 py-2 font-medium transition">
+                                                    Question
+                                                </button>
+                                                <button @click="$nextTick(() => { q.activeTab = 'info' })"
+                                                    :class="(q.activeTab || 'question') === 'info' ? 'border-b-2 border-blue-500 text-blue-400' : 'text-slate-400 hover:text-slate-300'"
+                                                    class="px-4 py-2 font-medium transition">
+                                                    Info & Solution
+                                                </button>
                                             </div>
-                                    </div>
-                                </div>
-                                
-                                    <!-- Info Tab Content -->
-                                    <div x-show="(q.activeTab || 'question') === 'info'" class="space-y-4">
-                                        <!-- Not Analyzed Message -->
-                                        <div x-show="!q.analyzed" class="p-6 bg-yellow-900 bg-opacity-30 rounded-lg border border-yellow-700 text-center">
-                                            <p class="text-yellow-400 mb-2">This question hasn't been analyzed yet.</p>
-                                            <p class="text-slate-400 text-sm">Click "Analyze Questions" or "Re-analyze" on the exam to see solution, difficulty, subtopics, and more.</p>
-                                        </div>
-                                        
-                                        <!-- Analyzed Content -->
-                                        <div x-show="q.analyzed" class="space-y-4">
-                                        <!-- Correct Answer -->
-                                        <div x-show="q.correct_answer || q.answer" class="p-4 bg-green-900 bg-opacity-30 rounded-lg border border-green-700">
-                                            <h5 class="font-semibold mb-2 text-green-400">✓ Correct Answer:</h5>
-                                            <div class="prose prose-invert max-w-none text-green-300 text-lg font-medium mathjax-process" x-html="renderMath(q.correct_answer || q.answer)"></div>
-                                        </div>
-                                        
-                                        <!-- Solution Explanation -->
-                                        <div x-show="q.solution" class="p-4 bg-blue-900 bg-opacity-20 rounded-lg border border-blue-700">
-                                            <h5 class="font-semibold mb-2 text-blue-400">📝 Solution Explanation:</h5>
-                                            <div class="text-slate-300 whitespace-pre-wrap" x-html="formatQuestionText(q.solution)"></div>
-                                        </div>
-                                        
-                                        <!-- Difficulty -->
-                                        <div x-show="q.difficulty" class="p-4 bg-slate-700 rounded-lg">
-                                            <h5 class="font-semibold mb-2">Difficulty:</h5>
-                                            <div class="flex items-center gap-3">
-                                                <span class="text-2xl font-bold" 
-                                                      :class="q.difficulty <= 2 ? 'text-green-400' : q.difficulty <= 3 ? 'text-yellow-400' : 'text-red-400'"
-                                                      x-text="q.difficulty + '/5'"></span>
-                                                <span x-show="q.difficulty_reasoning" class="text-slate-300 text-sm" x-text="q.difficulty_reasoning"></span>
+
+                                            <!-- Question Tab Content -->
+                                            <div x-show="(q.activeTab || 'question') === 'question'">
+                                                <!-- Solution (if analyzed) - shown in question tab too -->
+                                                <div x-show="q.solution"
+                                                    class="mb-4 p-4 bg-green-900 bg-opacity-20 rounded-lg border border-green-700">
+                                                    <h5 class="font-semibold text-green-400 mb-2">Solution:</h5>
+                                                    <div class="text-slate-300 whitespace-pre-wrap"
+                                                        x-html="formatQuestionText(q.solution)"></div>
+                                                    <div x-show="q.answer" class="mt-2">
+                                                        <span class="font-semibold">Answer: </span>
+                                                        <span class="text-green-400 mathjax-process"
+                                                            x-html="renderMath(q.answer)"></span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                        
-                                        <!-- Subtopics -->
-                                        <div x-show="q.subtopics && q.subtopics.length > 0" class="p-4 bg-purple-900 bg-opacity-20 rounded-lg border border-purple-700">
-                                            <h5 class="font-semibold mb-3 text-purple-400">🔧 Subtopics Required:</h5>
-                                            <div class="space-y-2">
-                                                <template x-for="(subtopic, idx) in q.subtopics" :key="idx">
-                                                    <div class="p-3 bg-slate-800 rounded">
-                                                        <div class="flex items-center justify-between mb-1">
-                                                            <span class="font-medium text-purple-300" x-text="subtopic.name"></span>
-                                                            <span class="text-sm text-slate-400" x-text="'Difficulty: ' + subtopic.difficulty_level + '/5'"></span>
+
+                                            <!-- Info Tab Content -->
+                                            <div x-show="(q.activeTab || 'question') === 'info'" class="space-y-4">
+                                                <!-- Not Analyzed Message -->
+                                                <div x-show="!q.analyzed"
+                                                    class="p-6 bg-yellow-900 bg-opacity-30 rounded-lg border border-yellow-700 text-center">
+                                                    <p class="text-yellow-400 mb-2">This question hasn't been analyzed
+                                                        yet.</p>
+                                                    <p class="text-slate-400 text-sm">Click "Analyze Questions" or
+                                                        "Re-analyze" on the exam to see solution, difficulty, subtopics,
+                                                        and more.</p>
+                                                </div>
+
+                                                <!-- Analyzed Content -->
+                                                <div x-show="q.analyzed" class="space-y-4">
+                                                    <!-- Correct Answer -->
+                                                    <div x-show="q.correct_answer || q.answer"
+                                                        class="p-4 bg-green-900 bg-opacity-30 rounded-lg border border-green-700">
+                                                        <h5 class="font-semibold mb-2 text-green-400">✓ Correct Answer:
+                                                        </h5>
+                                                        <div class="prose prose-invert max-w-none text-green-300 text-lg font-medium mathjax-process"
+                                                            x-html="renderMath(q.correct_answer || q.answer)"></div>
+                                                    </div>
+
+                                                    <!-- Solution Explanation -->
+                                                    <div x-show="q.solution"
+                                                        class="p-4 bg-blue-900 bg-opacity-20 rounded-lg border border-blue-700">
+                                                        <h5 class="font-semibold mb-2 text-blue-400">📝 Solution
+                                                            Explanation:</h5>
+                                                        <div class="text-slate-300 whitespace-pre-wrap"
+                                                            x-html="formatQuestionText(q.solution)"></div>
+                                                    </div>
+
+                                                    <!-- Difficulty -->
+                                                    <div x-show="q.difficulty" class="p-4 bg-slate-700 rounded-lg">
+                                                        <h5 class="font-semibold mb-2">Difficulty:</h5>
+                                                        <div class="flex items-center gap-3">
+                                                            <span class="text-2xl font-bold"
+                                                                :class="q.difficulty <= 2 ? 'text-green-400' : q.difficulty <= 3 ? 'text-yellow-400' : 'text-red-400'"
+                                                                x-text="q.difficulty + '/5'"></span>
+                                                            <span x-show="q.difficulty_reasoning"
+                                                                class="text-slate-300 text-sm"
+                                                                x-text="q.difficulty_reasoning"></span>
                                                         </div>
-                                                        <div x-show="subtopic.description" class="text-sm text-slate-400 mt-1" x-text="subtopic.description"></div>
                                                     </div>
-                                                </template>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Topics Tested at Difficulty -->
-                                        <div x-show="q.topics_tested && q.topics_tested.length > 0" class="p-4 bg-indigo-900 bg-opacity-20 rounded-lg border border-indigo-700">
-                                            <h5 class="font-semibold mb-3 text-indigo-400">📚 Topics Tested:</h5>
-                                            <div class="space-y-2">
-                                                <template x-for="(topic, idx) in q.topics_tested" :key="idx">
-                                                    <div class="flex items-center justify-between p-2 bg-slate-800 rounded">
-                                                        <span class="text-indigo-300" x-text="topic.topic"></span>
-                                                        <span class="text-sm px-2 py-1 rounded" 
-                                                              :class="topic.difficulty <= 2 ? 'bg-green-600' : topic.difficulty <= 3 ? 'bg-yellow-600' : 'bg-red-600'"
-                                                              x-text="topic.difficulty + '/5'"></span>
+
+                                                    <!-- Subtopics -->
+                                                    <div x-show="q.subtopics && q.subtopics.length > 0"
+                                                        class="p-4 bg-purple-900 bg-opacity-20 rounded-lg border border-purple-700">
+                                                        <h5 class="font-semibold mb-3 text-purple-400">🔧 Subtopics
+                                                            Required:</h5>
+                                                        <div class="space-y-2">
+                                                            <template x-for="(subtopic, idx) in q.subtopics" :key="idx">
+                                                                <div class="p-3 bg-slate-800 rounded">
+                                                                    <div class="flex items-center justify-between mb-1">
+                                                                        <span class="font-medium text-purple-300"
+                                                                            x-text="subtopic.name"></span>
+                                                                        <span class="text-sm text-slate-400"
+                                                                            x-text="'Difficulty: ' + subtopic.difficulty_level + '/5'"></span>
+                                                                    </div>
+                                                                    <div x-show="subtopic.description"
+                                                                        class="text-sm text-slate-400 mt-1"
+                                                                        x-text="subtopic.description"></div>
+                                                                </div>
+                                                            </template>
+                                                        </div>
                                                     </div>
-                                                </template>
+
+                                                    <!-- Topics Tested at Difficulty -->
+                                                    <div x-show="q.topics_tested && q.topics_tested.length > 0"
+                                                        class="p-4 bg-indigo-900 bg-opacity-20 rounded-lg border border-indigo-700">
+                                                        <h5 class="font-semibold mb-3 text-indigo-400">📚 Topics Tested:
+                                                        </h5>
+                                                        <div class="space-y-2">
+                                                            <template x-for="(topic, idx) in q.topics_tested"
+                                                                :key="idx">
+                                                                <div
+                                                                    class="flex items-center justify-between p-2 bg-slate-800 rounded">
+                                                                    <span class="text-indigo-300"
+                                                                        x-text="topic.topic"></span>
+                                                                    <span class="text-sm px-2 py-1 rounded"
+                                                                        :class="topic.difficulty <= 2 ? 'bg-green-600' : topic.difficulty <= 3 ? 'bg-yellow-600' : 'bg-red-600'"
+                                                                        x-text="topic.difficulty + '/5'"></span>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Required Skills -->
+                                                    <div x-show="q.skills && q.skills.length > 0"
+                                                        class="p-4 bg-blue-900 bg-opacity-20 rounded-lg border border-blue-700">
+                                                        <h5 class="font-semibold mb-2 text-blue-400">🎯 Required Skills:
+                                                        </h5>
+                                                        <div class="flex flex-wrap gap-2">
+                                                            <template x-for="skill in q.skills" :key="skill">
+                                                                <span
+                                                                    class="px-3 py-1 bg-blue-600 bg-opacity-30 rounded-full text-sm"
+                                                                    x-text="skill"></span>
+                                                            </template>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Prerequisite Skills -->
+                                                    <div x-show="q.prerequisite_skills && q.prerequisite_skills.length > 0"
+                                                        class="p-4 bg-orange-900 bg-opacity-20 rounded-lg border border-orange-700">
+                                                        <h5 class="font-semibold mb-2 text-orange-400">📖 Prerequisite
+                                                            Skills:</h5>
+                                                        <div class="flex flex-wrap gap-2">
+                                                            <template x-for="skill in q.prerequisite_skills"
+                                                                :key="skill">
+                                                                <span
+                                                                    class="px-3 py-1 bg-orange-600 bg-opacity-30 rounded-full text-sm"
+                                                                    x-text="skill"></span>
+                                                            </template>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Subskills -->
+                                                    <div x-show="q.subskills && q.subskills.length > 0"
+                                                        class="p-4 bg-teal-900 bg-opacity-20 rounded-lg border border-teal-700">
+                                                        <h5 class="font-semibold mb-2 text-teal-400">🔍 Detailed
+                                                            Subskills:</h5>
+                                                        <div class="flex flex-wrap gap-2">
+                                                            <template x-for="subskill in q.subskills" :key="subskill">
+                                                                <span
+                                                                    class="px-3 py-1 bg-teal-600 bg-opacity-30 rounded-full text-sm"
+                                                                    x-text="subskill"></span>
+                                                            </template>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Question Type -->
+                                                    <div x-show="q.question_type" class="p-4 bg-slate-700 rounded-lg">
+                                                        <h5 class="font-semibold mb-2">Question Type:</h5>
+                                                        <span class="text-slate-300" x-text="q.question_type"></span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                        
-                                        <!-- Required Skills -->
-                                        <div x-show="q.skills && q.skills.length > 0" class="p-4 bg-blue-900 bg-opacity-20 rounded-lg border border-blue-700">
-                                            <h5 class="font-semibold mb-2 text-blue-400">🎯 Required Skills:</h5>
-                                    <div class="flex flex-wrap gap-2">
-                                        <template x-for="skill in q.skills" :key="skill">
-                                            <span class="px-3 py-1 bg-blue-600 bg-opacity-30 rounded-full text-sm" x-text="skill"></span>
-                                        </template>
                                     </div>
-                                </div>
-                                
-                                        <!-- Prerequisite Skills -->
-                                        <div x-show="q.prerequisite_skills && q.prerequisite_skills.length > 0" class="p-4 bg-orange-900 bg-opacity-20 rounded-lg border border-orange-700">
-                                            <h5 class="font-semibold mb-2 text-orange-400">📖 Prerequisite Skills:</h5>
-                                    <div class="flex flex-wrap gap-2">
-                                        <template x-for="skill in q.prerequisite_skills" :key="skill">
-                                                    <span class="px-3 py-1 bg-orange-600 bg-opacity-30 rounded-full text-sm" x-text="skill"></span>
-                                        </template>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Subskills -->
-                                        <div x-show="q.subskills && q.subskills.length > 0" class="p-4 bg-teal-900 bg-opacity-20 rounded-lg border border-teal-700">
-                                            <h5 class="font-semibold mb-2 text-teal-400">🔍 Detailed Subskills:</h5>
-                                            <div class="flex flex-wrap gap-2">
-                                                <template x-for="subskill in q.subskills" :key="subskill">
-                                                    <span class="px-3 py-1 bg-teal-600 bg-opacity-30 rounded-full text-sm" x-text="subskill"></span>
-                                                </template>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Question Type -->
-                                        <div x-show="q.question_type" class="p-4 bg-slate-700 rounded-lg">
-                                            <h5 class="font-semibold mb-2">Question Type:</h5>
-                                            <span class="text-slate-300" x-text="q.question_type"></span>
-                                        </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </template>
-                        </div>
-                    </div>
-                    
-                    <!-- Empty state for questions -->
-                    <div x-show="selectedExamQuestions !== null && selectedExamQuestions.length === 0" class="mt-8">
-                        <div class="card empty-state-card">
-                            <div class="empty-state-icon" aria-hidden="true">📝</div>
-                            <h2 class="empty-state-title">No Questions Found</h2>
-                            <p class="empty-state-description">
-                                This exam doesn't have any questions extracted yet. This might happen if:
-                            </p>
-                            <ul class="text-slate-400 text-left max-w-md mx-auto mb-4 space-y-2">
-                                <li>• All pages were detected as instructions/logistics</li>
-                                <li>• The OCR couldn't identify question patterns</li>
-                                <li>• The exam file needs to be re-uploaded</li>
-                            </ul>
-                            <p class="text-slate-400 text-sm mb-4">
-                                Try uploading the exam again, or make sure your exam file contains actual questions (not just instructions).
-                            </p>
-                        </div>
-                    </div>
-                    </div>
-                </section>
-                
-                <!-- STUDY VIEW (BoilerBuddy Style) -->
-                <section class="view" data-view="study">
-                    <div class="page">
-                        <!-- Progress Header (BoilerBuddy Style) -->
-                        <div class="card mb-6" id="study-progress-header" style="display: none;">
-                            <div class="flex items-center justify-between">
-                                <button @click="currentView = 'home'" 
-                                        class="p-2 hover:bg-slate-700 rounded-xl transition-colors">
-                                    <span class="text-xl">✕</span>
-                                </button>
-                                <div class="flex-1 mx-4">
-                                    <div class="h-2 bg-slate-700 rounded-full overflow-hidden">
-                                        <div id="study-progress-bar" class="h-full bg-[#9B72CF] rounded-full transition-all" style="width: 40%"></div>
-                                    </div>
-                                </div>
-                                <span class="text-sm text-slate-400" id="study-progress-text">2/5</span>
+                                </template>
                             </div>
                         </div>
-                    
+
+                        <!-- Empty state for questions -->
+                        <div x-show="selectedExamQuestions !== null && selectedExamQuestions.length === 0" class="mt-8">
+                            <div class="card empty-state-card">
+                                <div class="empty-state-icon" aria-hidden="true">📝</div>
+                                <h2 class="empty-state-title">No Questions Found</h2>
+                                <p class="empty-state-description">
+                                    This exam doesn't have any questions extracted yet. This might happen if:
+                                </p>
+                                <ul class="text-slate-400 text-left max-w-md mx-auto mb-4 space-y-2">
+                                    <li>• All pages were detected as instructions/logistics</li>
+                                    <li>• The OCR couldn't identify question patterns</li>
+                                    <li>• The exam file needs to be re-uploaded</li>
+                                </ul>
+                                <p class="text-slate-400 text-sm mb-4">
+                                    Try uploading the exam again, or make sure your exam file contains actual questions
+                                    (not just instructions).
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+            </section>
+
+            <!-- STUDY VIEW (BoilerBuddy Style) -->
+            <section class="view" data-view="study">
+                <div class="page">
+                    <!-- Progress Header (BoilerBuddy Style) -->
+                    <div class="card mb-6" id="study-progress-header" style="display: none;">
+                        <div class="flex items-center justify-between">
+                            <button @click="currentView = 'home'"
+                                class="p-2 hover:bg-slate-700 rounded-xl transition-colors">
+                                <span class="text-xl">✕</span>
+                            </button>
+                            <div class="flex-1 mx-4">
+                                <div class="h-2 bg-slate-700 rounded-full overflow-hidden">
+                                    <div id="study-progress-bar" class="h-full bg-[#CEB888] rounded-full transition-all"
+                                        style="width: 40%"></div>
+                                </div>
+                            </div>
+                            <span class="text-sm text-slate-400" id="study-progress-text">2/5</span>
+                        </div>
+                    </div>
+
                     <!-- Step-by-step Stepper (BoilerBuddy Style) -->
                     <div class="card mb-6" id="step-stepper" style="display: none;">
                         <h4 class="mb-4 text-slate-400 text-sm">Problem-solving steps</h4>
@@ -1175,19 +1229,21 @@
                             <!-- Steps will be populated by JavaScript -->
                         </div>
                     </div>
-                    
+
                     <!-- Quiz Section (BoilerBuddy Style) -->
                     <div id="quiz-section" style="display: none;" class="card">
                         <div class="flex items-start justify-between mb-6">
                             <div class="flex-1">
-                                <span id="topic-name" class="inline-block text-xs text-[#9B72CF] bg-[#9B72CF]/10 px-3 py-1 rounded-full mb-3"></span>
+                                <span id="topic-name"
+                                    class="inline-block text-xs text-[#CEB888] bg-[#CEB888]/10 px-3 py-1 rounded-full mb-3"></span>
                                 <h2 id="question-text" class="text-2xl mb-4 leading-relaxed"></h2>
                                 <p class="text-slate-400 text-sm" id="question-hint"></p>
                             </div>
                         </div>
-                        
+
                         <!-- AI Hint (shown when hint is requested) -->
-                        <div id="hint-container" style="display: none;" class="mb-6 bg-blue-900/30 border border-blue-700 rounded-2xl p-4">
+                        <div id="hint-container" style="display: none;"
+                            class="mb-6 bg-blue-900/30 border border-blue-700 rounded-2xl p-4">
                             <div class="flex gap-3">
                                 <span class="text-2xl">💡</span>
                                 <div>
@@ -1196,65 +1252,63 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Multiple Choice Options (BoilerBuddy Style) -->
                         <div id="options-container" class="space-y-3 mb-6"></div>
-                        
+
                         <!-- Action Buttons (BoilerBuddy Style) -->
                         <div class="flex flex-col sm:flex-row gap-3">
                             <button @click="showHint()" id="show-hint-btn"
-                                    class="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border-2 border-slate-600 hover:bg-slate-700 transition-colors">
+                                class="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border-2 border-slate-600 hover:bg-slate-700 transition-colors">
                                 <span>❓</span>
                                 <span>Show Hint</span>
                             </button>
-                            <button @click="checkAnswer()" id="check-answer-btn"
-                                    disabled
-                                    class="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-[#9B72CF] text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
+                            <button @click="checkAnswer()" id="check-answer-btn" disabled
+                                class="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-[#CEB888] text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
                                 Check Answer
                                 <span>→</span>
                             </button>
                         </div>
-                        
+
                         <!-- Feedback (BoilerBuddy Style) -->
                         <div id="feedback" style="display: none;" class="mt-6">
                             <div id="feedback-content" class="rounded-2xl p-6 mb-4"></div>
-                            <button id="next-btn" style="display: none;" 
-                                    class="w-full px-6 py-3 bg-[#9B72CF] hover:opacity-90 rounded-2xl font-medium transition text-white">
+                            <button id="next-btn" style="display: none;"
+                                class="w-full px-6 py-3 bg-[#CEB888] hover:opacity-90 rounded-2xl font-medium transition text-white">
                                 Next Question
                             </button>
                         </div>
                     </div>
-                    
+
                     <!-- No Quiz Active Message (BoilerBuddy Style) -->
                     <div id="no-quiz-message" class="card empty-state-card">
                         <div class="empty-state-icon" aria-hidden="true">📚</div>
                         <h2 class="empty-state-title">No Active Study Session</h2>
-                        <p class="empty-state-description">Upload study materials or select a topic to begin practicing.</p>
-                        <button @click="currentView = 'home'" 
-                                class="px-6 py-3 bg-[#9B72CF] hover:opacity-90 rounded-2xl font-medium transition text-white shadow-lg">
+                        <p class="empty-state-description">Upload study materials or select a topic to begin practicing.
+                        </p>
+                        <button @click="currentView = 'home'"
+                            class="px-6 py-3 bg-[#CEB888] hover:opacity-90 rounded-2xl font-medium transition text-white shadow-lg">
                             Go to Home
                         </button>
                     </div>
-                    
+
                     <!-- Floating "I feel stuck" Button (BoilerBuddy Style) -->
-                    <button @click="openGuideMeModal()" 
-                            id="stuck-button"
-                            style="display: none;"
-                            class="fixed bottom-24 lg:bottom-8 right-8 bg-[#d4183d] text-white px-6 py-4 rounded-full shadow-lg hover:opacity-90 transition-opacity flex items-center gap-2 z-40">
+                    <button @click="openGuideMeModal()" id="stuck-button" style="display: none;"
+                        class="fixed bottom-24 lg:bottom-8 right-8 bg-[#d4183d] text-white px-6 py-4 rounded-full shadow-lg hover:opacity-90 transition-opacity flex items-center gap-2 z-40">
                         <span>⚠️</span>
                         <span>I feel stuck</span>
                     </button>
+                </div>
+            </section>
+
+            <!-- ANALYTICS VIEW -->
+            <section class="view" data-view="analytics">
+                <div class="page">
+                    <div>
+                        <h1 class="text-3xl font-bold mb-2">Learning Analytics</h1>
+                        <p class="text-slate-400 mb-6">Track your progress and identify areas for improvement</p>
                     </div>
-                </section>
-                
-                <!-- ANALYTICS VIEW -->
-                <section class="view" data-view="analytics">
-                    <div class="page">
-                        <div>
-                            <h1 class="text-3xl font-bold mb-2">Learning Analytics</h1>
-                            <p class="text-slate-400 mb-6">Track your progress and identify areas for improvement</p>
-                        </div>
-                    
+
                     <!-- Stats Grid -->
                     <div class="grid grid-cols-4 gap-4" x-show="totalQuestions > 0">
                         <div class="stat-card animate-stats-card" data-animate-delay="0">
@@ -1278,18 +1332,19 @@
                             <div class="stat-card-label">Topics Mastered</div>
                         </div>
                     </div>
-                    
+
                     <!-- Analytics Empty State -->
                     <div x-show="totalQuestions === 0" class="card empty-state-card">
                         <div class="empty-state-icon" aria-hidden="true">📊</div>
                         <h2 class="empty-state-title">No Analytics Yet</h2>
-                        <p class="empty-state-description">We'll show your performance here once you've answered some questions.</p>
-                        <button @click="currentView = 'study'" 
-                                class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition btn-animate">
+                        <p class="empty-state-description">We'll show your performance here once you've answered some
+                            questions.</p>
+                        <button @click="currentView = 'study'"
+                            class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition btn-animate">
                             Start Practicing
                         </button>
                     </div>
-                    
+
                     <!-- Charts Grid -->
                     <div class="grid grid-cols-2 gap-6" x-show="totalQuestions > 0">
                         <!-- Forgetting Curve Chart -->
@@ -1300,7 +1355,7 @@
                                 📌 Shows predicted retention over time for each topic
                             </p>
                         </div>
-                        
+
                         <!-- Mastery Progress Chart -->
                         <div class="bg-slate-800 rounded-xl p-6">
                             <h2 class="text-lg font-semibold mb-4">Mastery Progress Over Time</h2>
@@ -1309,7 +1364,7 @@
                                 📈 Track how your understanding improves with practice
                             </p>
                         </div>
-                        
+
                         <!-- Study Heatmap -->
                         <div class="bg-slate-800 rounded-xl p-6">
                             <h2 class="text-lg font-semibold mb-4">Study Activity Heatmap</h2>
@@ -1320,7 +1375,7 @@
                                 📅 Your study consistency over the past weeks
                             </p>
                         </div>
-                        
+
                         <!-- Time of Day Performance -->
                         <div class="bg-slate-800 rounded-xl p-6">
                             <h2 class="text-lg font-semibold mb-4">Performance by Time of Day</h2>
@@ -1329,7 +1384,7 @@
                                 ⏰ Discover when you study most effectively
                             </p>
                         </div>
-                        
+
                         <!-- Topic Distribution -->
                         <div class="bg-slate-800 rounded-xl p-6 col-span-2">
                             <h2 class="text-lg font-semibold mb-4">Topic Distribution</h2>
@@ -1339,7 +1394,7 @@
                             </p>
                         </div>
                     </div>
-                    
+
                     <!-- Performance Insights -->
                     <div class="mt-6 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl p-6">
                         <h2 class="text-xl font-semibold mb-4">🌟 Performance Insights</h2>
@@ -1347,17 +1402,17 @@
                             <!-- Generated dynamically -->
                         </div>
                     </div>
+                </div>
+            </section>
+
+            <!-- EXAM PREP VIEW -->
+            <section class="view" data-view="exam-prep">
+                <div class="page">
+                    <div>
+                        <h1 class="text-3xl font-bold mb-2">Exam Preparation</h1>
+                        <p class="text-slate-400 mb-6">Create personalized study plans for your upcoming exams</p>
                     </div>
-                </section>
-                
-                <!-- EXAM PREP VIEW -->
-                <section class="view" data-view="exam-prep">
-                    <div class="page">
-                        <div>
-                            <h1 class="text-3xl font-bold mb-2">Exam Preparation</h1>
-                            <p class="text-slate-400 mb-6">Create personalized study plans for your upcoming exams</p>
-                        </div>
-                    
+
                     <!-- Create New Exam Plan -->
                     <div class="card mb-6">
                         <h2 class="text-xl font-semibold mb-4">Create Exam Prep Plan</h2>
@@ -1365,37 +1420,39 @@
                             <div>
                                 <label class="block text-sm font-medium mb-2">Exam Name</label>
                                 <input type="text" id="exam-name" placeholder="e.g., CS 180 Midterm"
-                                       class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-300 focus:outline-none focus:border-blue-500">
+                                    class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-300 focus:outline-none focus:border-blue-500">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium mb-2">Exam Date</label>
                                 <input type="date" id="exam-date"
-                                       class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-300 focus:outline-none focus:border-blue-500">
+                                    class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-300 focus:outline-none focus:border-blue-500">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium mb-2">Select Topics</label>
-                                <div id="exam-topics-selector" class="space-y-2 max-h-48 overflow-y-auto p-2 bg-slate-700 rounded-lg">
+                                <div id="exam-topics-selector"
+                                    class="space-y-2 max-h-48 overflow-y-auto p-2 bg-slate-700 rounded-lg">
                                     <!-- Topics will be populated here -->
                                 </div>
                             </div>
-                            <button type="submit" 
-                                    class="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-lg font-medium transition">
+                            <button type="submit"
+                                class="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-lg font-medium transition">
                                 Generate Study Plan
                             </button>
                         </form>
                     </div>
-                    
+
                     <!-- Exam Prep Empty State -->
                     <div x-show="allTopics.length === 0" class="card empty-state-card">
                         <div class="empty-state-icon" aria-hidden="true">📚</div>
                         <h2 class="empty-state-title">No Study Plan Yet</h2>
-                        <p class="empty-state-description">Upload study materials to extract topics, then create a personalized exam prep plan.</p>
-                        <button @click="currentView = 'home'" 
-                                class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition btn-animate">
+                        <p class="empty-state-description">Upload study materials to extract topics, then create a
+                            personalized exam prep plan.</p>
+                        <button @click="currentView = 'home'"
+                            class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition btn-animate">
                             Upload Study Material
                         </button>
                     </div>
-                    
+
                     <!-- Exam Readiness Dashboard -->
                     <div id="exam-readiness-dashboard" style="display: none;">
                         <div class="grid grid-cols-3 gap-4">
@@ -1415,14 +1472,14 @@
                                 <div class="stat-card-label">Predicted Score</div>
                             </div>
                         </div>
-                        
+
                         <div class="bg-slate-800 rounded-xl p-6 mb-6">
                             <h2 class="text-xl font-semibold mb-4">Topic Readiness</h2>
                             <div id="topic-readiness-list" class="space-y-4">
                                 <!-- Topic readiness bars will be generated here -->
                             </div>
                         </div>
-                        
+
                         <div class="bg-slate-800 rounded-xl p-6">
                             <h3 class="text-xl font-semibold mb-4">Daily Study Goals</h3>
                             <div id="daily-goals-list" class="space-y-3">
@@ -1430,271 +1487,300 @@
                             </div>
                         </div>
                     </div>
-                    </div>
-                </section>
-                
-                <!-- GROUP STUDY VIEW (BoilerBuddy Style) -->
-                <section class="view" data-view="group-study">
-                    <div class="page">
-                        <div class="bg-white rounded-3xl shadow-lg p-6 border border-gray-200 mb-6">
-                            <div class="flex items-center justify-between mb-4">
-                                <button @click="currentView = 'home'" class="p-2 hover:bg-gray-100 rounded-xl transition-colors">
-                                    <i data-lucide="x" class="w-6 h-6"></i>
-                                </button>
-                                <div class="flex items-center gap-3">
-                                    <i data-lucide="users" class="w-5 h-5 text-[#9B72CF]"></i>
-                                    <div>
-                                        <h3 class="text-sm font-semibold">Group Study Session</h3>
-                                        <p class="text-xs text-gray-500">Code: <span x-text="sessionCode || 'ABC-123'"></span></p>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-2 text-gray-500">
-                                    <i data-lucide="clock" class="w-4 h-4"></i>
-                                    <span class="text-sm">24:15</span>
+                </div>
+            </section>
+
+            <!-- GROUP STUDY VIEW (BoilerBuddy Style) -->
+            <section class="view" data-view="group-study">
+                <div class="page">
+                    <div class="bg-white rounded-3xl shadow-lg p-6 border border-gray-200 mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <button @click="currentView = 'home'"
+                                class="p-2 hover:bg-gray-100 rounded-xl transition-colors">
+                                <i data-lucide="x" class="w-6 h-6"></i>
+                            </button>
+                            <div class="flex items-center gap-3">
+                                <i data-lucide="users" class="w-5 h-5 text-[#CEB888]"></i>
+                                <div>
+                                    <h3 class="text-sm font-semibold">Group Study Session</h3>
+                                    <p class="text-xs text-gray-500">Code: <span
+                                            x-text="sessionCode || 'ABC-123'"></span></p>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="flex flex-col lg:flex-row gap-6">
-                            <!-- Left: Question feed -->
-                            <div class="flex-1 space-y-6">
-                                <!-- Current Question -->
-                                <div class="bg-white rounded-3xl shadow-lg p-6 border border-gray-200">
-                                    <div class="flex items-center justify-between mb-4">
-                                        <span class="inline-block text-xs text-[#9B72CF] bg-[#9B72CF]/10 px-3 py-1 rounded-full">Current Question</span>
-                                        <div class="flex items-center gap-2">
-                                            <div class="flex -space-x-2">
-                                                <template x-for="member in activeMembers.filter(m => m.answered)" :key="member.id">
-                                                    <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center border-2 border-white text-white text-xs">
-                                                        <i data-lucide="check-circle" class="w-4 h-4"></i>
-                                                    </div>
-                                                </template>
-                                            </div>
-                                            <span class="text-sm text-gray-500" x-text="activeMembers.filter(m => m.answered).length + '/' + activeMembers.length + ' answered'"></span>
-                                        </div>
-                                    </div>
-                                    <h2 class="text-xl font-semibold mb-4" x-text="currentQuestion ? currentQuestion.question : 'Find the derivative of f(x) = 3x² + 2x - 5'"></h2>
-                                    <div class="space-y-3">
-                                        <template x-for="(option, index) in (currentQuestion ? currentQuestion.options : ['6x + 2', '6x² + 2x', '3x + 2', '6x'])" :key="index">
-                                            <button class="w-full text-left p-4 rounded-2xl border-2 border-gray-200 hover:border-[#9B72CF]/50 hover:bg-[#9B72CF]/5 transition-all">
-                                                <div class="flex items-center gap-3">
-                                                    <span class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm" x-text="String.fromCharCode(65 + index)"></span>
-                                                    <span x-text="option"></span>
-                                                </div>
-                                            </button>
-                                        </template>
-                                    </div>
-                                    <div class="mt-6 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                        <div class="h-full w-3/4 bg-amber-500 rounded-full transition-all"></div>
-                                    </div>
-                                    <p class="text-xs text-gray-500 mt-2 text-center">Time remaining: 45 seconds</p>
-                                </div>
-                                
-                                <!-- Previous Questions -->
-                                <div class="bg-white rounded-3xl shadow-lg p-6 border border-gray-200">
-                                    <h3 class="text-lg font-semibold mb-4">Previous Questions</h3>
-                                    <div class="space-y-3">
-                                        <div class="p-4 bg-gray-50 rounded-2xl">
-                                            <p class="text-sm mb-2">Evaluate ∫x² dx</p>
-                                            <div class="flex items-center justify-between">
-                                                <span class="text-xs text-green-600">Answer: x³/3 + C</span>
-                                                <span class="text-xs text-gray-500">3/4 correct</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Right: Chat and members -->
-                            <div class="lg:w-96 flex flex-col border-t lg:border-t-0 lg:border-l border-gray-200">
-                                <!-- Active members -->
-                                <div class="p-4 border-b border-gray-200">
-                                    <h4 class="mb-3 text-sm text-gray-500">Active Members</h4>
-                                    <div class="space-y-2">
-                                        <template x-for="member in activeMembers" :key="member.id">
-                                            <div class="flex items-center gap-3">
-                                                <div class="w-10 h-10 rounded-full bg-[#9B72CF] flex items-center justify-center text-white relative">
-                                                    <span x-text="member.avatar"></span>
-                                                    <div class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white" 
-                                                         :class="member.status === 'active' ? 'bg-green-500' : 'bg-amber-500'"></div>
-                                                </div>
-                                                <div class="flex-1">
-                                                    <p class="text-sm" x-text="member.name"></p>
-                                                    <p class="text-xs text-gray-500" x-text="member.status === 'active' ? 'Active' : 'Thinking...'"></p>
-                                                </div>
-                                                <i x-show="member.answered" data-lucide="check-circle" class="w-5 h-5 text-green-600"></i>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </div>
-                                
-                                <!-- Chat -->
-                                <div class="flex-1 flex flex-col">
-                                    <div class="flex-1 p-4 overflow-y-auto space-y-3">
-                                        <template x-for="msg in chatMessages" :key="msg.id">
-                                            <div :class="msg.isSystem ? 'text-center' : ''">
-                                                <template x-if="msg.isSystem">
-                                                    <p class="text-xs text-gray-500 bg-gray-100 px-3 py-2 rounded-full inline-block" x-text="msg.message"></p>
-                                                </template>
-                                                <template x-if="!msg.isSystem">
-                                                    <div>
-                                                        <div class="flex items-center gap-2 mb-1">
-                                                            <p class="text-xs" x-text="msg.user"></p>
-                                                            <span class="text-xs text-gray-500" x-text="msg.time"></span>
-                                                        </div>
-                                                        <div class="bg-gray-100 rounded-2xl rounded-tl-none px-4 py-2">
-                                                            <p class="text-sm" x-text="msg.message"></p>
-                                                        </div>
-                                                    </div>
-                                                </template>
-                                            </div>
-                                        </template>
-                                    </div>
-                                    
-                                    <!-- Message input -->
-                                    <div class="p-4 border-t border-gray-200">
-                                        <div class="flex gap-2">
-                                            <input type="text" x-model="chatMessage" @keypress.enter="sendChatMessage()" placeholder="Type a message..." 
-                                                   class="flex-1 px-4 py-3 rounded-2xl border-2 border-gray-200 bg-white focus:border-[#9B72CF] focus:outline-none focus:ring-2 focus:ring-[#9B72CF]/20">
-                                            <button @click="sendChatMessage()" :disabled="!chatMessage || !chatMessage.trim()" 
-                                                    class="px-4 py-3 bg-[#9B72CF] text-white rounded-2xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
-                                                <i data-lucide="send" class="w-5 h-5"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-                
-                <!-- HEATMAP VIEW (BoilerBuddy Style) -->
-                <section class="view" data-view="heatmap">
-                    <div class="page">
-                        <div class="mb-8">
-                            <h1 class="text-3xl md:text-4xl mb-2 flex items-center gap-3">
-                                <i data-lucide="map-pin" class="w-8 h-8 text-[#9B72CF]"></i>
-                                Campus Heatmap
-                            </h1>
-                            <p class="text-gray-400">See where Boilermakers are studying right now</p>
-                        </div>
-                        
-                        <!-- Time Filter -->
-                        <div class="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-gray-200 mb-6">
-                            <label class="text-sm text-gray-600 mb-3 block flex items-center gap-2">
+                            <div class="flex items-center gap-2 text-gray-500">
                                 <i data-lucide="clock" class="w-4 h-4"></i>
-                                Time Filter
-                            </label>
-                            <div class="flex gap-2">
-                                <button @click="heatmapTimeFilter = 'now'" 
-                                        :class="heatmapTimeFilter === 'now' ? 'bg-[#9B72CF]/10 text-[#9B72CF] border-2 border-[#9B72CF]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-                                        class="px-4 py-2 rounded-xl transition-all border-2 border-transparent">
-                                    Now
-                                </button>
-                                <button @click="heatmapTimeFilter = '24h'" 
-                                        :class="heatmapTimeFilter === '24h' ? 'bg-[#9B72CF]/10 text-[#9B72CF] border-2 border-[#9B72CF]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-                                        class="px-4 py-2 rounded-xl transition-all border-2 border-transparent">
-                                    Past 24 Hours
-                                </button>
-                                <button @click="heatmapTimeFilter = 'week'" 
-                                        :class="heatmapTimeFilter === 'week' ? 'bg-[#9B72CF]/10 text-[#9B72CF] border-2 border-[#9B72CF]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-                                        class="px-4 py-2 rounded-xl transition-all border-2 border-transparent">
-                                    Past Week
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Heatmap -->
-                        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-lg border border-gray-200 mb-6">
-                            <div class="relative h-[500px] bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl overflow-hidden mb-6">
-                                <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg shadow-sm">
-                                    <p class="text-sm">Purdue University Campus</p>
-                                </div>
-                                <!-- Study location markers would be rendered here -->
-                                <div class="absolute inset-0 flex items-center justify-center text-gray-400">
-                                    <p>Map visualization coming soon</p>
-                                </div>
-                            </div>
-                            
-                            <!-- Legend -->
-                            <div class="flex items-center justify-center gap-6 text-sm flex-wrap">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-8 h-8 bg-gradient-to-br from-green-500 to-green-400 rounded-full"></div>
-                                    <span class="text-gray-600">Low Activity (1-10)</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-full"></div>
-                                    <span class="text-gray-600">Medium Activity (11-25)</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-500 rounded-full"></div>
-                                    <span class="text-gray-600">High Activity (26+)</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Location List -->
-                        <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-                            <h3 class="text-lg font-semibold mb-4">All Study Locations</h3>
-                            <div class="grid md:grid-cols-2 gap-4">
-                                <template x-for="location in studyLocations.sort((a, b) => b.students - a.students)" :key="location.id">
-                                    <div class="flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:border-[#9B72CF] hover:bg-[#9B72CF]/5 transition-all">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-12 h-12 bg-gradient-to-br from-[#9B72CF] to-[#CEB888] rounded-xl flex items-center justify-center text-white">
-                                                <i data-lucide="map-pin" class="w-6 h-6"></i>
-                                            </div>
-                                            <div>
-                                                <h4 class="font-medium" x-text="location.name"></h4>
-                                                <p class="text-sm text-gray-600 flex items-center gap-1">
-                                                    <i data-lucide="users" class="w-3 h-3"></i>
-                                                    <span x-text="location.students + ' students'"></span>
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <span x-show="location.hot" class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs">🔥 Hot Spot</span>
-                                    </div>
-                                </template>
+                                <span class="text-sm">24:15</span>
                             </div>
                         </div>
                     </div>
-                </section>
-                
-                <!-- LEADERBOARDS VIEW (BoilerBuddy Style) -->
-                <section class="view" data-view="leaderboards">
-                    <div class="page">
-                        <div class="mb-6">
-                            <h1 class="text-3xl font-bold mb-2">Leaderboard</h1>
-                            <p class="text-slate-400">Compete with Purdue students</p>
+
+                    <div class="flex flex-col lg:flex-row gap-6">
+                        <!-- Left: Question feed -->
+                        <div class="flex-1 space-y-6">
+                            <!-- Current Question -->
+                            <div class="bg-white rounded-3xl shadow-lg p-6 border border-gray-200">
+                                <div class="flex items-center justify-between mb-4">
+                                    <span
+                                        class="inline-block text-xs text-[#CEB888] bg-[#CEB888]/10 px-3 py-1 rounded-full">Current
+                                        Question</span>
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex -space-x-2">
+                                            <template x-for="member in activeMembers.filter(m => m.answered)"
+                                                :key="member.id">
+                                                <div
+                                                    class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center border-2 border-white text-white text-xs">
+                                                    <i data-lucide="check-circle" class="w-4 h-4"></i>
+                                                </div>
+                                            </template>
+                                        </div>
+                                        <span class="text-sm text-gray-500"
+                                            x-text="activeMembers.filter(m => m.answered).length + '/' + activeMembers.length + ' answered'"></span>
+                                    </div>
+                                </div>
+                                <h2 class="text-xl font-semibold mb-4"
+                                    x-text="currentQuestion ? currentQuestion.question : 'Find the derivative of f(x) = 3x² + 2x - 5'">
+                                </h2>
+                                <div class="space-y-3">
+                                    <template
+                                        x-for="(option, index) in (currentQuestion ? currentQuestion.options : ['6x + 2', '6x² + 2x', '3x + 2', '6x'])"
+                                        :key="index">
+                                        <button
+                                            class="w-full text-left p-4 rounded-2xl border-2 border-gray-200 hover:border-[#CEB888]/50 hover:bg-[#CEB888]/5 transition-all">
+                                            <div class="flex items-center gap-3">
+                                                <span
+                                                    class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm"
+                                                    x-text="String.fromCharCode(65 + index)"></span>
+                                                <span x-text="option"></span>
+                                            </div>
+                                        </button>
+                                    </template>
+                                </div>
+                                <div class="mt-6 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div class="h-full w-3/4 bg-amber-500 rounded-full transition-all"></div>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-2 text-center">Time remaining: 45 seconds</p>
+                            </div>
+
+                            <!-- Previous Questions -->
+                            <div class="bg-white rounded-3xl shadow-lg p-6 border border-gray-200">
+                                <h3 class="text-lg font-semibold mb-4">Previous Questions</h3>
+                                <div class="space-y-3">
+                                    <div class="p-4 bg-gray-50 rounded-2xl">
+                                        <p class="text-sm mb-2">Evaluate ∫x² dx</p>
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs text-green-600">Answer: x³/3 + C</span>
+                                            <span class="text-xs text-gray-500">3/4 correct</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    
+
+                        <!-- Right: Chat and members -->
+                        <div class="lg:w-96 flex flex-col border-t lg:border-t-0 lg:border-l border-gray-200">
+                            <!-- Active members -->
+                            <div class="p-4 border-b border-gray-200">
+                                <h4 class="mb-3 text-sm text-gray-500">Active Members</h4>
+                                <div class="space-y-2">
+                                    <template x-for="member in activeMembers" :key="member.id">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-10 h-10 rounded-full bg-[#CEB888] flex items-center justify-center text-white relative">
+                                                <span x-text="member.avatar"></span>
+                                                <div class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white"
+                                                    :class="member.status === 'active' ? 'bg-green-500' : 'bg-amber-500'">
+                                                </div>
+                                            </div>
+                                            <div class="flex-1">
+                                                <p class="text-sm" x-text="member.name"></p>
+                                                <p class="text-xs text-gray-500"
+                                                    x-text="member.status === 'active' ? 'Active' : 'Thinking...'"></p>
+                                            </div>
+                                            <i x-show="member.answered" data-lucide="check-circle"
+                                                class="w-5 h-5 text-green-600"></i>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Chat -->
+                            <div class="flex-1 flex flex-col">
+                                <div class="flex-1 p-4 overflow-y-auto space-y-3">
+                                    <template x-for="msg in chatMessages" :key="msg.id">
+                                        <div :class="msg.isSystem ? 'text-center' : ''">
+                                            <template x-if="msg.isSystem">
+                                                <p class="text-xs text-gray-500 bg-gray-100 px-3 py-2 rounded-full inline-block"
+                                                    x-text="msg.message"></p>
+                                            </template>
+                                            <template x-if="!msg.isSystem">
+                                                <div>
+                                                    <div class="flex items-center gap-2 mb-1">
+                                                        <p class="text-xs" x-text="msg.user"></p>
+                                                        <span class="text-xs text-gray-500" x-text="msg.time"></span>
+                                                    </div>
+                                                    <div class="bg-gray-100 rounded-2xl rounded-tl-none px-4 py-2">
+                                                        <p class="text-sm" x-text="msg.message"></p>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <!-- Message input -->
+                                <div class="p-4 border-t border-gray-200">
+                                    <div class="flex gap-2">
+                                        <input type="text" x-model="chatMessage" @keypress.enter="sendChatMessage()"
+                                            placeholder="Type a message..."
+                                            class="flex-1 px-4 py-3 rounded-2xl border-2 border-gray-200 bg-white focus:border-[#CEB888] focus:outline-none focus:ring-2 focus:ring-[#CEB888]/20">
+                                        <button @click="sendChatMessage()"
+                                            :disabled="!chatMessage || !chatMessage.trim()"
+                                            class="px-4 py-3 bg-[#CEB888] text-white rounded-2xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
+                                            <i data-lucide="send" class="w-5 h-5"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- HEATMAP VIEW (BoilerBuddy Style) -->
+            <section class="view" data-view="heatmap">
+                <div class="page">
+                    <div class="mb-8">
+                        <h1 class="text-3xl md:text-4xl mb-2 flex items-center gap-3">
+                            <i data-lucide="map-pin" class="w-8 h-8 text-[#CEB888]"></i>
+                            Campus Heatmap
+                        </h1>
+                        <p class="text-gray-400">See where Boilermakers are studying right now</p>
+                    </div>
+
+                    <!-- Time Filter -->
+                    <div class="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-gray-200 mb-6">
+                        <label class="text-sm text-gray-600 mb-3 block flex items-center gap-2">
+                            <i data-lucide="clock" class="w-4 h-4"></i>
+                            Time Filter
+                        </label>
+                        <div class="flex gap-2">
+                            <button @click="heatmapTimeFilter = 'now'"
+                                :class="heatmapTimeFilter === 'now' ? 'bg-[#CEB888]/10 text-[#CEB888] border-2 border-[#CEB888]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                                class="px-4 py-2 rounded-xl transition-all border-2 border-transparent">
+                                Now
+                            </button>
+                            <button @click="heatmapTimeFilter = '24h'"
+                                :class="heatmapTimeFilter === '24h' ? 'bg-[#CEB888]/10 text-[#CEB888] border-2 border-[#CEB888]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                                class="px-4 py-2 rounded-xl transition-all border-2 border-transparent">
+                                Past 24 Hours
+                            </button>
+                            <button @click="heatmapTimeFilter = 'week'"
+                                :class="heatmapTimeFilter === 'week' ? 'bg-[#CEB888]/10 text-[#CEB888] border-2 border-[#CEB888]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                                class="px-4 py-2 rounded-xl transition-all border-2 border-transparent">
+                                Past Week
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Heatmap -->
+                    <div class="bg-white rounded-3xl p-6 md:p-8 shadow-lg border border-gray-200 mb-6">
+                        <div
+                            class="relative h-[500px] bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl overflow-hidden mb-6">
+                            <div
+                                class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg shadow-sm">
+                                <p class="text-sm">Purdue University Campus</p>
+                            </div>
+                            <!-- Study location markers would be rendered here -->
+                            <div class="absolute inset-0 flex items-center justify-center text-gray-400">
+                                <p>Map visualization coming soon</p>
+                            </div>
+                        </div>
+
+                        <!-- Legend -->
+                        <div class="flex items-center justify-center gap-6 text-sm flex-wrap">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 bg-gradient-to-br from-green-500 to-green-400 rounded-full"></div>
+                                <span class="text-gray-600">Low Activity (1-10)</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-full">
+                                </div>
+                                <span class="text-gray-600">Medium Activity (11-25)</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-500 rounded-full"></div>
+                                <span class="text-gray-600">High Activity (26+)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Location List -->
+                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
+                        <h3 class="text-lg font-semibold mb-4">All Study Locations</h3>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <template x-for="location in studyLocations.sort((a, b) => b.students - a.students)"
+                                :key="location.id">
+                                <div
+                                    class="flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:border-[#CEB888] hover:bg-[#CEB888]/5 transition-all">
+                                    <div class="flex items-center gap-3">
+                                        <div
+                                            class="w-12 h-12 bg-gradient-to-br from-[#CEB888] to-[#CEB888] rounded-xl flex items-center justify-center text-white">
+                                            <i data-lucide="map-pin" class="w-6 h-6"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-medium" x-text="location.name"></h4>
+                                            <p class="text-sm text-gray-600 flex items-center gap-1">
+                                                <i data-lucide="users" class="w-3 h-3"></i>
+                                                <span x-text="location.students + ' students'"></span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <span x-show="location.hot"
+                                        class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs">🔥 Hot
+                                        Spot</span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- LEADERBOARDS VIEW (BoilerBuddy Style) -->
+            <section class="view" data-view="leaderboards">
+                <div class="page">
+                    <div class="mb-6">
+                        <h1 class="text-3xl font-bold mb-2">Leaderboard</h1>
+                        <p class="text-slate-400">Compete with Purdue students</p>
+                    </div>
+
                     <!-- Leaderboard Filters (BoilerBuddy Style) -->
                     <div class="mb-6 flex flex-col sm:flex-row gap-3">
                         <div class="flex gap-2 bg-slate-700 p-1 rounded-2xl">
                             <button @click="leaderboardPeriod = 'week'; loadLeaderboard()"
-                                    :class="leaderboardPeriod === 'week' ? 'bg-slate-800 shadow-sm text-white' : 'text-slate-400 hover:text-white'"
-                                    class="px-4 py-2 rounded-xl text-sm transition-all">
+                                :class="leaderboardPeriod === 'week' ? 'bg-slate-800 shadow-sm text-white' : 'text-slate-400 hover:text-white'"
+                                class="px-4 py-2 rounded-xl text-sm transition-all">
                                 This Week
                             </button>
                             <button @click="leaderboardPeriod = 'alltime'; loadLeaderboard()"
-                                    :class="leaderboardPeriod === 'alltime' ? 'bg-slate-800 shadow-sm text-white' : 'text-slate-400 hover:text-white'"
-                                    class="px-4 py-2 rounded-xl text-sm transition-all">
+                                :class="leaderboardPeriod === 'alltime' ? 'bg-slate-800 shadow-sm text-white' : 'text-slate-400 hover:text-white'"
+                                class="px-4 py-2 rounded-xl text-sm transition-all">
                                 All Time
                             </button>
                         </div>
-                        
+
                         <select x-model="leaderboardType" @change="loadLeaderboard()"
-                                class="px-4 py-2 rounded-2xl border-2 border-slate-600 bg-slate-800 text-slate-300 focus:border-[#9B72CF] focus:outline-none focus:ring-2 focus:ring-[#9B72CF]/20">
+                            class="px-4 py-2 rounded-2xl border-2 border-slate-600 bg-slate-800 text-slate-300 focus:border-[#CEB888] focus:outline-none focus:ring-2 focus:ring-[#CEB888]/20">
                             <option value="global">All Courses</option>
                             <option value="course">By Course</option>
                             <option value="major">By Major</option>
                         </select>
                     </div>
-                    
+
                     <!-- Top 3 Podium (BoilerBuddy Style) -->
                     <div class="mb-8 grid grid-cols-3 gap-4 items-end" id="podium-container">
                         <!-- Will be populated by JavaScript -->
                     </div>
-                    
+
                     <!-- Full Leaderboard (BoilerBuddy Style) -->
                     <div class="card overflow-hidden mb-6">
                         <div class="p-6 border-b border-slate-700">
@@ -1704,67 +1790,69 @@
                             <!-- Leaderboard entries will be inserted here -->
                         </div>
                     </div>
-                    
+
                     <!-- Your Stats (BoilerBuddy Style) -->
-                    <div class="bg-gradient-to-br from-[#9B72CF]/20 to-[#9B72CF]/10 rounded-3xl p-6 border border-[#9B72CF]/30">
+                    <div
+                        class="bg-gradient-to-br from-[#CEB888]/20 to-[#CEB888]/10 rounded-3xl p-6 border border-[#CEB888]/30">
                         <h4 class="text-xl font-semibold mb-3">Your Progress</h4>
                         <div class="grid grid-cols-2 gap-4 mb-4">
                             <div>
-                                <p class="text-2xl text-[#9B72CF] font-bold" x-text="currentUser.total_xp || 0"></p>
+                                <p class="text-2xl text-[#CEB888] font-bold" x-text="currentUser.total_xp || 0"></p>
                                 <p class="text-sm text-slate-400">Total XP</p>
                             </div>
                             <div>
-                                <p class="text-2xl text-[#9B72CF] font-bold" x-text="'#' + (myRank || '-')"></p>
+                                <p class="text-2xl text-[#CEB888] font-bold" x-text="'#' + (myRank || '-')"></p>
                                 <p class="text-sm text-slate-400">Your Rank</p>
                             </div>
                         </div>
                         <div class="mt-4">
                             <div class="flex justify-between text-sm mb-2">
                                 <span class="text-slate-400">Next rank progress</span>
-                                <span class="text-[#9B72CF]" x-text="'82%'"></span>
+                                <span class="text-[#CEB888]" x-text="'82%'"></span>
                             </div>
                             <div class="h-2 bg-slate-700 rounded-full overflow-hidden">
-                                <div class="h-full w-4/5 bg-[#9B72CF] rounded-full"></div>
+                                <div class="h-full w-4/5 bg-[#CEB888] rounded-full"></div>
                             </div>
                         </div>
                     </div>
+                </div>
+            </section>
+
+            <!-- ACHIEVEMENTS VIEW -->
+            <section class="view" data-view="achievements">
+                <div class="page">
+                    <div>
+                        <h1 class="text-3xl font-bold mb-2">Achievements</h1>
+                        <p class="text-slate-400 mb-6">Unlock achievements as you progress in your studies</p>
                     </div>
-                </section>
-                
-                <!-- ACHIEVEMENTS VIEW -->
-                <section class="view" data-view="achievements">
-                    <div class="page">
-                        <div>
-                            <h1 class="text-3xl font-bold mb-2">Achievements</h1>
-                            <p class="text-slate-400 mb-6">Unlock achievements as you progress in your studies</p>
-                        </div>
-                    
+
                     <div class="grid grid-cols-3 gap-4 animate-card-stagger">
                         <!-- Achievement cards will be inserted here -->
                         <template x-for="achievement in allAchievements" :key="achievement.achievement_id">
                             <div class="bg-slate-800 rounded-xl p-6 text-center depth-1 lift-on-hover"
-                                 :class="achievement.unlocked ? 'ring-2 ring-blue-500' : 'opacity-50'">
+                                :class="achievement.unlocked ? 'ring-2 ring-blue-500' : 'opacity-50'">
                                 <div class="text-5xl mb-3" x-text="achievement.badge_icon"></div>
                                 <h4 class="font-semibold mb-2" x-text="achievement.achievement_name"></h4>
                                 <p class="text-sm text-slate-400 mb-3" x-text="achievement.description"></p>
                                 <div class="text-xs text-blue-400">
                                     <span x-show="achievement.unlocked">✅ Unlocked!</span>
-                                    <span x-show="!achievement.unlocked" x-text="'+' + achievement.xp_reward + ' XP'"></span>
+                                    <span x-show="!achievement.unlocked"
+                                        x-text="'+' + achievement.xp_reward + ' XP'"></span>
                                 </div>
                             </div>
                         </template>
                     </div>
+                </div>
+            </section>
+
+            <!-- SETTINGS VIEW -->
+            <section class="view" data-view="settings">
+                <div class="page">
+                    <div>
+                        <h1 class="text-3xl font-bold mb-2">Settings</h1>
+                        <p class="text-slate-400 mb-6">Manage your account and preferences</p>
                     </div>
-                </section>
-                
-                <!-- SETTINGS VIEW -->
-                <section class="view" data-view="settings">
-                    <div class="page">
-                        <div>
-                            <h1 class="text-3xl font-bold mb-2">Settings</h1>
-                            <p class="text-slate-400 mb-6">Manage your account and preferences</p>
-                        </div>
-                    
+
                     <div class="card space-y-6">
                         <div>
                             <h2 class="text-lg font-semibold mb-4">Account Information</h2>
@@ -1787,27 +1875,28 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div>
                             <h2 class="text-lg font-semibold mb-4">Database Actions</h2>
-                            <button @click="clearUserData()" 
-                                    class="px-6 py-3 bg-red-600 hover:bg-red-500 rounded-lg font-medium transition">
+                            <button @click="clearUserData()"
+                                class="px-6 py-3 bg-red-600 hover:bg-red-500 rounded-lg font-medium transition">
                                 ⚠️ Clear All Progress
                             </button>
                             <p class="mt-2 text-xs text-slate-400">This will delete all your progress data.</p>
                         </div>
                     </div>
-                    </div>
-                </section>
-                
+                </div>
+            </section>
+
         </main>
-        
+
     </div>
-    
+
     <!-- Guide Me Modal (BoilerBuddy Style) -->
-    <div x-show="showGuideMeModal" x-cloak 
-         class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 modal-backdrop">
-        <div class="bg-slate-800 rounded-3xl shadow-2xl p-8 max-w-2xl w-full max-h-[80vh] overflow-y-auto modal-content depth-3">
+    <div x-show="showGuideMeModal" x-cloak
+        class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 modal-backdrop">
+        <div
+            class="bg-slate-800 rounded-3xl shadow-2xl p-8 max-w-2xl w-full max-h-[80vh] overflow-y-auto modal-content depth-3">
             <div class="flex items-start justify-between mb-6">
                 <div>
                     <h2 class="text-2xl font-bold mb-2">Step-by-step walkthrough</h2>
@@ -1817,45 +1906,34 @@
                     <span class="text-2xl text-slate-400">✕</span>
                 </button>
             </div>
-            
+
             <div id="guide-me-content">
                 <!-- Guide Me steps will be inserted here -->
             </div>
         </div>
     </div>
-    
+
     <!-- Mobile Bottom Navigation (BoilerBuddy Style) -->
-    <nav x-show="isAuthenticated && onboardingStep === null && onboardingStep !== 'checking'" x-cloak class="mobile-bottom-nav" aria-label="Mobile bottom navigation">
+    <nav x-show="isAuthenticated && onboardingStep === null && onboardingStep !== 'checking'" x-cloak
+        class="mobile-bottom-nav" aria-label="Mobile bottom navigation">
         <div class="mobile-bottom-nav-content">
-            <button 
-                @click="currentView = 'home'" 
-                class="mobile-bottom-nav-item"
-                :class="{ 'mobile-bottom-nav-item--active': currentView === 'home' }"
-                aria-label="Dashboard">
+            <button @click="currentView = 'home'" class="mobile-bottom-nav-item"
+                :class="{ 'mobile-bottom-nav-item--active': currentView === 'home' }" aria-label="Dashboard">
                 <i data-lucide="home" class="w-6 h-6"></i>
                 <span>Home</span>
             </button>
-            <button 
-                @click="currentView = 'study'" 
-                class="mobile-bottom-nav-item"
-                :class="{ 'mobile-bottom-nav-item--active': currentView === 'study' }"
-                aria-label="Study">
+            <button @click="currentView = 'study'" class="mobile-bottom-nav-item"
+                :class="{ 'mobile-bottom-nav-item--active': currentView === 'study' }" aria-label="Study">
                 <i data-lucide="book-open" class="w-6 h-6"></i>
                 <span>Study</span>
             </button>
-            <button 
-                @click="currentView = 'leaderboards'" 
-                class="mobile-bottom-nav-item"
-                :class="{ 'mobile-bottom-nav-item--active': currentView === 'leaderboards' }"
-                aria-label="Rank">
+            <button @click="currentView = 'leaderboards'" class="mobile-bottom-nav-item"
+                :class="{ 'mobile-bottom-nav-item--active': currentView === 'leaderboards' }" aria-label="Rank">
                 <i data-lucide="trophy" class="w-6 h-6"></i>
                 <span>Rank</span>
             </button>
-            <button 
-                @click="currentView = 'group-study'" 
-                class="mobile-bottom-nav-item"
-                :class="{ 'mobile-bottom-nav-item--active': currentView === 'group-study' }"
-                aria-label="Groups">
+            <button @click="currentView = 'group-study'" class="mobile-bottom-nav-item"
+                :class="{ 'mobile-bottom-nav-item--active': currentView === 'group-study' }" aria-label="Groups">
                 <i data-lucide="users" class="w-6 h-6"></i>
                 <span>Groups</span>
             </button>
@@ -1863,5 +1941,5 @@
     </nav>
 
 </body>
-</html>
 
+</html>

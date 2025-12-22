@@ -1,0 +1,424 @@
+---
+alwaysApply: true
+---
+You are building/refactoring a SPA-style web app StudyBoiler using HTML, CSS, JS, and Alpine.js. Optimize for:
+
+Clean, low–technical-debt architecture
+
+Framework-agnostic code (easy to migrate to React/Svelte later)
+
+CSS-first, performant, accessible animations
+
+Consistent, calm, modern UI for a study tool
+
+1. Architecture & State (Engineering)
+
+Tech:
+
+Vanilla HTML/CSS/JS
+
+Alpine.js allowed for state + simple events only (no complex DOM/animation logic)
+
+Global state:
+
+Use one top-level Alpine scope for app-level state, e.g.:
+
+<div
+  x-data="{ currentView: 'home', user: null }"
+  x-init="$watch('currentView', value => showView(value))"
+>
+  <!-- nav + views -->
+</div>
+
+
+currentView (string) controls active section.
+
+user (object/null) for auth (placeholder).
+
+Alpine usage – allowed:
+
+x-data for state
+
+x-init for simple setup
+
+@click, x-model, x-show, x-if for simple toggles
+
+$watch for reacting to simple state changes (e.g. currentView → showView)
+
+Alpine usage – avoid:
+
+Animation logic in Alpine directives
+
+Deeply nested x-show / x-transition networks for main page views
+
+Multiple independent navigation states
+
+View structure:
+
+Treat app as a mini SPA with .view sections:
+
+<section class="view is-active" data-view="home">...</section>
+<section class="view" data-view="documents">...</section>
+<section class="view" data-view="exam-questions">...</section>
+
+
+data-view must match possible currentView values exactly.
+
+Single view controller:
+
+All main view switching goes through a single helper:
+
+function showView(viewName) {
+  const views = document.querySelectorAll('[data-view]');
+  views.forEach(v => v.classList.remove('is-active'));
+
+  const target = document.querySelector(`[data-view="${viewName}"]`);
+  if (!target) return;
+
+  requestAnimationFrame(() => {
+    target.classList.add('is-active');
+  });
+}
+
+
+Don’t create extra show/hide functions for main views.
+
+Navigation binding:
+
+<button
+  class="nav-item"
+  :class="{ 'nav-item--active': currentView === 'home' }"
+  @click="currentView = 'home'"
+>
+  Home
+</button>
+
+
+All nav/menus that change pages must update currentView only.
+
+App shell layout (structural):
+
+<div class="app-shell">
+  <header class="app-header">...</header>
+  <div class="app-main">
+    <nav class="app-nav">...</nav>
+    <main class="app-content">
+      <!-- .view sections -->
+    </main>
+  </div>
+</div>
+
+
+Use flex/grid; keep layout simple and readable.
+
+2. Motion & Animations (CSS-first)
+
+Core rules:
+
+CSS handles animations/transitions.
+
+JS only toggles classes / data attributes.
+
+Only animate opacity and transform (translate, scale, rotate) for continuous motion.
+
+Avoid animating layout properties (width, height, top, left, margin, padding) in transitions.
+
+Motion tokens:
+
+In :root:
+
+:root {
+  --motion-duration-fast: 150ms;
+  --motion-duration-md: 220ms;
+  --motion-duration-slow: 320ms;
+
+  --motion-ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --motion-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --motion-ease-in: cubic-bezier(0.4, 0, 1, 1);
+}
+
+
+Use these tokens for all transitions/animations.
+
+Don’t hardcode random durations/eases unless updating these tokens.
+
+Main view transition:
+
+.view {
+  opacity: 0;
+  transform: translateX(16px);
+  transition:
+    opacity var(--motion-duration-md) var(--motion-ease-standard),
+    transform var(--motion-duration-md) var(--motion-ease-standard);
+  pointer-events: none;
+}
+
+.view.is-active {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+
+Do not combine Alpine x-transition on these primary .view elements.
+
+Reusable motion utilities:
+
+.motion-fade {
+  opacity: 0;
+  transition: opacity var(--motion-duration-md) var(--motion-ease-standard);
+}
+.motion-fade.is-active,
+.motion-fade.is-visible {
+  opacity: 1;
+}
+
+.motion-slide-up {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity var(--motion-duration-md) var(--motion-ease-standard),
+    transform var(--motion-duration-md) var(--motion-ease-standard);
+}
+.motion-slide-up.is-active,
+.motion-slide-up.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.motion-scale-in {
+  opacity: 0;
+  transform: scale(0.96);
+  transition:
+    opacity var(--motion-duration-md) var(--motion-ease-standard),
+    transform var(--motion-duration-md) var(--motion-ease-standard);
+}
+.motion-scale-in.is-active,
+.motion-scale-in.is-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+
+Use these for cards, modals, tooltips, etc., instead of inventing one-off animations.
+
+For frequently animated elements, you may add will-change: opacity, transform; (don’t spam this globally).
+
+Reduced motion:
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
+All complex motion must remain usable under this mode.
+
+Timing guidelines:
+
+Hover effects: ~150ms, var(--motion-duration-fast) with --motion-ease-out.
+
+Page/view transitions: ~200–250ms, var(--motion-duration-md) with --motion-ease-standard.
+
+Motion should clarify changes, not delay interaction.
+
+3. UI / UX & Visual Design
+
+User context:
+
+Stressed students prepping for exams.
+
+Needs: clarity, control, and motivation.
+
+App tone: calm, focused, trustworthy, slightly motivational.
+
+Information architecture (main sections):
+
+Home, Documents, Exam Questions, Study Analytics, Exam Prep, Leaderboards, Achievements, Settings.
+
+Primary navigation:
+
+Use a top-level app nav (bar or pill-style) inside the app shell.
+
+Always clearly highlight active section with nav-item--active.
+
+Nav labels are short and clear; nav is shallow (no deep nesting).
+
+Home / Dashboard:
+
+Show:
+
+Welcome (with name when available).
+
+Primary CTA: e.g. “Upload Study Material” or “Start New Exam Plan”.
+
+Key stats: streaks, questions practiced, upcoming exams.
+
+Use cards to group:
+
+Quick Actions
+
+Recent Documents / Exams
+
+Study Snapshot / Analytics preview
+
+Color system (dark dashboard style):
+
+Background: dark slate/charcoal.
+
+Surfaces (cards): slightly lighter with subtle gradient.
+
+Primary accent: blue/teal for CTAs, highlights, active nav.
+
+Secondary accent: soft purple/green for secondary emphasis/analytics.
+
+Text: off-white, high contrast but not pure #fff.
+
+Use accents sparingly: active states, key metrics, primary buttons.
+
+Typography scale:
+
+H1 (page title): ~28–32px, bold.
+
+H2 (section title): ~20–22px, semi-bold.
+
+Labels/small headings: ~12–14px, uppercase or semi-bold.
+
+Body: 14–16px, normal.
+
+Meta text: 12–13px, with reduced opacity or lighter weight.
+
+Maintain generous but consistent line-height.
+
+Spacing:
+
+Use a scale (e.g. 4 / 8 / 12 / 16 / 24 / 32px).
+
+Bigger gaps between major sections, smaller within cards.
+
+Align edges of text, cards, and buttons to a consistent grid.
+
+Cards:
+
+Use .card for content blocks (uploads, document lists, stats, charts):
+
+.card {
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: radial-gradient(
+    circle at top left,
+    rgba(59, 130, 246, 0.16),
+    rgba(15, 23, 42, 1)
+  );
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.45);
+}
+
+
+Each card: clear title, optional subtitle, content, optional actions, consistent header style.
+
+Buttons & interactions:
+
+States: default, hover, active, disabled, focus.
+
+Primary button: filled accent; secondary: outline/subtle surface.
+
+Hover: small transform (translateY(-1px) / scale(1.01)), slight shadow change.
+
+Active: closer to baseline (reduce shadow).
+
+Focus: visible focus ring (keyboard-friendly).
+
+Inputs & forms:
+
+Clear labels + concise placeholders.
+
+File upload: obvious dropzone: icon + text (“Drop your PDF here or click to browse”).
+
+Show clear success/error feedback (inline text, subtle color changes).
+
+Feedback & empty states:
+
+Use toasts/inline messages for:
+
+Upload success/failure
+
+Background processing
+
+Wording: human, simple, non-technical.
+
+e.g. “That file type isn’t supported yet. Please upload a PDF, PowerPoint, or image.”
+
+Empty states:
+
+1–2 lines explaining the situation
+
+One primary action
+
+Example: “No documents yet — upload your first exam PDF to get started.”
+
+Analytics & charts:
+
+Use simple chart types (line, bar, donut).
+
+Consistent color mapping (same metric = same color across charts).
+
+Charts live inside cards with:
+
+Title
+
+Short insight sentence
+
+Chart
+
+Optional filters (e.g., time range)
+
+Avoid visual overload; prioritize key insights.
+
+4. Motion & UX Behavior
+
+Motion is used to:
+
+Clarify view changes (page transitions).
+
+Support overlays/modals.
+
+Provide feedback on interactions (hover, button press).
+
+Motion is not used to:
+
+Block user actions
+
+Add gratuitous flair
+
+Patterns:
+
+View transitions: subtle fade + slide (using .view rules).
+
+Modals: background fade + .motion-scale-in on the modal card.
+
+Hover interactions: quick, subtle movement (~150ms, ease-out).
+
+Must always respect prefers-reduced-motion.
+
+5. Implementation Expectations
+
+When generating/refactoring code:
+
+Use global Alpine currentView + showView() for main navigation.
+
+Use CSS motion tokens and .view / .motion-* utilities for all animations.
+
+Use .card and consistent spacing/typography across sections.
+
+Keep layout responsive (desktop → smaller screens) with simple flex/grid.
+
+Avoid inline styles for anything visual/animated; use classes.
+
+Keep functions small, single-purpose (showView, toggleModal, setActiveTab).
+
+If existing code violates these rules, propose and apply refactors that align with this spec, with brief comments when needed.

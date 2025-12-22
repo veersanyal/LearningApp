@@ -174,16 +174,23 @@ def main():
         
         if demo_user:
             demo_user_id = demo_user[0]
-            print(f"Found demo user (ID: {demo_user_id})")
+            print(f"Found demo user (ID: {demo_user_id}). Force updating stats...")
+            cursor.execute('''
+                UPDATE users 
+                SET total_xp = ?, study_streak = ?, course_code = ?
+                WHERE user_id = ?
+            ''', (1250, 5, 'CS 180', demo_user_id))
         else:
             print("Demo user 'veer.orgami' not found. Creating...")
             cursor.execute('''
-                INSERT INTO users (username, full_name, email, major, graduation_year, total_xp, study_streak)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ''', ('veer.orgami', 'Veer Sanyal', 'veer.orgami@purdue.edu', 'Computer Science', 2026, 1250, 5))
+                INSERT INTO users (username, full_name, email, major, graduation_year, total_xp, study_streak, course_code)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', ('veer.orgami', 'Veer Sanyal', 'veer.orgami@purdue.edu', 'Computer Science', 2026, 1250, 5, 'CS 180'))
             demo_user_id = cursor.lastrowid
             
         # Ensure demo user has history
+        # First clear old history to prevent duplicates/messy graphs
+        cursor.execute("DELETE FROM attempt_history WHERE user_id = ?", (demo_user_id,))
         seed_retention_history(cursor, [demo_user_id])
         seed_progress(cursor, [demo_user_id])
         conn.commit()

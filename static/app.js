@@ -28,6 +28,9 @@ function app() {
         currentUser: {},
         usersOnline: 0,
 
+        // Appearance State
+        darkMode: false,
+
         // Login/Register Forms
         loginForm: {
             username: '',
@@ -127,6 +130,9 @@ function app() {
 
             // Initialize MathJax lazy loading
             this.initMathJaxLazyLoading();
+
+            // Initialize Dark Mode
+            this.initDarkMode();
 
             // Set initial active view
             if (this.isAuthenticated) {
@@ -362,6 +368,39 @@ function app() {
                 this.onboardingStep = null;
             } catch (err) {
                 console.error('Logout error:', err);
+            }
+        },
+
+        // Dark Mode Logic
+        initDarkMode() {
+            // Check local storage or system preference
+            const savedMode = localStorage.getItem('darkMode');
+
+            if (savedMode !== null) {
+                this.darkMode = savedMode === 'true';
+            } else {
+                // Default to light mode as requested
+                this.darkMode = false;
+            }
+
+            this.applyDarkMode();
+
+            // Watch for changes
+            this.$watch('darkMode', val => {
+                localStorage.setItem('darkMode', val);
+                this.applyDarkMode();
+            });
+        },
+
+        toggleDarkMode() {
+            this.darkMode = !this.darkMode;
+        },
+
+        applyDarkMode() {
+            if (this.darkMode) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
             }
         },
 
@@ -1365,7 +1404,7 @@ function app() {
 
                 question.options.forEach((option, index) => {
                     const btn = document.createElement('button');
-                    btn.className = 'w-full text-left p-4 rounded-2xl border-2 border-slate-600 hover:border-[#9B72CF]/50 hover:bg-[#9B72CF]/5 transition-all';
+                    btn.className = 'w-full text-left p-4 rounded-2xl border-2 border-slate-600 hover:border-[#CEB888]/50 hover:bg-[#CEB888]/5 transition-all';
                     btn.innerHTML = `
                         <div class="flex items-center gap-3">
                             <span class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-sm">${String.fromCharCode(65 + index)}</span>
@@ -1375,10 +1414,10 @@ function app() {
                     btn.addEventListener('click', () => {
                         // Remove previous selection
                         optionsContainer.querySelectorAll('button').forEach(b => {
-                            b.classList.remove('border-[#9B72CF]', 'bg-[#9B72CF]/10');
+                            b.classList.remove('border-[#CEB888]', 'bg-[#CEB888]/10');
                         });
                         // Add selection
-                        btn.classList.add('border-[#9B72CF]', 'bg-[#9B72CF]/10');
+                        btn.classList.add('border-[#CEB888]', 'bg-[#CEB888]/10');
                         this.selectedAnswerIndex = index;
                         if (checkBtn) checkBtn.disabled = false;
                     });
@@ -1410,7 +1449,7 @@ function app() {
                     <div class="w-8 h-8 rounded-full flex items-center justify-center ${step.completed
                     ? 'bg-green-500 text-white'
                     : idx === 0
-                        ? 'bg-[#9B72CF] text-white'
+                        ? 'bg-[#CEB888] text-white'
                         : 'bg-slate-700 text-slate-400'
                 }">
                         ${step.completed ? '✓' : step.id}
@@ -1448,7 +1487,7 @@ function app() {
                 optionsContainer.querySelectorAll('button').forEach((btn, index) => {
                     btn.disabled = true;
                     if (index === this.currentQuestion.correct_answer) {
-                        btn.classList.remove('border-slate-600', 'bg-[#9B72CF]/10');
+                        btn.classList.remove('border-slate-600', 'bg-[#CEB888]/10');
                         btn.classList.add('border-green-500', 'bg-green-500/20');
                         // Add checkmark
                         const checkmark = document.createElement('span');
@@ -1456,7 +1495,7 @@ function app() {
                         checkmark.textContent = '✓';
                         btn.querySelector('.flex').appendChild(checkmark);
                     } else if (index === selectedIndex && !isCorrect) {
-                        btn.classList.remove('border-[#9B72CF]', 'bg-[#9B72CF]/10');
+                        btn.classList.remove('border-[#CEB888]', 'bg-[#CEB888]/10');
                         btn.classList.add('border-red-500', 'bg-red-500/20');
                     }
                 });
@@ -1571,7 +1610,7 @@ function app() {
             content.innerHTML = `
                 <div class="space-y-6">
                     ${this.guideMeSteps.map((s, idx) => `
-                        <div class="bg-[#9B72CF]/10 rounded-2xl p-4 border border-[#9B72CF]/30">
+                        <div class="bg-[#CEB888]/10 rounded-2xl p-4 border border-[#CEB888]/30">
                             <h4 class="mb-2 font-semibold">Step ${idx + 1}: ${s.title || 'Step'}</h4>
                             <p class="text-sm text-slate-300">${s.question || s.explanation || ''}</p>
                             ${s.hint ? `
@@ -1590,7 +1629,7 @@ function app() {
                     
                     <button
                         onclick="window.nextGuideMeStep()"
-                        class="w-full bg-[#9B72CF] text-white py-3 rounded-2xl hover:opacity-90 transition-opacity font-medium"
+                        class="w-full bg-[#CEB888] text-white py-3 rounded-2xl hover:opacity-90 transition-opacity font-medium"
                     >
                         ${this.currentGuideMeStep < this.guideMeSteps.length - 1 ? 'Next Step →' : 'Got it, thanks!'}
                     </button>
