@@ -97,8 +97,8 @@
         </div>
     </div>
 
-    <!-- KPI Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+    <!-- KPI Cards (Uniform Row) -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6"> <!-- 24px gap to Retention -->
         <!-- Streak -->
         <div class="surface-card p-5 relative overflow-hidden group">
             <div class="flex justify-between items-start mb-2">
@@ -215,7 +215,7 @@
 </div>
 
 <!-- Row 1: Retention & Study Together -->
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-10"> <!-- 32px gap to Leaderboard -->
     <!-- Retention Graph (8 cols) -->
     <div class="lg:col-span-8 surface-card p-6 flex flex-col min-h-[300px]">
         <div class="flex items-center justify-between mb-6">
@@ -305,7 +305,7 @@
             <p class="text-xs text-slate-400 text-center mb-4">2 friends online</p>
         </div>
 
-        <div>
+        <div class="mt-auto pt-4"> <!-- Pushed to bottom, unified spacing -->
             <a href="{{ url_for('group_study') }}"
                 class="block w-full bg-black dark:bg-white text-white dark:text-black hover:scale-[1.02] py-3 rounded-xl transition-all font-bold text-center mb-3 shadow-lg">
                 Join Session
@@ -318,7 +318,7 @@
 </div>
 
 <!-- Row 2: Leaderboard & Progress -->
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-12">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-12"> <!-- 40px gap to Heatmap -->
     <!-- Leaderboard (8 cols) -->
     <div id="leaderboard-section" class="lg:col-span-8 surface-card p-6">
         <div class="flex items-center justify-between mb-6">
@@ -432,139 +432,149 @@
 
 <!-- Heatmap Full Width -->
 <div id="heatmap-section" class="mb-12 surface-card p-6">
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <h2 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <i data-lucide="map-pin" class="w-6 h-6 text-[#bfa060]"></i> Campus Heatmap
-            </h2>
-            <p class="text-sm text-slate-500 dark:text-slate-400">Live study activity across campus</p>
+    <!-- Header Row 1: Title + Legend -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+        <!-- Hero Section (Header + Checklist Unit) -->
+        <div class="mb-6"> <!-- 24px gap to KPIs -->
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white mb-1">
+                Welcome back, <span
+                    class="bg-gradient-to-r from-[#CBB87C] to-[#bfa060] bg-clip-text text-transparent">{{ user.username
+                    }}</span>
+            </h1>
+            <p class="text-slate-500 dark:text-slate-400 mb-4">Here's what's happening on campus today.</p>
+            <div class="flex gap-2">
+                <span
+                    class="px-3 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-white/8 text-slate-600 dark:text-white/70 border border-slate-200 dark:border-transparent">Low</span>
+                <span
+                    class="px-3 py-1 rounded-full text-xs font-medium bg-amber-100 dark:bg-[#CBB87C]/12 text-amber-600 dark:text-[#EADCA7] border border-amber-200 dark:border-transparent">Medium</span>
+                <span
+                    class="px-3 py-1 rounded-full text-xs font-medium bg-rose-100 dark:bg-[#CBB87C]/22 text-rose-600 dark:text-[#FFE8A3] border border-rose-200 dark:border-[#CBB87C]/35">High</span>
+            </div>
         </div>
-        <!-- Legend as Pills -->
-        <div class="hidden md:flex gap-2">
-            <span
-                class="px-3 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-white/8 text-slate-600 dark:text-white/70 border border-slate-200 dark:border-transparent">Low</span>
-            <span
-                class="px-3 py-1 rounded-full text-xs font-medium bg-amber-100 dark:bg-[#CBB87C]/12 text-amber-600 dark:text-[#EADCA7] border border-amber-200 dark:border-transparent">Medium</span>
-            <span
-                class="px-3 py-1 rounded-full text-xs font-medium bg-rose-100 dark:bg-[#CBB87C]/22 text-rose-600 dark:text-[#FFE8A3] border border-rose-200 dark:border-[#CBB87C]/35">High</span>
-        </div>
-    </div>
 
-    <!-- Filter Row -->
-    <div class="flex items-center gap-2 mb-4 px-1">
-        <span class="text-xs text-slate-500 mr-2 uppercase tracking-wider font-medium">Timeframe:</span>
-        <button @click="heatmapTimeFilter = 'now'; loadHeatmapData()"
-            :class="heatmapTimeFilter === 'now' ? 'bg-[#D0B991] text-black shadow-lg shadow-[#D0B991]/20' : 'bg-slate-100 text-slate-500 hover:text-slate-900 hover:bg-slate-200'"
-            class="px-4 py-1.5 rounded-full text-xs font-medium transition-all">
-            Live Now
-        </button>
-        <button @click="heatmapTimeFilter = '24h'; loadHeatmapData()"
-            :class="heatmapTimeFilter === '24h' ? 'bg-[#D0B991] text-black shadow-lg shadow-[#D0B991]/20' : 'bg-slate-100 text-slate-500 hover:text-slate-900 hover:bg-slate-200'"
-            class="px-4 py-1.5 rounded-full text-xs font-medium transition-all">
-            Past 24h
-        </button>
-        <button @click="heatmapTimeFilter = 'week'; loadHeatmapData()"
-            :class="heatmapTimeFilter === 'week' ? 'bg-[#D0B991] text-black shadow-lg shadow-[#D0B991]/20' : 'bg-slate-100 text-slate-500 hover:text-slate-900 hover:bg-slate-200'"
-            class="px-4 py-1.5 rounded-full text-xs font-medium transition-all">
-            Past Week
-        </button>
+        <!-- Header Row 2: Controls + Summary -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+            <!-- Timeframe Pills -->
+            <div class="flex items-center gap-2">
+                <span
+                    class="text-xs text-slate-500 mr-2 uppercase tracking-wider font-medium hidden md:inline">Timeframe:</span>
+                <button @click="heatmapTimeFilter = 'now'; loadHeatmapData()"
+                    :class="heatmapTimeFilter === 'now' ? 'bg-[#D0B991] text-black shadow-lg shadow-[#D0B991]/20' : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
+                    class="px-4 py-1.5 rounded-full text-xs font-medium transition-all">
+                    Live Now
+                </button>
+                <button @click="heatmapTimeFilter = '24h'; loadHeatmapData()"
+                    :class="heatmapTimeFilter === '24h' ? 'bg-[#D0B991] text-black shadow-lg shadow-[#D0B991]/20' : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
+                    class="px-4 py-1.5 rounded-full text-xs font-medium transition-all">
+                    24h
+                </button>
+                <button @click="heatmapTimeFilter = 'week'; loadHeatmapData()"
+                    :class="heatmapTimeFilter === 'week' ? 'bg-[#D0B991] text-black shadow-lg shadow-[#D0B991]/20' : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
+                    class="px-4 py-1.5 rounded-full text-xs font-medium transition-all">
+                    Week
+                </button>
+            </div>
+
+            <!-- Inline Summary Text (previously
     </div>
 
     <!-- Summary Row -->
-    <div class="flex items-center gap-4 mb-4 text-sm text-slate-600 dark:text-slate-400">
-        <div class="flex items-center gap-2">
-            <i data-lucide="flame" class="w-4 h-4 text-[#CBB87C]"></i>
-            <span>Most active: <strong class="text-slate-900 dark:text-white">WALC</strong> • 12 live</span>
-        </div>
-        <div class="w-px h-4 bg-slate-200 dark:bg-white/10"></div>
-        <div class="flex items-center gap-2">
-            <i data-lucide="map-pin" class="w-4 h-4 text-slate-400"></i>
-            <span>Your usual spot: <strong class="text-slate-900 dark:text-white">HSSE</strong></span>
-        </div>
-    </div>
-
-    <div class="heatmap-container relative h-[400px] w-full surface-inset overflow-hidden rounded-xl">
-        <!-- Map Layer (Light) -->
-        <div
-            class="absolute inset-0 bg-[url('https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Campus_map_faint.svg/2000px-Campus_map_faint.svg.png')] opacity-10 bg-cover bg-center mix-blend-multiply dark:mix-blend-screen">
-        </div>
-        <div class="absolute inset-0 bg-slate-50/50 dark:bg-slate-900/80">
-            <!-- Placeholder Shimmer when loading -->
-            <div class="absolute inset-0 map-placeholder-shimmer opacity-10 pointer-events-none"
-                x-show="!studyLocations.length"></div>
-
-            <!-- Center Text if Empty -->
-            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10"
-                x-show="!studyLocations.length">
-                <div class="p-4 bg-white/80 backdrop-blur rounded-2xl border border-slate-100 text-center shadow-lg">
-                    <i data-lucide="map" class="w-8 h-8 text-slate-400 mx-auto mb-2"></i>
-                    <p class="text-slate-600 font-medium">Map visualization loading...</p>
-                    <p class="text-xs text-slate-400">(Using 2D placeholders for now)</p>
+            <div class="flex items-center gap-4 mb-4 text-sm text-slate-600 dark:text-slate-400">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="flame" class="w-4 h-4 text-[#CBB87C]"></i>
+                    <span>Most active: <strong class="text-slate-900 dark:text-white">WALC</strong> • 12 live</span>
+                </div>
+                <div class="w-px h-4 bg-slate-200 dark:bg-white/10"></div>
+                <div class="flex items-center gap-2">
+                    <i data-lucide="map-pin" class="w-4 h-4 text-slate-400"></i>
+                    <span>Your usual spot: <strong class="text-slate-900 dark:text-white">HSSE</strong></span>
                 </div>
             </div>
 
-            <!-- Locations Dots (visualizing the data) -->
-            <template x-for="loc in studyLocations" :key="loc.id">
-                <div class="absolute w-4 h-4 rounded-full shadow-sm border-2 border-white dark:border-slate-800 cursor-pointer hover:scale-150 hover:z-30 transition-all z-20 group"
-                    :class="{
+            <div class="heatmap-container relative h-[400px] w-full surface-inset overflow-hidden rounded-xl">
+                <!-- Map Layer (Light) -->
+                <div
+                    class="absolute inset-0 bg-[url('https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Campus_map_faint.svg/2000px-Campus_map_faint.svg.png')] opacity-10 bg-cover bg-center mix-blend-multiply dark:mix-blend-screen">
+                </div>
+                <div class="absolute inset-0 bg-slate-50/50 dark:bg-slate-900/80">
+                    <!-- Placeholder Shimmer when loading -->
+                    <div class="absolute inset-0 map-placeholder-shimmer opacity-10 pointer-events-none"
+                        x-show="!studyLocations.length"></div>
+
+                    <!-- Center Text if Empty -->
+                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10"
+                        x-show="!studyLocations.length">
+                        <div
+                            class="p-4 bg-white/80 backdrop-blur rounded-2xl border border-slate-100 text-center shadow-lg">
+                            <i data-lucide="map" class="w-8 h-8 text-slate-400 mx-auto mb-2"></i>
+                            <p class="text-slate-600 font-medium">Map visualization loading...</p>
+                            <p class="text-xs text-slate-400">(Using 2D placeholders for now)</p>
+                        </div>
+                    </div>
+
+                    <!-- Locations Dots (visualizing the data) -->
+                    <template x-for="loc in studyLocations" :key="loc.id">
+                        <div class="absolute w-4 h-4 rounded-full shadow-sm border-2 border-white dark:border-slate-800 cursor-pointer hover:scale-150 hover:z-30 transition-all z-20 group"
+                            :class="{
                              'bg-slate-400 dark:bg-slate-600': loc.students <= 10,
                              'bg-[#CBB87C]': loc.students > 10 && loc.students <= 25,
                              'bg-[#b45309]': loc.students > 25
                          }" :style="`left: ${loc.x}%; top: ${loc.y}%;`"
-                    @click="document.getElementById('loc-item-' + loc.id)?.scrollIntoView({behavior: 'smooth', block: 'center'});">
+                            @click="document.getElementById('loc-item-' + loc.id)?.scrollIntoView({behavior: 'smooth', block: 'center'});">
 
-                    <!-- Tooltip -->
-                    <div
-                        class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-white border border-slate-100 text-slate-800 text-xs whitespace-nowrap rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
-                        <span class="font-bold" x-text="loc.name"></span> • <span
-                            x-text="loc.students + ' studying'"></span>
+                            <!-- Tooltip -->
+                            <div
+                                class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-white border border-slate-100 text-slate-800 text-xs whitespace-nowrap rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
+                                <span class="font-bold" x-text="loc.name"></span> • <span
+                                    x-text="loc.students + ' studying'"></span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Floating List Overlay (Right Side - Sub Card) -->
+                <div
+                    class="absolute right-4 top-4 bottom-4 w-72 surface-card !rounded-xl !p-0 overflow-hidden flex flex-col shadow-lg z-30">
+                    <div class="p-4 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
+                        <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Top Locations</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Sorted by activity</p>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar bg-white dark:bg-slate-800">
+                        <template x-for="loc in studyLocations.sort((a,b) => b.students - a.students)" :key="loc.id">
+                            <div :id="'loc-item-' + loc.id"
+                                class="p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors group cursor-pointer border border-transparent hover:border-slate-100 dark:hover:border-slate-600">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span
+                                        class="text-sm font-medium text-slate-700 dark:text-slate-200 group-hover:text-black dark:group-hover:text-white truncate"
+                                        x-text="loc.name"></span>
+                                    <span x-show="loc.hot"
+                                        class="text-[10px] bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-[#CBB87C] px-1.5 py-0.5 rounded border border-amber-100 dark:border-amber-700/50">HOT</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-xs text-slate-400">
+                                    <div
+                                        class="flex-1 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                                        <div class="h-full bg-[#CBB87C] rounded-full"
+                                            :style="`width: ${(loc.students / 50) * 100}%`"></div>
+                                    </div>
+                                    <span x-text="loc.students"></span>
+                                </div>
+                            </div>
+                        </template>
                     </div>
                 </div>
-            </template>
-        </div>
-
-        <!-- Floating List Overlay (Right Side - Sub Card) -->
-        <div
-            class="absolute right-4 top-4 bottom-4 w-72 surface-card !rounded-xl !p-0 overflow-hidden flex flex-col shadow-lg z-30">
-            <div class="p-4 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
-                <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Top Locations</h3>
-                <p class="text-xs text-slate-500 dark:text-slate-400">Sorted by activity</p>
-            </div>
-            <div class="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar bg-white dark:bg-slate-800">
-                <template x-for="loc in studyLocations.sort((a,b) => b.students - a.students)" :key="loc.id">
-                    <div :id="'loc-item-' + loc.id"
-                        class="p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors group cursor-pointer border border-transparent hover:border-slate-100 dark:hover:border-slate-600">
-                        <div class="flex justify-between items-center mb-1">
-                            <span
-                                class="text-sm font-medium text-slate-700 dark:text-slate-200 group-hover:text-black dark:group-hover:text-white truncate"
-                                x-text="loc.name"></span>
-                            <span x-show="loc.hot"
-                                class="text-[10px] bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-[#CBB87C] px-1.5 py-0.5 rounded border border-amber-100 dark:border-amber-700/50">HOT</span>
-                        </div>
-                        <div class="flex items-center gap-2 text-xs text-slate-400">
-                            <div class="flex-1 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                                <div class="h-full bg-[#CBB87C] rounded-full"
-                                    :style="`width: ${(loc.students / 50) * 100}%`"></div>
-                            </div>
-                            <span x-text="loc.students"></span>
-                        </div>
-                    </div>
-                </template>
             </div>
         </div>
     </div>
-</div>
-</div>
 
-<script>
-    // Component specific scripts or overrides
-    function handleQuickUpload(event) {
-        // Logic to trigger the main upload flow
-        const file = event.target.files[0];
-        if (file) {
-            // Check if app() scope is available, or redirect
-            window.location.href = "{{ url_for('documents') }}";
+    <script>
+        // Component specific scripts or overrides
+        function handleQuickUpload(event) {
+            // Logic to trigger the main upload flow
+            const file = event.target.files[0];
+            if (file) {
+                // Check if app() scope is available, or redirect
+                window.location.href = "{{ url_for('documents') }}";
+            }
         }
-    }
-</script>
-{% endblock %}
+    </script>
+    {% endblock %}
