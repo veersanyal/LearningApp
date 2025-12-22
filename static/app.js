@@ -1817,22 +1817,18 @@ function app() {
                             </div>
                             <span class="text-3xl mb-1 block drop-shadow-md">🥈</span>
                             <p class="text-sm mb-1 font-medium text-white truncate w-full">${top3[1].username || 'User'}</p>
-                            <div class="bg-indigo-500/20 px-3 py-1 rounded-full inline-block">
-                                <p class="text-xs text-indigo-300 font-bold">${top3[1].total_xp || 0} XP</p>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- 1st place -->
+                            <div class="bg-[#D0B991]/20 px-3 py-1 rounded-full inline-block">
+                                <p class="text-xs text-[#D0B991] font-bold">${top3[1].total_xp || 0} XP</p>
                     <div class="text-center z-10 -mt-6">
-                        <div class="bg-gradient-to-b from-amber-500/20 to-amber-600/5 rounded-3xl p-6 border border-amber-500/30 relative h-full flex flex-col justify-end shadow-[0_0_30px_rgba(245,158,11,0.1)]">
+                        <div class="bg-gradient-to-b from-[#D0B991]/20 to-[#C2A070]/5 rounded-3xl p-6 border border-[#D0B991]/30 relative h-full flex flex-col justify-end shadow-[0_0_30px_rgba(208,185,145,0.1)]">
                              <div class="absolute -top-4 -right-4 text-4xl animate-bounce">👑</div>
-                            <div class="w-20 h-20 mx-auto rounded-full bg-gradient-to-r from-amber-400 to-orange-500 flex items-center justify-center text-white text-2xl mb-3 shadow-lg ring-4 ring-amber-500/20">
+                            <div class="w-20 h-20 mx-auto rounded-full bg-gradient-to-r from-[#D0B991] to-[#C2A070] flex items-center justify-center text-black text-2xl mb-3 shadow-lg ring-4 ring-[#D0B991]/20">
                                 ${top3[0].username ? top3[0].username.substring(0, 2).toUpperCase() : '1'}
                             </div>
                             <span class="text-5xl mb-2 block drop-shadow-md">🥇</span>
                             <p class="text-base mb-1 font-bold text-white truncate w-full">${top3[0].username || 'User'}</p>
-                             <div class="bg-amber-500/20 px-4 py-1.5 rounded-full inline-block border border-amber-500/20">
-                                <p class="text-sm text-amber-300 font-bold">${top3[0].total_xp || 0} XP</p>
+                             <div class="bg-[#D0B991]/20 px-4 py-1.5 rounded-full inline-block border border-[#D0B991]/20">
+                                <p class="text-sm text-[#D0B991] font-bold">${top3[0].total_xp || 0} XP</p>
                             </div>
                         </div>
                     </div>
@@ -1844,8 +1840,8 @@ function app() {
                             </div>
                             <span class="text-3xl mb-1 block drop-shadow-md">🥉</span>
                             <p class="text-sm mb-1 font-medium text-white truncate w-full">${top3[2].username || 'User'}</p>
-                            <div class="bg-indigo-500/20 px-3 py-1 rounded-full inline-block">
-                                <p class="text-xs text-indigo-300 font-bold">${top3[2].total_xp || 0} XP</p>
+                            <div class="bg-[#C2A070]/20 px-3 py-1 rounded-full inline-block">
+                                <p class="text-xs text-[#C2A070] font-bold">${top3[2].total_xp || 0} XP</p>
                             </div>
                         </div>
                     </div>
@@ -1859,18 +1855,18 @@ function app() {
                 const isCurrentUser = user.user_id === this.currentUser.user_id;
 
                 return `
-                    <div class="px-6 py-4 flex items-center gap-4 transition-colors ${isCurrentUser ? 'bg-[#9B72CF]/10 border-l-4 border-[#9B72CF]' : 'hover:bg-slate-700/50'
+                    <div class="px-6 py-4 flex items-center gap-4 transition-colors ${isCurrentUser ? 'bg-[#D0B991]/10 border-l-4 border-[#D0B991]' : 'hover:bg-slate-700/50'
                     }">
                         <div class="w-12 flex items-center justify-center">
                             <span class="text-lg text-slate-400">#${user.rank}</span>
                         </div>
-                        <div class="w-12 h-12 rounded-full bg-[#9B72CF] flex items-center justify-center text-white font-semibold">
+                        <div class="w-12 h-12 rounded-full bg-[#D0B991] flex items-center justify-center text-black font-semibold">
                             ${user.username ? user.username.substring(0, 2).toUpperCase() : 'U'}
                         </div>
                         <div class="flex-1">
                             <div class="flex items-center gap-2">
-                                <p class="font-medium ${isCurrentUser ? 'text-[#9B72CF]' : ''}">${user.username || 'User'}</p>
-                                ${isCurrentUser ? '<span class="text-xs bg-[#9B72CF]/20 text-[#9B72CF] px-2 py-0.5 rounded-full">You</span>' : ''}
+                                <p class="font-medium ${isCurrentUser ? 'text-[#D0B991]' : ''}">${user.username || 'User'}</p>
+                                ${isCurrentUser ? '<span class="text-xs bg-[#D0B991]/20 text-[#D0B991] px-2 py-0.5 rounded-full">You</span>' : ''}
                             </div>
                             <p class="text-sm text-slate-400">${user.major || 'No major'}</p>
                         </div>
