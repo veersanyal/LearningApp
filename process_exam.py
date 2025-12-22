@@ -13,10 +13,18 @@ from exam_gemini import extract_exam_questions_with_gemini, save_exam_questions_
 load_dotenv()
 
 def ensure_user_exists():
-    """Ensure at least one user exists in the database to associate exams with."""
+    """Ensure user exists in the database to associate exams with."""
     db = get_db()
     try:
-        # Check if any user exists
+        # Try to find specific user 'veer.orgami' first
+        db.cursor.execute("SELECT user_id FROM users WHERE username = 'veer.orgami'")
+        target_user = db.cursor.fetchone()
+        
+        if target_user:
+            print(f"Using target user 'veer.orgami' (ID: {target_user['user_id']})")
+            return target_user['user_id']
+
+        # Fallback to any user
         db.cursor.execute("SELECT user_id FROM users LIMIT 1")
         user = db.cursor.fetchone()
         

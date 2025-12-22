@@ -432,11 +432,11 @@ def exams():
     try:
         # Get all exams formatted for display
         db.cursor.execute('''
-            SELECT exam_id, exam_name, file_type, total_questions, created_at 
+            SELECT exam_id, exam_name, file_type, total_questions, created_at, course_code, user_id 
             FROM exams 
-            WHERE user_id = ? 
+            WHERE user_id = ? OR (course_code = ? AND course_code IS NOT NULL)
             ORDER BY created_at DESC
-        ''', (current_user.id,))
+        ''', (current_user.id, current_user.course_code))
         exams_data = db.cursor.fetchall()
         
         # Convert to list of dicts for easier handling
@@ -447,7 +447,9 @@ def exams():
                 'exam_name': exam['exam_name'],
                 'file_type': exam['file_type'],
                 'total_questions': exam['total_questions'],
-                'created_at': exam['created_at'].split(' ')[0] # Just the date
+                'total_questions': exam['total_questions'],
+                'created_at': exam['created_at'].split(' ')[0], # Just the date
+                'is_shared': exam['course_code'] == current_user.course_code and exam['user_id'] != current_user.id
             })
             
         return render_template('exams.html', exams=exams_list)
@@ -466,7 +468,11 @@ def exam_detail(exam_id):
     db = get_db()
     try:
         # Get exam details
-        db.cursor.execute('SELECT * FROM exams WHERE exam_id = ? AND user_id = ?', (exam_id, current_user.id))
+        # Get exam details (allow if own exam OR shared with course)
+        db.cursor.execute('''
+            SELECT * FROM exams 
+            WHERE exam_id = ? AND (user_id = ? OR (course_code = ? AND course_code IS NOT NULL))
+        ''', (exam_id, current_user.id, current_user.course_code))
         exam = db.cursor.fetchone()
         
         if not exam:
