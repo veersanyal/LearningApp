@@ -186,15 +186,16 @@ body {
 }
 
 .dark .page-bg {
-  background:
-    radial-gradient(1200px 600px at 0% 0%, rgba(30, 41, 59, 0.5), transparent 60%),
-    linear-gradient(to bottom right, #050505, #0f172a);
-  /* Charcoal -> Deep Navy */
+  background-color: #070B13;
+  /* Layer 0: Darkest */
+  background-image:
+    radial-gradient(1200px 600px at 0% 0%, rgba(30, 41, 59, 0.3), transparent 60%);
 }
 
 .dark .page-bg::after {
+  /* Keep noise but very subtle */
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
-  opacity: 0.4;
+  opacity: 0.3;
   mix-blend-mode: overlay;
   pointer-events: none;
 }
@@ -240,19 +241,25 @@ body {
 }
 
 .dark .surface-card {
-  background-color: rgba(255, 255, 255, 0.04);
-  /* Transparent Fill */
-  border-color: rgba(255, 255, 255, 0.08);
-  /* Clear Border */
+  background-color: #0D1526;
+  /* Layer 1: Cards */
+  border-color: rgba(255, 255, 255, 0.12);
+  /* Increased border opacity */
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(10px);
 }
 
 .dark .surface-card:hover {
-  background-color: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.12);
+  background-color: #1a253a;
+  /* Layer 3: Interactive Hover (approx white/4 relative to card) */
+  border-color: rgba(255, 255, 255, 0.18);
   transform: translateY(-2px);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+}
+
+/* Layer 2: Inset Panels */
+.dark .surface-inset {
+  background-color: #0A1120;
+  border: 1px solid rgba(255, 255, 255, 0.10);
 }
 
 /* Button Utilities - Paper UI */
