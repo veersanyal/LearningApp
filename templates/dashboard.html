@@ -3,18 +3,18 @@
 {% block title %}Dashboard - StudyBoiler{% endblock %}
 
 {% block page_content %}
-<div class="page text-slate-200">
+<div class="page text-slate-800 dark:text-slate-200">
     <!-- Hero Section -->
     <div class="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
         <div>
-            <h1 class="text-3xl font-bold mb-2 text-white flex items-center gap-2">
+            <h1 class="text-3xl font-bold mb-2 text-slate-900 dark:text-white flex items-center gap-2">
                 Welcome back, <span x-text="currentUser.username || 'Boilermaker'"></span>! <span
                     class="text-2xl">👋</span>
             </h1>
-            <div class="flex items-center gap-3 text-sm text-slate-400">
-                <span>Today: <span class="text-white font-medium">0 due topics</span></span>
-                <span class="w-1 h-1 bg-slate-600 rounded-full"></span>
-                <span><span class="text-white font-medium">0 min</span> studied</span>
+            <div class="flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400">
+                <span>Today: <span class="text-slate-900 dark:text-white font-medium">0 due topics</span></span>
+                <span class="w-1 h-1 bg-slate-400 dark:bg-slate-600 rounded-full"></span>
+                <span><span class="text-slate-900 dark:text-white font-medium">0 min</span> studied</span>
                 <span class="w-1 h-1 bg-slate-600 rounded-full"></span>
                 <span>Next goal: <span class="text-[#CEB888] font-medium">20 min</span></span>
             </div>
@@ -41,8 +41,9 @@
         <div class="surface-glass surface-glass-hover rounded-2xl p-5 relative overflow-hidden group">
             <div class="flex justify-between items-start mb-2">
                 <div>
-                    <p class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">Study Streak</p>
-                    <h3 class="text-2xl font-bold text-white max-w-[120px] truncate"
+                    <p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">
+                        Study Streak</p>
+                    <h3 class="text-2xl font-bold text-slate-900 dark:text-white max-w-[120px] truncate"
                         x-text="studyStreak ? studyStreak + ' days' : '0 days'"></h3>
                 </div>
                 <div
@@ -68,8 +69,9 @@
         <div class="surface-glass surface-glass-hover rounded-2xl p-5 relative overflow-hidden group">
             <div class="flex justify-between items-start mb-2">
                 <div>
-                    <p class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">Accuracy</p>
-                    <h3 class="text-2xl font-bold text-white" x-text="(accuracy || 0) + '%'"></h3>
+                    <p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">
+                        Accuracy</p>
+                    <h3 class="text-2xl font-bold text-slate-900 dark:text-white" x-text="(accuracy || 0) + '%'"></h3>
                 </div>
                 <div
                     class="p-2 bg-[#D0B991]/10 rounded-lg text-[#D0B991] group-hover:bg-[#D0B991]/20 transition-colors">
@@ -93,8 +95,9 @@
         <div class="surface-glass surface-glass-hover rounded-2xl p-5 relative overflow-hidden group">
             <div class="flex justify-between items-start mb-2">
                 <div>
-                    <p class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">Mastered</p>
-                    <h3 class="text-2xl font-bold text-white"
+                    <p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">
+                        Mastered</p>
+                    <h3 class="text-2xl font-bold text-slate-900 dark:text-white"
                         x-text="(masteredTopics || 0) + '/' + (allTopics.length || 0)"></h3>
                 </div>
                 <div
@@ -115,8 +118,10 @@
         <div class="surface-glass surface-glass-hover rounded-2xl p-5 relative overflow-hidden group">
             <div class="flex justify-between items-start mb-2">
                 <div>
-                    <p class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">Until Exam</p>
-                    <h3 class="text-2xl font-bold text-white" x-text="daysUntilExam ? daysUntilExam + ' days' : '--'">
+                    <p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">
+                        Until Exam</p>
+                    <h3 class="text-2xl font-bold text-slate-900 dark:text-white"
+                        x-text="daysUntilExam ? daysUntilExam + ' days' : '--'">
                     </h3>
                 </div>
                 <div class="p-2 bg-blue-500/10 rounded-lg text-blue-400 group-hover:bg-blue-500/20 transition-colors">
@@ -144,8 +149,8 @@
                         <i data-lucide="bar-chart-2" class="w-5 h-5 text-[#D0B991]"></i>
                     </div>
                     <div>
-                        <h3 class="text-lg font-semibold text-white">Retention Progress</h3>
-                        <p class="text-xs text-slate-400">Estimated memory decay over time</p>
+                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Retention Progress</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Estimated memory decay over time</p>
                     </div>
                 </div>
                 <!-- Optional Timeframe Selector if implemented -->
@@ -198,8 +203,9 @@
                     <span class="text-xs text-slate-500 bg-slate-800/50 px-2 py-1 rounded">2 sessions open</span>
                 </div>
 
-                <h3 class="text-xl font-bold text-white mb-2">Study Together</h3>
-                <p class="text-sm text-slate-400 mb-6">Join 12 other Boilermakers studying right now.</p>
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Study Together</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Join 12 other Boilermakers studying right
+                    now.</p>
 
                 <!-- Avatar Stack -->
                 <div class="flex -space-x-3 mb-6">
@@ -220,7 +226,7 @@
 
             <div>
                 <a href="{{ url_for('group_study') }}"
-                    class="block w-full bg-white/10 hover:bg-white/20 hover:scale-[1.02] border border-white/5 backdrop-blur text-white py-3 rounded-xl transition-all font-medium text-center mb-3">
+                    class="block w-full bg-slate-900/10 dark:bg-white/10 hover:bg-slate-900/20 dark:hover:bg-white/20 hover:scale-[1.02] border border-black/5 dark:border-white/5 backdrop-blur text-slate-900 dark:text-white py-3 rounded-xl transition-all font-medium text-center mb-3">
                     Join Session
                 </a>
                 <a href="#" class="block text-center text-xs text-slate-500 hover:text-slate-300 transition-colors">
@@ -236,20 +242,22 @@
         <div id="leaderboard-section" class="lg:col-span-8">
             <div class="flex items-center justify-between mb-6">
                 <div>
-                    <h2 class="text-2xl font-bold text-white">Leaderboard</h2>
-                    <p class="text-sm text-slate-400">Competing with <span class="text-slate-200">Engineering</span>
+                    <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Leaderboard</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Competing with <span
+                            class="text-slate-700 dark:text-slate-200">Engineering</span>
                         students</p>
                 </div>
 
                 <!-- Pill Filters -->
-                <div class="flex bg-slate-800/50 rounded-full p-1 border border-white/5">
+                <div
+                    class="flex bg-slate-100 dark:bg-slate-800/50 rounded-full p-1 border border-black/5 dark:border-white/5">
                     <button @click="leaderboardPeriod = 'week'; loadLeaderboard()"
-                        :class="leaderboardPeriod === 'week' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'"
+                        :class="leaderboardPeriod === 'week' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'"
                         class="px-4 py-1.5 rounded-full text-xs font-medium transition-all">
                         This Week
                     </button>
                     <button @click="leaderboardPeriod = 'alltime'; loadLeaderboard()"
-                        :class="leaderboardPeriod === 'alltime' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'"
+                        :class="leaderboardPeriod === 'alltime' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'"
                         class="px-4 py-1.5 rounded-full text-xs font-medium transition-all">
                         All Time
                     </button>
@@ -273,12 +281,13 @@
 
         <!-- Local Stats / Progress (4 cols) -->
         <div class="lg:col-span-4 space-y-6">
-            <div class="surface-glass rounded-3xl p-6 border border-white/5">
-                <h3 class="text-lg font-semibold text-white mb-4">Your Progress</h3>
+            <div class="surface-glass rounded-3xl p-6 border border-black/5 dark:border-white/5">
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Your Progress</h3>
 
                 <div class="flex items-center justify-between mb-2">
-                    <span class="text-sm text-slate-400">Current Rank</span>
-                    <span class="text-xl font-bold text-white" x-text="'#' + (myRank || '-')"></span>
+                    <span class="text-sm text-slate-500 dark:text-slate-400">Current Rank</span>
+                    <span class="text-xl font-bold text-slate-900 dark:text-white"
+                        x-text="'#' + (myRank || '-')"></span>
                 </div>
 
                 <div class="mb-6">
@@ -313,11 +322,13 @@
                         class="p-3 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 relative overflow-hidden">
                         <div class="flex items-start justify-between gap-2 relative z-10">
                             <div>
-                                <p class="text-xs text-amber-200/80 mb-1 font-medium uppercase tracking-wider">Rivalry
+                                <p
+                                    class="text-xs text-amber-600 dark:text-amber-200/80 mb-1 font-medium uppercase tracking-wider">
+                                    Rivalry
                                 </p>
-                                <p class="text-sm text-slate-300">
-                                    Only <span class="text-white font-bold">40 XP</span> behind <span
-                                        class="text-[#CEB888]">Sam_Purdue</span>
+                                <p class="text-sm text-slate-700 dark:text-slate-300">
+                                    Only <span class="text-slate-900 dark:text-white font-bold">40 XP</span> behind
+                                    <span class="text-[#CEB888]">Sam_Purdue</span>
                                 </p>
                             </div>
                             <div class="p-1.5 bg-amber-500/20 rounded-lg">
@@ -338,10 +349,10 @@
     <div id="heatmap-section" class="mb-12">
         <div class="flex items-center justify-between mb-6">
             <div>
-                <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <i data-lucide="map-pin" class="w-6 h-6 text-[#D0B991]"></i> Campus Heatmap
                 </h2>
-                <p class="text-sm text-slate-400">Live study activity across campus</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Live study activity across campus</p>
             </div>
             <!-- Legend as Pills -->
             <div class="hidden md:flex gap-2">

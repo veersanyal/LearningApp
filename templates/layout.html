@@ -9,10 +9,10 @@
             <!-- Left: Logo -->
             <div class="app-header-left flex items-center gap-3">
                 <a href="{{ url_for('dashboard') }}" class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-black rounded-2xl flex items-center justify-center">
+                    <div class="w-10 h-10 bg-slate-900 rounded-2xl flex items-center justify-center">
                         <i data-lucide="book-open" class="w-6 h-6 text-[#CEB888]"></i>
                     </div>
-                    <h1 class="text-xl font-bold text-white">
+                    <h1 class="text-xl font-bold text-slate-900 dark:text-white">
                         <span class="text-[#CEB888]">Boiler</span><span>Buddy</span>
                     </h1>
                 </a>
@@ -107,23 +107,24 @@
                     <i data-lucide="user" class="w-5 h-5 text-white"></i>
                 </button>
                 <div x-show="showUserMenu" @click.away="showUserMenu = false" x-cloak
-                    class="absolute right-0 top-12 bg-white text-black rounded-lg shadow-xl p-2 min-w-[160px] z-50">
-                    <div class="px-3 py-2 border-b border-gray-200">
+                    class="absolute right-0 top-12 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg shadow-xl p-2 min-w-[160px] z-50 border border-slate-200 dark:border-slate-700">
+                    <div class="px-3 py-2 border-b border-gray-200 dark:border-slate-700">
                         <p class="font-medium text-sm" x-text="currentUser.username || 'Student'"></p>
-                        <p class="text-xs text-gray-500">Level <span x-text="xpProgress.current_level || 1"></span></p>
+                        <p class="text-xs text-gray-500 dark:text-slate-400">Level <span
+                                x-text="xpProgress.current_level || 1"></span></p>
                     </div>
                     <a href="{{ url_for('settings') }}"
-                        class="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors text-sm">
+                        class="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors text-sm">
                         <i data-lucide="settings" class="w-4 h-4"></i>
                         <span>Settings</span>
                     </a>
                     <a href="{{ url_for('achievements') }}"
-                        class="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors text-sm">
+                        class="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors text-sm">
                         <i data-lucide="award" class="w-4 h-4"></i>
                         <span>Achievements</span>
                     </a>
                     <button @click="logout(); showUserMenu = false"
-                        class="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors text-sm">
+                        class="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors text-sm">
                         <i data-lucide="log-out" class="w-4 h-4"></i>
                         <span>Logout</span>
                     </button>

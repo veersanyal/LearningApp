@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -118,7 +118,8 @@
     {% block extra_head %}{% endblock %}
 </head>
 
-<body class="bg-slate-900 text-slate-100 font-sans antialiased" x-data="app()" x-init="init();">
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans antialiased" x-data="app()"
+    x-init="init();">
 
     {% block content %}{% endblock %}
 
