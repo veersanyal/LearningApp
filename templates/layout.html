@@ -4,19 +4,15 @@
 <div x-show="isAuthenticated && onboardingStep === null && onboardingStep !== 'checking'" x-cloak class="app-shell">
 
     <!-- App Header with Navigation (BoilerBuddy Style) -->
-    <header class="app-header bg-white/80 backdrop-blur-md border-b border-slate-200/50" role="banner">
-        <!-- Subtle Grid Background for Header -->
-        <div class="absolute inset-0 opacity-[0.12] pointer-events-none"
-            style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 24px 24px;">
-        </div>
-
-        <div class="app-header-content relative z-10">
+    <!-- App Header with Navigation (Paper Header) -->
+    <header class="app-header bg-white border-b border-slate-200/60" role="banner">
+        <div class="app-header-content">
             <!-- Left: Logo -->
             <div class="app-header-left flex items-center gap-3">
                 <a href="{{ url_for('dashboard') }}" class="flex items-center gap-3 group">
                     <div
                         class="w-10 h-10 rounded-xl flex items-center justify-center bg-black group-hover:bg-slate-900 transition-colors">
-                        <i data-lucide="book-open" class="w-5 h-5 text-[#CEB888]"></i>
+                        <i data-lucide="book-open" class="w-5 h-5 text-[#CBB87C]"></i>
                     </div>
                     <h1 class="text-xl font-bold tracking-tight text-slate-900">
                         Boiler<span class="text-slate-400 font-normal">Buddy</span>
@@ -37,7 +33,7 @@
                 <!-- Search Bar -->
                 <div class="mr-6 hidden lg:block">
                     <div
-                        class="nav-search flex items-center gap-2 px-3 py-1.5 bg-slate-100/50 rounded-full border border-transparent focus-within:border-slate-300 focus-within:bg-white transition-all w-64">
+                        class="nav-search flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-full border border-slate-200 focus-within:border-slate-300 focus-within:bg-white transition-all w-64">
                         <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
                         <input type="text" placeholder="Search topics..."
                             class="bg-transparent border-none outline-none text-sm w-full placeholder-slate-400 text-slate-700">
@@ -45,19 +41,19 @@
                 </div>
 
                 <a href="{{ url_for('dashboard') }}"
-                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'dashboard' %}bg-[#CEB888]/10 text-slate-900 ring-1 ring-[#CEB888]/50{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}"
+                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'dashboard' %}bg-[#CBB87C]/10 text-slate-900 ring-1 ring-[#CBB87C]/40{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}"
                     aria-label="Go to Dashboard">
                     Home
                 </a>
 
                 <a href="{{ url_for('study') }}"
-                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'study' %}bg-[#CEB888]/10 text-slate-900 ring-1 ring-[#CEB888]/50{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}"
+                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'study' %}bg-[#CBB87C]/10 text-slate-900 ring-1 ring-[#CBB87C]/40{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}"
                     aria-label="Go to Study">
                     Study
                 </a>
 
                 <a href="{{ url_for('group_study') }}"
-                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'group_study' %}bg-[#CEB888]/10 text-slate-900 ring-1 ring-[#CEB888]/50{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}"
+                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'group_study' %}bg-[#CBB87C]/10 text-slate-900 ring-1 ring-[#CBB87C]/40{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}"
                     aria-label="Go to Group Study">
                     Group
                 </a>
@@ -70,14 +66,14 @@
                 </a>
 
                 <a href="{{ url_for('exams') }}"
-                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'exams' %}bg-[#CEB888]/10 text-slate-900 ring-1 ring-[#CEB888]/50{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}"
+                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'exams' %}bg-[#CBB87C]/10 text-slate-900 ring-1 ring-[#CBB87C]/40{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}"
                     aria-label="Go to Exams">
                     Exams
                 </a>
 
                 <!-- Primary Action -->
                 <a href="{{ url_for('documents') }}"
-                    class="ml-4 px-4 py-2 rounded-full bg-black text-white hover:bg-slate-800 transition-all text-sm font-medium flex items-center gap-2 shadow-lg shadow-black/5"
+                    class="ml-4 btn-primary-black text-sm font-medium flex items-center gap-2 shadow-sm"
                     aria-label="Upload">
                     <i data-lucide="upload" class="w-4 h-4"></i>
                     <span>Upload</span>

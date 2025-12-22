@@ -162,19 +162,20 @@
                 </div>
             </div>
 
-            <!-- Empty State for Chart -->
+            <!-- Empty State for Chart (Paper UI) -->
             <div x-show="!hasRetentionData"
-                class="flex-1 flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50 relative overflow-hidden">
+                class="flex-1 flex flex-col items-center justify-center text-center p-8 rounded-xl border border-slate-200 bg-[#CBB87C]/5 relative overflow-hidden">
                 <div
-                    class="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm border border-slate-100 relative z-10">
-                    <i data-lucide="line-chart" class="w-8 h-8 text-slate-300"></i>
+                    class="p-4 bg-white rounded-full mb-4 shadow-sm border border-slate-100 flex items-center justify-center relative z-10">
+                    <i data-lucide="lock" class="w-6 h-6 text-[#CBB87C]"></i>
                 </div>
-                <h4 class="text-slate-900 font-medium mb-1 relative z-10">No retention data yet</h4>
+                <h4 class="text-slate-900 font-semibold mb-1 relative z-10">Unlock Retention Insights</h4>
                 <p class="text-slate-500 text-sm max-w-xs mb-6 relative z-10">Complete your first study session to
-                    verify your retention curve.</p>
+                    verify your memory curve.</p>
                 <a href="{{ url_for('study') }}"
-                    class="relative z-10 px-5 py-2.5 bg-black text-white rounded-full hover:bg-slate-800 transition-colors font-medium text-sm shadow-lg shadow-black/5 flex items-center gap-2">
-                    Start Studying <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    class="relative z-10 btn-primary-black text-sm font-medium shadow-sm flex items-center gap-2">
+                    <i data-lucide="play" class="w-4 h-4 text-[#CBB87C]"></i>
+                    <span class="text-[#CBB87C]">Start Studying</span>
                 </a>
             </div>
 
@@ -247,16 +248,14 @@
                         students</p>
                 </div>
 
-                <!-- Pill Filters -->
-                <div class="flex bg-slate-100 rounded-full p-1">
+                <!-- Pill Filters (Chips) -->
+                <div class="flex gap-2">
                     <button @click="leaderboardPeriod = 'week'; loadLeaderboard()"
-                        :class="leaderboardPeriod === 'week' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
-                        class="px-4 py-1.5 rounded-full text-xs font-medium transition-all">
+                        :data-active="leaderboardPeriod === 'week'" class="chip font-medium text-xs transition-all">
                         This Week
                     </button>
                     <button @click="leaderboardPeriod = 'alltime'; loadLeaderboard()"
-                        :class="leaderboardPeriod === 'alltime' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
-                        class="px-4 py-1.5 rounded-full text-xs font-medium transition-all">
+                        :data-active="leaderboardPeriod === 'alltime'" class="chip font-medium text-xs transition-all">
                         All Time
                     </button>
                 </div>
@@ -403,7 +402,7 @@
                     <div class="absolute w-4 h-4 rounded-full shadow-sm border-2 border-white cursor-pointer hover:scale-150 hover:z-30 transition-all z-20 group"
                         :class="{
                              'bg-slate-400': loc.students <= 10,
-                             'bg-[#CEB888]': loc.students > 10 && loc.students <= 25,
+                             'bg-[#CBB87C]': loc.students > 10 && loc.students <= 25,
                              'bg-[#b45309]': loc.students > 25
                          }" :style="`left: ${loc.x}%; top: ${loc.y}%;`"
                         @click="document.getElementById('loc-item-' + loc.id)?.scrollIntoView({behavior: 'smooth', block: 'center'});">
@@ -418,26 +417,26 @@
                 </template>
             </div>
 
-            <!-- Floating List Overlay (Right Side) -->
+            <!-- Floating List Overlay (Right Side - Sub Card) -->
             <div
-                class="absolute right-4 top-4 bottom-4 w-72 bg-white/90 backdrop-blur-md rounded-2xl border border-slate-100 overflow-hidden flex flex-col shadow-xl">
-                <div class="p-4 border-b border-slate-100 bg-slate-50/50">
-                    <h3 class="text-sm font-bold text-slate-800">Top Locations</h3>
+                class="absolute right-4 top-4 bottom-4 w-72 surface-card !rounded-xl !p-0 overflow-hidden flex flex-col shadow-lg z-30">
+                <div class="p-4 border-b border-slate-100 bg-white">
+                    <h3 class="text-sm font-semibold text-slate-900">Top Locations</h3>
                     <p class="text-xs text-slate-500">Sorted by activity</p>
                 </div>
-                <div class="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
+                <div class="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar bg-white">
                     <template x-for="loc in studyLocations.sort((a,b) => b.students - a.students)" :key="loc.id">
                         <div :id="'loc-item-' + loc.id"
-                            class="p-3 rounded-xl hover:bg-slate-50 transition-colors group cursor-pointer border border-transparent hover:border-slate-100">
+                            class="p-3 rounded-lg hover:bg-slate-50 transition-colors group cursor-pointer border border-transparent hover:border-slate-100">
                             <div class="flex justify-between items-center mb-1">
                                 <span class="text-sm font-medium text-slate-700 group-hover:text-black truncate"
                                     x-text="loc.name"></span>
                                 <span x-show="loc.hot"
-                                    class="text-[10px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded">HOT</span>
+                                    class="text-[10px] bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded border border-amber-100">HOT</span>
                             </div>
                             <div class="flex items-center gap-2 text-xs text-slate-400">
                                 <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                    <div class="h-full bg-[#CEB888] rounded-full"
+                                    <div class="h-full bg-[#CBB87C] rounded-full"
                                         :style="`width: ${(loc.students / 50) * 100}%`"></div>
                                 </div>
                                 <span x-text="loc.students"></span>
