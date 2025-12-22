@@ -377,6 +377,8 @@ Return ONLY valid JSON, no markdown, no explanation."""
 
 @app.route('/')
 def index():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
     return render_template('index.html')
 
 @app.route('/dashboard')
