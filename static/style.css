@@ -31,9 +31,9 @@ html {
   --gold-subtle: #85724D;
   /* Darker/Subtle for borders or small accents */
 
-  /* Neutral Palette - Light Mode (Warm Off-White Base) */
-  --bg-page: #FBFBF8;
-  /* Warm off-white */
+  /* Neutral Palette - Light Mode (Cooler "Modern Paper") */
+  --bg-page: #F9FAFB;
+  /* Slate-50 - Cooler light gray */
   --bg-card: #FFFFFF;
   /* True white */
   --bg-card-hover: #FFFFFF;
@@ -50,10 +50,11 @@ html {
   /* Slate-500 (Darkened from Slate-400) */
 
   /* 3-Level Surface System (Light) */
-  --surface-page: #FBFBF8;
+  --surface-page: #F9FAFB;
+  /* Slate-50 - Cooler light gray */
   --surface-card: #FFFFFF;
-  --surface-inset: #F8FAFC;
-  /* Slate-50 */
+  --surface-inset: #F1F5F9;
+  /* Slate-100 */
   --surface-inset-tint: rgba(206, 184, 136, 0.08);
   /* Gold tint */
 
@@ -103,11 +104,13 @@ html {
   /* Subtle visible border */
   --shadow-card: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
 
-  --text-heading: #f8fafc;
+  --text-heading: #F1F5F9;
+  /* Slate-100 */
   /* Slate-50 */
-  --text-body: #cbd5e1;
+  --text-body: #E2E8F0;
+  /* Slate-200 - Much lighter for readability */
   /* Slate-300 */
-  --text-muted: #94a3b8;
+  --text-muted: #94A3B8;
   /* Slate-400 */
 
   --nav-item-color: var(--text-muted);
@@ -176,8 +179,8 @@ body {
 
 .page-bg {
   background:
-    radial-gradient(900px 500px at 50% 120px, rgba(207, 184, 124, 0.16), transparent 60%),
-    linear-gradient(#fbfbf7, #fbfbf7);
+    radial-gradient(900px 500px at 50% 120px, rgba(207, 184, 124, 0.12), transparent 60%),
+    linear-gradient(#F9FAFB, #F9FAFB);
   position: relative;
   min-height: 100vh;
 }
@@ -219,6 +222,24 @@ body {
   /* Specific soft shadow */
   border-radius: 1rem;
   /* rounded-2xl */
+
+  /* Premium Hover Animation */
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+  will-change: transform, box-shadow;
+}
+
+.surface-card:hover {
+  transform: translateY(-4px) scale(1.005);
+  box-shadow: 0 25px 50px -12px rgba(15, 15, 15, 0.15);
+  /* Stronger lift shadow */
+  z-index: 10;
+  border-color: rgba(206, 184, 136, 0.3);
+  /* Subtle gold hint on hover */
+}
+
+.dark .surface-card:hover {
+  box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.7);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .dark .surface-card {
