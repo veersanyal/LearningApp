@@ -118,8 +118,8 @@
     {% block extra_head %}{% endblock %}
 </head>
 
-<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans antialiased" x-data="app()"
-    x-init="init();">
+<body style="background-color: var(--bg-page); color: var(--text-body);"
+    class="font-sans antialiased transition-colors duration-300" x-data="app()" x-init="init();">
 
     {% block content %}{% endblock %}
 
