@@ -404,8 +404,8 @@
                     <div class="absolute w-4 h-4 rounded-full shadow-sm border-2 border-white dark:border-slate-800 cursor-pointer hover:scale-150 hover:z-30 transition-all z-20 group"
                         :class="{
                              'bg-slate-400 dark:bg-slate-600': loc.students <= 10,
-                             'bg-[#CBB87C] dark:bg-[#34D399]': loc.students > 10 && loc.students <= 25,
-                             'bg-[#b45309] dark:bg-[#10B981]': loc.students > 25
+                             'bg-[#CBB87C]': loc.students > 10 && loc.students <= 25,
+                             'bg-[#b45309]': loc.students > 25
                          }" :style="`left: ${loc.x}%; top: ${loc.y}%;`"
                         @click="document.getElementById('loc-item-' + loc.id)?.scrollIntoView({behavior: 'smooth', block: 'center'});">
 
@@ -435,11 +435,11 @@
                                     class="text-sm font-medium text-slate-700 dark:text-slate-200 group-hover:text-black dark:group-hover:text-white truncate"
                                     x-text="loc.name"></span>
                                 <span x-show="loc.hot"
-                                    class="text-[10px] bg-amber-50 dark:bg-emerald-900/30 text-amber-600 dark:text-emerald-400 px-1.5 py-0.5 rounded border border-amber-100 dark:border-emerald-800">HOT</span>
+                                    class="text-[10px] bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-[#CBB87C] px-1.5 py-0.5 rounded border border-amber-100 dark:border-amber-700/50">HOT</span>
                             </div>
                             <div class="flex items-center gap-2 text-xs text-slate-400">
                                 <div class="flex-1 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                                    <div class="h-full bg-[#CBB87C] dark:bg-[#34D399] rounded-full"
+                                    <div class="h-full bg-[#CBB87C] rounded-full"
                                         :style="`width: ${(loc.students / 50) * 100}%`"></div>
                                 </div>
                                 <span x-text="loc.students"></span>
