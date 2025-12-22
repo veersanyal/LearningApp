@@ -2430,13 +2430,30 @@ def get_retention_history():
         db.disconnect()
 
 
-# Auto-initialize database on first run
-with app.app_context():
-    if not os.path.exists('learning_app.db'):
-        init_db()
+@app.route('/seed-db')
+def seed_database():
+    """
+    Helper route to seed the database in production.
+    In a real app, protect this with a password or admin check!
+    """
+    key = request.args.get('key')
+    # Simple protection to prevent accidental seeding by random visitors
+    if not key or key != 'purdue-boiler-up':
+        return jsonify({"error": "Unauthorized. Provide ?key=purdue-boiler-up"}), 403
+        
+    try:
+        import seed_data
+        # Run the seeding logic
+        seed_data.main()
+        return jsonify({"message": "Database seeded successfully! Refresh the dashboard."})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
-
-
+    # Initialize DB if not exists
+    if not os.path.exists('learning_app.db'):
+        init_db()
+        
+    port = int(os.environ.get('PORT', 8080))
+    # Listen on all addresses (0.0.0.0) to make it accessible in containers
+    app.run(host='0.0.0.0', port=port, debug=not is_production)
