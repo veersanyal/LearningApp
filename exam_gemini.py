@@ -46,6 +46,13 @@ IMPORTANT INSTRUCTIONS:
 
 Return a JSON object with this EXACT structure:
 {
+  "exam_metadata": {
+    "course_code": "MA 161",
+    "semester": "Fall", // Fall, Spring, or Summer
+    "year": 2024,
+    "exam_date": "2024-10-15", // YYYY-MM-DD if found, otherwise null
+    "exam_type": "Exam 1"
+  },
   "questions": [
     {
       "question_number": "1",
@@ -83,6 +90,7 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
         questions_data = []
         total_pages = 0
         instruction_pages = []
+        exam_metadata = {}
         
         if file_type == 'pdf':
             # Use Gemini File API for PDF
@@ -136,6 +144,7 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
                         
                     total_pages = data.get("total_pages", 1) # AI estimate
                     instruction_pages = data.get("instruction_pages_skipped", [])
+                    exam_metadata = data.get("exam_metadata", {})
                     
                 except json.JSONDecodeError as e:
                     print(f"[GEMINI_EXTRACT] Error parsing JSON: {e}")
@@ -198,6 +207,7 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
                 
                 # Parse JSON response
                 page_data = json.loads(response_text)
+                exam_metadata = page_data.get("exam_metadata", {})
                 
                 # Add questions
                 if page_data.get("questions"):
@@ -226,7 +236,8 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
         return {
             "questions": questions_data,
             "total_pages": total_pages,
-            "instruction_pages_skipped": instruction_pages
+            "instruction_pages_skipped": instruction_pages,
+            "exam_metadata": exam_metadata
         }
     
     except Exception as e:

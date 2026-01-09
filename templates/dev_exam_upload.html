@@ -12,7 +12,8 @@
 
     <!-- Upload Form -->
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 mb-8">
-        <form action="{{ url_for('dev_exam_upload') }}" method="post" enctype="multipart/form-data" class="space-y-4">
+        <form action="{{ url_for('dev_exam_upload') }}" method="post" enctype="multipart/form-data" class="space-y-4"
+            @submit="isExtracting = true">
 
             <!-- Metadata Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4" x-show="!questions.length">
@@ -49,9 +50,11 @@
             </div>
 
             <div class="flex items-center gap-4">
-                <button type="submit"
-                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Extract Questions
+                <button type="submit" :disabled="isExtracting"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed">
+                    <span x-show="isExtracting" class="mr-2"><i data-lucide="loader-2"
+                            class="animate-spin w-4 h-4"></i></span>
+                    <span x-text="isExtracting ? 'Extracting...' : 'Extract Questions'"></span>
                 </button>
             </div>
         </form>
@@ -78,6 +81,12 @@
     <div x-init="
         questions = {{ extraction_result.questions | tojson }};
         totalPages = {{ extraction_result.total_pages }};
+        {% if extraction_result.exam_metadata %}
+            {% if extraction_result.exam_metadata.exam_date %}examMetadata.date = '{{ extraction_result.exam_metadata.exam_date }}';{% endif %}
+            {% if extraction_result.exam_metadata.semester and extraction_result.exam_metadata.year %}
+                examMetadata.semester = '{{ extraction_result.exam_metadata.semester }} {{ extraction_result.exam_metadata.year }}';
+            {% endif %}
+        {% endif %}
         {% if extraction_result.exam_name %}examMetadata.name = '{{ extraction_result.exam_name }}';{% endif %}
     "></div>
 
@@ -200,6 +209,7 @@
                     semester: ''
                 },
                 isSaving: false,
+                isExtracting: false,
 
                 adjustHeight(el) {
                     el.style.height = "auto";
