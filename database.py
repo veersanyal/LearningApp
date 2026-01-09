@@ -317,10 +317,23 @@ class Database:
                 file_type TEXT,
                 total_pages INTEGER,
                 total_questions INTEGER,
+                exam_date DATE,
+                semester TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
             )
         ''')
+        
+        # Add metadata columns if they don't exist (migration)
+        try:
+            self.cursor.execute('ALTER TABLE exams ADD COLUMN exam_date DATE')
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+            
+        try:
+            self.cursor.execute('ALTER TABLE exams ADD COLUMN semester TEXT')
+        except sqlite3.OperationalError:
+            pass  # Column already exists
         
         # Exam questions table (for storing OCR'd questions)
         self.cursor.execute('''

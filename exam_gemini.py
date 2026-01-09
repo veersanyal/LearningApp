@@ -42,7 +42,7 @@ IMPORTANT INSTRUCTIONS:
 3. Preserve all mathematical notation, equations, and LaTeX formatting exactly as shown
 4. For diagrams/images: Provide a detailed description that would allow someone to recreate the diagram. Include all labels, axes, curves, shapes, and their relationships
 5. Number questions correctly (handle subparts like 1a, 1b, etc.)
-6. For multiple choice questions, extract ALL options (A, B, C, D, E, F, etc.) exactly as written
+6. For multiple choice questions, extract ALL options (A, B, C, D, E, F, etc.) exactly as written but remove the leading letter reference (e.g. "(A) 5" becomes just "5")
 
 Return a JSON object with this EXACT structure:
 {
@@ -51,7 +51,7 @@ Return a JSON object with this EXACT structure:
       "question_number": "1",
       "question_text": "Full question text with all details, preserving LaTeX notation like $\\int_0^1 x^2 dx$ or $$\\frac{d}{dx}\\left(\\sin(x)\\right) = \\cos(x)$$",
       "question_type": "multiple_choice|free_response|true_false|short_answer",
-      "options": ["Option A", "Option B", ...] or null if not multiple choice,
+      "options": ["Option text without A)", "Option text without B)"] or null if not multiple choice,
       "correct_answer": "Answer or solution" or null if not provided,
       "page_number": 2,
       "has_diagram": true/false,
@@ -245,7 +245,7 @@ Return ONLY the JSON, no markdown formatting, no explanations."""
             return {"error": f"Failed to extract questions: {error_msg}"}
 
 
-def save_exam_questions_to_db(user_id: int, exam_name: str, file_type: str, questions_data: List[Dict], total_pages: int) -> Dict:
+def save_exam_questions_to_db(user_id: int, exam_name: str, file_type: str, questions_data: List[Dict], total_pages: int, exam_date: str = None, semester: str = None) -> Dict:
     """
     Save extracted questions to the database.
     
@@ -255,6 +255,8 @@ def save_exam_questions_to_db(user_id: int, exam_name: str, file_type: str, ques
         file_type: File type ('pdf' or image extension)
         questions_data: List of question dictionaries from Gemini
         total_pages: Total number of pages
+        exam_date: Date of the exam (YYYY-MM-DD)
+        semester: Semester (e.g., "Fall 2024")
     
     Returns:
         Dict with 'exam_id' and 'total_questions'
@@ -266,9 +268,9 @@ def save_exam_questions_to_db(user_id: int, exam_name: str, file_type: str, ques
         os.makedirs(exam_dir, exist_ok=True)
         
         db.cursor.execute('''
-            INSERT INTO exams (user_id, exam_name, file_type, total_pages, total_questions)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (user_id, exam_name, file_type, total_pages, len(questions_data)))
+            INSERT INTO exams (user_id, exam_name, file_type, total_pages, total_questions, exam_date, semester)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (user_id, exam_name, file_type, total_pages, len(questions_data), exam_date, semester))
         db.conn.commit()
         exam_id = db.cursor.lastrowid
         
@@ -282,6 +284,7 @@ def save_exam_questions_to_db(user_id: int, exam_name: str, file_type: str, ques
                 "correct_answer": q.get("correct_answer"),
                 "has_diagram": q.get("has_diagram", False),
                 "diagram_description": q.get("diagram_description"),
+                "image_path": q.get("image_path"),  # Save image path in JSON too
                 "topics": q.get("topics", []),
                 "subparts": q.get("subparts")
             })
@@ -289,8 +292,8 @@ def save_exam_questions_to_db(user_id: int, exam_name: str, file_type: str, ques
             # Insert main question
             db.cursor.execute('''
                 INSERT INTO exam_questions 
-                (exam_id, page_number, question_number, raw_text, solved_json, difficulty, topics_json, diagram_note)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                (exam_id, page_number, question_number, raw_text, solved_json, difficulty, topics_json, diagram_note, image_path)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 exam_id,
                 q.get("page_number", 1),
@@ -299,7 +302,8 @@ def save_exam_questions_to_db(user_id: int, exam_name: str, file_type: str, ques
                 question_json,  # Store full structured data in solved_json
                 q.get("difficulty_estimate", 3),
                 json.dumps({"topics": q.get("topics", [])}),
-                q.get("diagram_description")  # Store diagram description in diagram_note column
+                q.get("diagram_description"),  # Store diagram description in diagram_note column
+                q.get("image_path")  # Store image path in column
             ))
             
             question_id = db.cursor.lastrowid

@@ -2457,6 +2457,122 @@ def seed_database():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/dev/exam-upload', methods=['GET', 'POST'])
+@login_required
+def dev_exam_upload():
+    """Dev route to test exam extraction."""
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            return render_template('dev_exam_upload.html', error="No file provided")
+        
+        file = request.files['file']
+        if file.filename == '':
+            return render_template('dev_exam_upload.html', error="No file selected")
+            
+        try:
+            file_bytes = file.read()
+            filename = file.filename.lower()
+            
+            # Basic extension check
+            if filename.endswith('.pdf'):
+                file_type = 'pdf'
+            elif '.' in filename:
+                file_type = filename.rsplit('.', 1)[1]
+            else:
+                return render_template('dev_exam_upload.html', error="Unknown file type")
+            
+            # Use the global vision_model
+            if not vision_model:
+                return render_template('dev_exam_upload.html', error="Vision model not initialized. Check GEMINI_API_KEY.")
+
+            result = extract_exam_questions_with_gemini(file_bytes, file_type, vision_model)
+            
+            if 'error' in result:
+                return render_template('dev_exam_upload.html', error=result['error'])
+                
+            return render_template('dev_exam_upload.html', extraction_result=result)
+            
+        except Exception as e:
+            print(f"Dev upload error: {e}")
+            import traceback
+            traceback.print_exc()
+            return render_template('dev_exam_upload.html', error=str(e))
+            
+
+@app.route('/api/upload-diagram', methods=['POST'])
+@login_required
+def upload_diagram():
+    """Upload a diagram image for a specific question."""
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part"}), 400
+        
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+        
+    if file:
+        try:
+            # Create uploads directory for diagrams
+            diagrams_dir = os.path.join(os.path.dirname(__file__), 'static', 'uploads', 'diagrams')
+            os.makedirs(diagrams_dir, exist_ok=True)
+            
+            # Generate unique filename
+            ext = os.path.splitext(file.filename)[1]
+            filename = f"diagram_{uuid.uuid4()}{ext}"
+            file_path = os.path.join(diagrams_dir, filename)
+            
+            file.save(file_path)
+            
+            # Return web-accessible path
+            return jsonify({
+                "url": url_for('static', filename=f'uploads/diagrams/{filename}'),
+                "path": f"static/uploads/diagrams/{filename}"
+            })
+        except Exception as e:
+            print(f"Diagram upload error: {e}")
+            return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/save-exam', methods=['POST'])
+@login_required
+def save_exam():
+    """Save the final exam data."""
+    try:
+        data = request.json
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+            
+        exam_name = data.get('exam_name', 'Untitled Exam')
+        exam_date = data.get('exam_date')
+        semester = data.get('semester')
+        file_type = data.get('file_type', 'unknown')
+        questions = data.get('questions', [])
+        total_pages = data.get('total_pages', 1)
+        
+        if not questions:
+            return jsonify({"error": "No questions to save"}), 400
+            
+        result = save_exam_questions_to_db(
+            user_id=current_user.id,
+            exam_name=exam_name,
+            file_type=file_type,
+            questions_data=questions,
+            total_pages=total_pages,
+            exam_date=exam_date,
+            semester=semester
+        )
+        
+        return jsonify({"success": True, "exam_id": result['exam_id']})
+        
+    except Exception as e:
+        print(f"Save exam error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+            
+    return render_template('dev_exam_upload.html')
+
+
 if __name__ == '__main__':
     # Initialize DB if not exists
     if not os.path.exists('learning_app.db'):

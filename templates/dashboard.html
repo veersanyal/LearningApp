@@ -21,11 +21,10 @@
             </div>
             <!-- Quick Actions (Upload) -->
             <div class="flex gap-2">
-                <input type="file" id="exam-upload-input" class="hidden" @change="handleQuickUpload($event)">
-                <button onclick="document.getElementById('exam-upload-input').click()"
+                <a href="{{ url_for('dev_exam_upload') }}"
                     class="px-4 py-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white text-sm font-medium flex items-center gap-2 transition-colors">
                     <i data-lucide="upload-cloud" class="w-4 h-4"></i> Upload Exam
-                </button>
+                </a>
             </div>
         </div>
 
@@ -59,11 +58,11 @@
                         </div>
                     </div>
                 </div>
-                <button onclick="document.getElementById('exam-upload-input').click()"
-                    class="btn-primary-black px-6 py-3 rounded-xl shadow-[0_0_0_3px_rgba(203,184,124,0.15)] hover:scale-105 transition-transform bg-[#CBB87C] text-black hover:bg-[#D8C69E] border-none font-bold">
+                <a href="{{ url_for('dev_exam_upload') }}"
+                    class="btn-primary-black px-6 py-3 rounded-xl shadow-[0_0_0_3px_rgba(203,184,124,0.15)] hover:scale-105 transition-transform bg-[#CBB87C] text-black hover:bg-[#D8C69E] border-none font-bold inline-flex items-center">
                     Upload First Exam
                     <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i>
-                </button>
+                </a>
             </div>
 
             <!-- Next Session State (Active) -->

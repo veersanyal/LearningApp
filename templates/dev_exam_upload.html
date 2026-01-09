@@ -1,0 +1,297 @@
+{% extends "layout.html" %}
+
+{% block title %}Dev: Exam Upload - StudyBoiler{% endblock %}
+
+{% block page_content %}
+<div class="max-w-4xl mx-auto px-4 py-8" x-data="examEditor()">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">Dev: Exam Extraction</h1>
+        <p class="text-slate-600 dark:text-slate-400">Upload an exam PDF or image to test the Gemini extraction pathway.
+        </p>
+    </div>
+
+    <!-- Upload Form -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 mb-8">
+        <form action="{{ url_for('dev_exam_upload') }}" method="post" enctype="multipart/form-data" class="space-y-4">
+
+            <!-- Metadata Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" x-show="!questions.length">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Exam Date</label>
+                    <input type="date" name="exam_date" x-model="examMetadata.date"
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Semester</label>
+                    <select name="semester" x-model="examMetadata.semester"
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                        <option value="">Select Semester</option>
+                        <option value="Fall 2024">Fall 2024</option>
+                        <option value="Spring 2025">Spring 2025</option>
+                        <option value="Summer 2025">Summer 2025</option>
+                        <option value="Fall 2025">Fall 2025</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label for="file" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Exam File
+                    (PDF or Image)</label>
+                <input type="file" name="file" id="file" accept=".pdf,.png,.jpg,.jpeg,.webp" required class="block w-full text-sm text-slate-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-full file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-indigo-50 file:text-indigo-700
+                    hover:file:bg-indigo-100
+                    dark:file:bg-slate-700 dark:file:text-slate-200
+                    dark:hover:file:bg-slate-600
+                    cursor-pointer border border-slate-300 dark:border-slate-600 rounded-lg p-2">
+            </div>
+
+            <div class="flex items-center gap-4">
+                <button type="submit"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Extract Questions
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {% if error %}
+    <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-8">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <i data-lucide="alert-circle" class="h-5 w-5 text-red-400"></i>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-red-800 dark:text-red-200">Error</h3>
+                <div class="mt-2 text-sm text-red-700 dark:text-red-300">
+                    <p>{{ error }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if extraction_result %}
+    <!-- Initialize Alpine data from server-side template -->
+    <div x-init="
+        questions = {{ extraction_result.questions | tojson }};
+        totalPages = {{ extraction_result.total_pages }};
+        {% if extraction_result.exam_name %}examMetadata.name = '{{ extraction_result.exam_name }}';{% endif %}
+    "></div>
+
+    <div class="space-y-8" x-show="questions.length > 0">
+
+        <!-- Action Bar -->
+        <div
+            class="flex items-center justify-between bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 sticky top-4 z-10">
+            <div>
+                <h3 class="font-bold text-slate-900 dark:text-white">Review & Publish</h3>
+                <p class="text-xs text-slate-500" x-text="questions.length + ' questions extracted'"></p>
+            </div>
+
+            <div class="flex gap-2">
+                <!-- Metadata inputs in action bar -->
+                <input type="text" x-model="examMetadata.name" placeholder="Exam Name"
+                    class="text-sm rounded-md border-gray-300 dark:bg-slate-700 dark:border-slate-600">
+                <input type="date" x-model="examMetadata.date"
+                    class="text-sm rounded-md border-gray-300 dark:bg-slate-700 dark:border-slate-600">
+
+                <button @click="saveExam()" :disabled="isSaving"
+                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+                    <span x-show="isSaving"><i data-lucide="loader-2" class="animate-spin w-4 h-4"></i> Saving...</span>
+                    <span x-show="!isSaving"><i data-lucide="save" class="w-4 h-4"></i> Save Exam</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <template x-for="(question, index) in questions" :key="index">
+                <div
+                    class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 group">
+                    <div class="flex items-start justify-between mb-4">
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                            Q<span x-text="question.question_number"></span>
+                        </span>
+                        <span class="text-xs text-slate-500">
+                            Page <span x-text="question.page_number"></span> •
+                            <span x-text="question.question_type"></span> •
+                            Diff: <span x-text="question.difficulty_estimate"></span>
+                        </span>
+                    </div>
+
+                    <!-- Question Text (Editable) -->
+                    <div class="mb-6">
+                        <textarea x-model="question.question_text"
+                            class="w-full h-auto min-h-[100px] p-2 rounded border border-transparent hover:border-slate-200 dark:hover:border-slate-700 bg-transparent focus:bg-slate-50 dark:focus:bg-slate-900 transition-colors"
+                            @input="adjustHeight($event.target)"></textarea>
+                    </div>
+
+                    <!-- Options -->
+                    <template x-if="question.options">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                            <template x-for="(option, optIndex) in question.options" :key="optIndex">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-slate-400 text-xs font-mono"
+                                        x-text="String.fromCharCode(65 + optIndex)"></span>
+                                    <input type="text" x-model="question.options[optIndex]"
+                                        class="flex-1 p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 text-sm">
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- Correct Answer -->
+                    <div
+                        class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg border border-yellow-100 dark:border-yellow-900/30">
+                        <p class="text-sm font-medium text-yellow-800 dark:text-yellow-200">Correct Answer:</p>
+                        <input type="text" x-model="question.correct_answer"
+                            class="w-full mt-1 bg-transparent border-none p-0 text-slate-700 dark:text-slate-300 focus:ring-0">
+                    </div>
+
+                    <!-- Diagram Drop Zone -->
+                    <div class="mt-6 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-4 transition-colors"
+                        :class="{'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20': question.isDragging}"
+                        @dragover.prevent="question.isDragging = true" @dragleave.prevent="question.isDragging = false"
+                        @drop.prevent="handleDrop($event, index)">
+
+                        <div x-show="!question.image_path" class="text-center cursor-pointer"
+                            @click="$refs['fileInput_' + index].click()">
+                            <input type="file" :x-ref="'fileInput_' + index" class="hidden" accept="image/*"
+                                @change="handleFileGroup($event, index)">
+                            <i data-lucide="image-plus" class="w-8 h-8 text-slate-400 mx-auto mb-2"></i>
+                            <p class="text-sm text-slate-500">Drag diagram here or click to upload</p>
+                        </div>
+
+                        <div x-show="question.image_path" class="relative group/image">
+                            <img :src="'/' + question.image_path" class="max-h-64 rounded mx-auto">
+                            <button @click="question.image_path = null"
+                                class="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover/image:opacity-100 transition-opacity">
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Topics tag input placeholder -->
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <template x-for="topic in question.topics">
+                            <span
+                                class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
+                                <span x-text="topic"></span>
+                            </span>
+                        </template>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+    {% endif %}
+
+    <script>
+        function examEditor() {
+            return {
+                questions: [],
+                totalPages: 0,
+                examMetadata: {
+                    name: 'Extracted Exam',
+                    date: '',
+                    semester: ''
+                },
+                isSaving: false,
+
+                adjustHeight(el) {
+                    el.style.height = "auto";
+                    el.style.height = el.scrollHeight + "px";
+                },
+
+                handleDrop(event, index) {
+                    this.questions[index].isDragging = false;
+                    const file = event.dataTransfer.files[0];
+                    if (file && file.type.startsWith('image/')) {
+                        this.uploadDiagram(file, index);
+                    }
+                },
+
+                handleFileGroup(event, index) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        this.uploadDiagram(file, index);
+                    }
+                },
+
+                async uploadDiagram(file, index) {
+                    const formData = new FormData();
+                    formData.append('file', file);
+
+                    try {
+                        const response = await fetch('/api/upload-diagram', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            // Update just this question's image path
+                            // Use spread to trigger abundance reactivity if needed, or normal assignment
+                            this.questions[index].image_path = data.path;
+                        } else {
+                            alert('Upload failed');
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        alert('Upload error');
+                    }
+                },
+
+                async saveExam() {
+                    this.isSaving = true;
+                    try {
+                        const payload = {
+                            exam_name: this.examMetadata.name,
+                            exam_date: this.examMetadata.date,
+                            semester: this.examMetadata.semester,
+                            questions: this.questions,
+                            total_pages: this.totalPages
+                        };
+
+                        const response = await fetch('/api/save-exam', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(payload)
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            alert('Exam saved successfully! ID: ' + data.exam_id);
+                            // Redirect to exam listing?
+                            window.location.href = "{{ url_for('documents') }}";
+                        } else {
+                            alert('Error saving exam: ' + data.error);
+                        }
+                    } catch (e) {
+                        alert('Network error saving exam');
+                        console.error(e);
+                    } finally {
+                        this.isSaving = false;
+                    }
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+            // Initial typeset
+            if (window.MathJax) {
+                MathJax.typesetPromise();
+            }
+        });
+    </script>
+</div>
+{% endblock %}
