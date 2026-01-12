@@ -60,6 +60,12 @@
                     Group
                 </a>
 
+                <a href="{{ url_for('my_courses') }}"
+                    class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all {% if request.endpoint == 'my_courses' %}bg-[#CBB87C]/10 dark:bg-[#CBB87C]/20 text-slate-900 dark:text-[#CBB87C] border border-[#CBB87C]/30{% else %}text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-transparent{% endif %}"
+                    aria-label="Go to My Courses">
+                    My Courses
+                </a>
+
                 <a href="{{ url_for('dashboard') }}#leaderboard-section"
                     class="nav-item px-4 py-2 rounded-full text-sm font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-transparent"
                     aria-label="Go to Leaderboard"

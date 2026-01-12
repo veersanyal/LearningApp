@@ -3,7 +3,7 @@
 {% block title %}Dev: Exam Upload - StudyBoiler{% endblock %}
 
 {% block page_content %}
-<div class="max-w-4xl mx-auto px-4 py-8" x-data="examEditor()">
+<div class="max-w-4xl mx-auto px-4 py-8" x-data="examEditor()" x-init="initData()">
     <div class="mb-8">
         <h1 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">Dev: Exam Extraction</h1>
         <p class="text-slate-600 dark:text-slate-400">Upload an exam PDF or image to test the Gemini extraction pathway.
@@ -16,10 +16,33 @@
             @submit="isExtracting = true">
 
             <!-- Metadata Grid -->
+            <!-- Show only if no results yet -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4" x-show="!questions.length">
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Exam Date</label>
-                    <input type="date" name="exam_date" x-model="examMetadata.date"
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Course Name
+                        (Required)</label>
+                    <input type="text" name="course_name" x-model="examMetadata.course_name" placeholder="e.g. CS 180"
+                        required
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Exam Type</label>
+                    <select name="exam_type" x-model="examMetadata.exam_type"
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                        <option value="">Select Type</option>
+                        <option value="Midterm 1">Midterm 1</option>
+                        <option value="Midterm 2">Midterm 2</option>
+                        <option value="Midterm 3">Midterm 3</option>
+                        <option value="Final">Final Exam</option>
+                        <option value="Quiz">Quiz</option>
+                        <option value="Homework">Homework</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Year</label>
+                    <input type="number" name="exam_year" x-model="examMetadata.year" placeholder="YYYY" min="2000"
+                        max="2100"
                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white">
                 </div>
                 <div>
@@ -27,10 +50,10 @@
                     <select name="semester" x-model="examMetadata.semester"
                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white">
                         <option value="">Select Semester</option>
-                        <option value="Fall 2024">Fall 2024</option>
-                        <option value="Spring 2025">Spring 2025</option>
-                        <option value="Summer 2025">Summer 2025</option>
-                        <option value="Fall 2025">Fall 2025</option>
+                        <option value="Fall">Fall</option>
+                        <option value="Spring">Spring</option>
+                        <option value="Summer">Summer</option>
+                        <option value="Winter">Winter</option>
                     </select>
                 </div>
             </div>
@@ -76,54 +99,104 @@
     </div>
     {% endif %}
 
+    {% if metadata %}
+    <script>
+        window.initialMetadata = {{ metadata | tojson | safe }};
+    </script>
+    {% endif %}
+
     {% if extraction_result %}
-    <!-- Initialize Alpine data from server-side template -->
-    <div x-init="
-        questions = {{ extraction_result.questions | tojson }};
-        totalPages = {{ extraction_result.total_pages }};
-        {% if extraction_result.exam_metadata %}
-            {% if extraction_result.exam_metadata.exam_date %}examMetadata.date = '{{ extraction_result.exam_metadata.exam_date }}';{% endif %}
-            {% if extraction_result.exam_metadata.semester and extraction_result.exam_metadata.year %}
-                examMetadata.semester = '{{ extraction_result.exam_metadata.semester }} {{ extraction_result.exam_metadata.year }}';
-            {% endif %}
-        {% endif %}
-        {% if extraction_result.exam_name %}examMetadata.name = '{{ extraction_result.exam_name }}';{% endif %}
-    "></div>
+    <!-- Data Injection via Script -->
+    <script>
+        // Safely serialize the entire result object
+        window.extractedData = {{ extraction_result | tojson | safe }};
+        console.log("Extracted Data:", window.extractedData);
+    </script>
 
-    <div class="space-y-8" x-show="questions.length > 0">
+    <div x-show="questions.length === 0" class="bg-yellow-50 p-4 rounded-lg text-yellow-800 mb-8" x-cloak>
+        <p>No questions extracted yet.</p>
+        <p class="text-xs mt-2 font-mono">Debug: questions.length = <span x-text="questions.length"></span></p>
+    </div>
 
+    <!-- Debug Info (Temporary) -->
+    <div class="mb-4 p-2 bg-gray-100 rounded text-xs font-mono text-gray-500">
+        JS Loaded: Yes | Questions: <span x-text="questions.length"></span> | Year: <span
+            x-text="examMetadata.year"></span>
+    </div>
+
+    <div class="space-y-8" x-show="questions.length > 0" x-cloak>
         <!-- Action Bar -->
         <div
-            class="flex items-center justify-between bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 sticky top-4 z-10">
+            class="flex items-center justify-between bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 sticky top-4 z-10 transition-all">
             <div>
                 <h3 class="font-bold text-slate-900 dark:text-white">Review & Publish</h3>
                 <p class="text-xs text-slate-500" x-text="questions.length + ' questions extracted'"></p>
             </div>
 
-            <div class="flex gap-2">
-                <!-- Metadata inputs in action bar -->
+            <!-- Metadata inputs in action bar -->
+            <div class="flex items-center gap-2">
+                <input type="text" x-model="examMetadata.course_name" placeholder="Course (e.g. CS 180)"
+                    class="text-sm rounded-md border-gray-300 dark:bg-slate-700 dark:border-slate-600 w-32 focus:ring-indigo-500 focus:border-indigo-500">
+
+                <select x-model="examMetadata.exam_type"
+                    class="text-sm rounded-md border-gray-300 dark:bg-slate-700 dark:border-slate-600 w-32 focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="">Type</option>
+                    <option value="Midterm 1">Midterm 1</option>
+                    <option value="Midterm 2">Midterm 2</option>
+                    <option value="Midterm 3">Midterm 3</option>
+                    <option value="Final">Final Exam</option>
+                    <option value="Quiz">Quiz</option>
+                    <option value="Homework">Homework</option>
+                    <option value="Other">Other</option>
+                </select>
+
                 <input type="text" x-model="examMetadata.name" placeholder="Exam Name"
-                    class="text-sm rounded-md border-gray-300 dark:bg-slate-700 dark:border-slate-600">
-                <input type="date" x-model="examMetadata.date"
-                    class="text-sm rounded-md border-gray-300 dark:bg-slate-700 dark:border-slate-600">
+                    class="text-sm rounded-md border-gray-300 dark:bg-slate-700 dark:border-slate-600 w-40 focus:ring-indigo-500 focus:border-indigo-500">
+
+                <input type="number" x-model="examMetadata.year" placeholder="Year"
+                    class="text-sm rounded-md border-gray-300 dark:bg-slate-700 dark:border-slate-600 w-20 focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+
+            <div class="flex gap-2">
+                <button @click="analyzeExam()" :disabled="isAnalyzing || questions.length === 0"
+                    class="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
+                    <span x-show="isAnalyzing"><i data-lucide="loader-2" class="animate-spin w-4 h-4"></i>
+                        Solving...</span>
+                    <span x-show="!isAnalyzing"><i data-lucide="brain-circuit" class="w-4 h-4"></i> Analyze</span>
+                </button>
 
                 <button @click="saveExam()" :disabled="isSaving"
-                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
                     <span x-show="isSaving"><i data-lucide="loader-2" class="animate-spin w-4 h-4"></i> Saving...</span>
-                    <span x-show="!isSaving"><i data-lucide="save" class="w-4 h-4"></i> Save Exam</span>
+                    <span x-show="!isSaving">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        <span x-text="examMetadata.exam_id ? 'Update Exam' : 'Save Exam'"></span>
+                    </span>
                 </button>
             </div>
         </div>
 
+        <!-- Questions List -->
         <div class="space-y-6">
             <template x-for="(question, index) in questions" :key="index">
                 <div
-                    class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 group">
+                    class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 group transition-all hover:border-indigo-200 dark:hover:border-indigo-900">
                     <div class="flex items-start justify-between mb-4">
-                        <span
-                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                            Q<span x-text="question.question_number"></span>
-                        </span>
+                        <div class="flex items-center gap-2">
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                                Q<span x-text="question.question_number"></span>
+                            </span>
+                            <!-- Single Question Analyze Button -->
+                            <button @click="analyzeQuestion(index)" :disabled="question.isAnalyzing"
+                                class="text-xs flex items-center gap-1 px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/20 dark:text-indigo-400 font-medium transition-colors"
+                                title="Analyze this question">
+                                <i data-lucide="sparkles" class="w-3 h-3"
+                                    :class="{'animate-spin': question.isAnalyzing}"></i>
+                                <span x-text="question.isAnalyzing ? 'Analyzing...' : 'Analyze'"></span>
+                            </button>
+                            </button>
+                        </div>
                         <span class="text-xs text-slate-500">
                             Page <span x-text="question.page_number"></span> •
                             <span x-text="question.question_type"></span> •
@@ -131,11 +204,32 @@
                         </span>
                     </div>
 
-                    <!-- Question Text (Editable) -->
-                    <div class="mb-6">
-                        <textarea x-model="question.question_text"
-                            class="w-full h-auto min-h-[100px] p-2 rounded border border-transparent hover:border-slate-200 dark:hover:border-slate-700 bg-transparent focus:bg-slate-50 dark:focus:bg-slate-900 transition-colors"
-                            @input="adjustHeight($event.target)"></textarea>
+                    <!-- Question Text (Toggle View) -->
+                    <div class="mb-6 space-y-2" x-data="{ isEditing: false }">
+                        <div class="flex justify-between items-center">
+                            <label class="text-xs font-semibold text-slate-500 uppercase">Question Text</label>
+                            <button
+                                @click="isEditing = !isEditing; if(!isEditing) $nextTick(() => { if(window.MathJax) MathJax.typesetPromise([$el.closest('.mb-6').querySelector('.preview-box')]) })"
+                                class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
+                                <span x-show="!isEditing">Edit Source</span>
+                                <span x-show="isEditing">Done</span>
+                            </button>
+                        </div>
+
+                        <!-- Live Preview (View Mode) -->
+                        <div class="preview-box p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-800 cursor-pointer hover:border-indigo-200 transition-colors"
+                            x-show="!isEditing" @click="isEditing = true"
+                            x-html="question.question_text || '<span class=\'text-gray-400 italic\'>Empty question text</span>'">
+                        </div>
+
+                        <!-- Editor (Edit Mode) -->
+                        <div x-show="isEditing">
+                            <textarea x-model="question.question_text"
+                                class="w-full h-auto min-h-[100px] p-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-indigo-500 focus:border-indigo-500 transition-colors font-mono text-sm"
+                                @input="adjustHeight($event.target)"
+                                placeholder="Enter LaTeX question text..."></textarea>
+                            <p class="text-xs text-slate-400 mt-1">LaTeX enabled. Click Done to render.</p>
+                        </div>
                     </div>
 
                     <!-- Options -->
@@ -145,20 +239,225 @@
                                 <div class="flex items-center gap-2">
                                     <span class="text-slate-400 text-xs font-mono"
                                         x-text="String.fromCharCode(65 + optIndex)"></span>
-                                    <input type="text" x-model="question.options[optIndex]"
-                                        class="flex-1 p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 text-sm">
+                                    <div class="flex flex-col flex-1 gap-1" x-data="{ isOptEditing: false }">
+                                        <!-- Option View -->
+                                        <div x-show="!isOptEditing" @click="isOptEditing = true"
+                                            class="latex-opt text-sm p-2 rounded border cursor-pointer min-h-[38px] flex items-center transition-colors"
+                                            :class="question.correct_answer && question.options[optIndex] && (question.correct_answer === question.options[optIndex] || question.correct_answer === String.fromCharCode(65 + optIndex)) 
+                                                ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' 
+                                                : 'bg-slate-50 dark:bg-slate-900/30 border-transparent hover:border-indigo-200'">
+                                            <div x-html="question.options[optIndex]"></div>
+                                        </div>
+
+                                        <!-- Option Edit -->
+                                        <input x-show="isOptEditing"
+                                            @blur="isOptEditing = false; $nextTick(() => { if(window.MathJax) MathJax.typesetPromise([$el.previousElementSibling]) })"
+                                            @keydown.enter="isOptEditing = false; $nextTick(() => { if(window.MathJax) MathJax.typesetPromise([$el.previousElementSibling]) })"
+                                            type="text" x-model="question.options[optIndex]"
+                                            class="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-mono focus:ring-indigo-500 focus:border-indigo-500 w-full">
+                                    </div>
                                 </div>
                             </template>
                         </div>
                     </template>
 
-                    <!-- Correct Answer -->
-                    <div
-                        class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg border border-yellow-100 dark:border-yellow-900/30">
-                        <p class="text-sm font-medium text-yellow-800 dark:text-yellow-200">Correct Answer:</p>
-                        <input type="text" x-model="question.correct_answer"
-                            class="w-full mt-1 bg-transparent border-none p-0 text-slate-700 dark:text-slate-300 focus:ring-0">
+                    <!-- Correct Answer (View/Edit) -->
+                    <div class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg border border-yellow-100 dark:border-yellow-900/30"
+                        x-data="{ isEditingAns: false }">
+                        <div class="flex justify-between items-center mb-1">
+                            <p class="text-sm font-medium text-yellow-800 dark:text-yellow-200">Correct Answer:</p>
+                            <button
+                                @click="isEditingAns = !isEditingAns; if(!isEditingAns) $nextTick(() => { if(window.MathJax) MathJax.typesetPromise([$el.closest('.mt-4').querySelector('.ans-preview')]) })"
+                                class="text-xs text-yellow-700 hover:text-yellow-900 dark:text-yellow-300 dark:hover:text-yellow-100 font-medium">
+                                <span x-show="!isEditingAns">Edit</span>
+                                <span x-show="isEditingAns">Done</span>
+                            </button>
+                        </div>
+
+                        <!-- View -->
+                        <div x-show="!isEditingAns" @click="isEditingAns = true"
+                            class="ans-preview mt-1 text-slate-700 dark:text-slate-300 min-h-[24px] cursor-pointer">
+                            <div
+                                x-html="question.correct_answer || '<span class=\'text-yellow-800/50 italic\'>Enter answer...</span>'">
+                            </div>
+                        </div>
+
+                        <!-- Edit -->
+                        <input x-show="isEditingAns" type="text" x-model="question.correct_answer"
+                            class="w-full mt-1 bg-white dark:bg-slate-800 border border-yellow-200 dark:border-yellow-900 rounded p-2 text-sm font-mono text-slate-700 dark:text-slate-300 focus:ring-yellow-500 focus:border-yellow-500"
+                            placeholder="Enter LaTeX answer...">
                     </div>
+
+                    <!-- Solution Steps (New) -->
+                    <template x-if="question.steps && question.steps.length > 0">
+                        <div
+                            class="mt-4 p-4 bg-indigo-50 dark:bg-indigo-900/10 rounded-lg border border-indigo-100 dark:border-indigo-900/30">
+                            <h4
+                                class="text-sm font-medium text-indigo-900 dark:text-indigo-200 mb-2 flex items-center gap-2">
+                                <i data-lucide="footprints" class="w-4 h-4"></i> Step-by-Step Solution
+                            </h4>
+
+                            <!-- Guiding Questions (New Preferred View) -->
+                            <template x-if="question.guiding_questions && question.guiding_questions.length > 0">
+                                <div class="mb-4 space-y-3">
+                                    <template x-for="(gq, gIdx) in question.guiding_questions" :key="gIdx">
+                                        <div class="bg-indigo-100/50 dark:bg-indigo-900/20 rounded-lg p-4 text-sm border border-indigo-200 dark:border-indigo-800"
+                                            x-data="{ 
+                                                currentHintIndex: -1, 
+                                                selectedOptionIdx: null,
+                                                get hints() { return gq.hints || (gq.hint ? [gq.hint] : []) },
+                                                get options() { return gq.options || [] } 
+                                            }">
+
+                                            <!-- Micro-goal Title -->
+                                            <div class="text-xs font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-wide mb-1"
+                                                x-text="gq.title || 'Step ' + (gIdx + 1)"></div>
+
+                                            <!-- Question -->
+                                            <div class="font-semibold text-indigo-900 dark:text-indigo-200 mb-3"
+                                                x-html="gq.question"></div>
+
+                                            <!-- Options (MCQ) -->
+                                            <div class="space-y-2 mb-3">
+                                                <template x-for="(opt, optIdx) in options" :key="optIdx">
+                                                    <div>
+                                                        <button @click="selectedOptionIdx = optIdx"
+                                                            class="w-full text-left px-3 py-2 rounded border transition-colors flex items-center justify-between group"
+                                                            :class="{
+                                                                'bg-green-100 border-green-300 text-green-800 dark:bg-green-900/40 dark:border-green-700 dark:text-green-300': selectedOptionIdx === optIdx && opt.text === gq.correct_answer,
+                                                                'bg-red-100 border-red-300 text-red-800 dark:bg-red-900/40 dark:border-red-700 dark:text-red-300': selectedOptionIdx === optIdx && opt.text !== gq.correct_answer,
+                                                                'bg-white dark:bg-slate-800 border-indigo-100 dark:border-indigo-900 hover:border-indigo-300 dark:hover:border-indigo-700': selectedOptionIdx !== optIdx
+                                                            }"
+                                                            :disabled="selectedOptionIdx !== null && options[selectedOptionIdx].text === gq.correct_answer">
+
+                                                            <span x-html="opt.text || opt"></span>
+
+                                                            <!-- Icons -->
+                                                            <span x-show="selectedOptionIdx === optIdx">
+                                                                <i x-show="opt.text === gq.correct_answer"
+                                                                    data-lucide="check-circle" class="w-4 h-4"></i>
+                                                                <i x-show="opt.text !== gq.correct_answer"
+                                                                    data-lucide="x-circle" class="w-4 h-4"></i>
+                                                            </span>
+                                                        </button>
+
+                                                        <!-- Option Feedback -->
+                                                        <div x-show="selectedOptionIdx === optIdx && opt.feedback"
+                                                            x-transition class="mt-1 text-xs px-2 py-1 rounded"
+                                                            :class="opt.text === gq.correct_answer ? 'text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/20' : 'text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/20'">
+                                                            <span class="font-semibold"
+                                                                x-text="opt.text === gq.correct_answer ? 'Correct:' : 'Incorrect:'"></span>
+                                                            <span x-text="opt.feedback"></span>
+                                                        </div>
+                                                    </div>
+                                                </template>
+                                            </div>
+
+                                            <!-- Checkpoint / Generalization (Show after correct answer) -->
+                                            <template
+                                                x-if="selectedOptionIdx !== null && options[selectedOptionIdx].text === gq.correct_answer">
+                                                <div class="mt-3 space-y-2">
+                                                    <!-- Checkpoint -->
+                                                    <div x-show="gq.checkpoint"
+                                                        class="text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 p-2 rounded flex gap-2 items-start">
+                                                        <i data-lucide="shield-check"
+                                                            class="w-4 h-4 shrink-0 mt-0.5"></i>
+                                                        <div>
+                                                            <span class="font-bold">Checkpoint:</span>
+                                                            <span x-text="gq.checkpoint"></span>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Generalization -->
+                                                    <div x-show="gq.generalization"
+                                                        class="text-xs bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 p-2 rounded flex gap-2 items-start">
+                                                        <i data-lucide="zap" class="w-4 h-4 shrink-0 mt-0.5"></i>
+                                                        <div>
+                                                            <span class="font-bold">Takeaway:</span>
+                                                            <span x-text="gq.generalization"></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </template>
+
+                                            <!-- Hint Ladder -->
+                                            <div class="mt-3" x-show="hints.length > 0">
+                                                <div class="flex items-center gap-2">
+                                                    <button
+                                                        @click="if(currentHintIndex < hints.length - 1) currentHintIndex++"
+                                                        :disabled="currentHintIndex >= hints.length - 1"
+                                                        class="text-xs flex items-center gap-1 font-medium px-2 py-1 rounded transition-colors"
+                                                        :class="currentHintIndex >= hints.length - 1 ? 'text-slate-400 cursor-not-allowed' : 'text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30'">
+                                                        <i data-lucide="lightbulb" class="w-3 h-3"></i>
+                                                        <span
+                                                            x-text="currentHintIndex === -1 ? 'Show Hint ' + (currentHintIndex + 2) : (currentHintIndex < hints.length - 1 ? 'Next Hint (' + (currentHintIndex + 2) + '/' + hints.length + ')' : 'All Hints Shown')"></span>
+                                                    </button>
+                                                </div>
+
+                                                <!-- Display Hints -->
+                                                <div class="space-y-2 mt-2">
+                                                    <template x-for="(hint, hIdx) in hints">
+                                                        <div x-show="hIdx <= currentHintIndex" x-transition
+                                                            class="text-xs bg-indigo-50 dark:bg-indigo-900/40 p-2 rounded border border-indigo-100 dark:border-indigo-900/50 text-slate-600 dark:text-slate-400">
+                                                            <span class="font-bold text-indigo-700 dark:text-indigo-300"
+                                                                x-text="'Hint ' + (hIdx + 1) + ':'"></span>
+                                                            <span x-html="hint"></span>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+
+                            <!-- Detailed Steps (Collapsible) -->
+                            <div x-data="{ showDetails: false }">
+                                <button @click="showDetails = !showDetails"
+                                    class="mb-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
+                                    <span x-text="showDetails ? 'Hide Detailed Steps' : 'Show Detailed Steps'"></span>
+                                    <i data-lucide="chevron-down" class="w-3 h-3 transition-transform"
+                                        :class="{'rotate-180': showDetails}"></i>
+                                </button>
+
+                                <div x-show="showDetails"
+                                    class="space-y-3 pl-2 border-l-2 border-indigo-200 dark:border-indigo-800/50">
+                                    <template x-for="(step, stepIdx) in question.steps" :key="stepIdx">
+                                        <div class="flex gap-3 text-sm text-slate-700 dark:text-slate-300">
+                                            <span
+                                                class="font-mono text-indigo-600 dark:text-indigo-400 font-bold shrink-0"
+                                                x-text="stepIdx + 1 + '.'"></span>
+                                            <div x-html="step"
+                                                x-effect="$nextTick(() => { if(window.MathJax) MathJax.typesetPromise([$el]); })">
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Explanation & Concept -->
+                            <template x-if="question.explanation || question.key_concept">
+                                <div class="mt-4 pt-4 border-t border-indigo-200 dark:border-indigo-800/50 text-sm">
+                                    <template x-if="question.key_concept">
+                                        <div class="mb-2">
+                                            <span class="font-semibold text-indigo-900 dark:text-indigo-200">Key
+                                                Concept:</span>
+                                            <span class="text-slate-700 dark:text-slate-300"
+                                                x-text="question.key_concept"></span>
+                                        </div>
+                                    </template>
+                                    <template x-if="question.explanation">
+                                        <div>
+                                            <span
+                                                class="font-semibold text-indigo-900 dark:text-indigo-200">Explanation:</span>
+                                            <span class="text-slate-700 dark:text-slate-300 content-html"
+                                                x-html="question.explanation"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
 
                     <!-- Diagram Drop Zone -->
                     <div class="mt-6 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-4 transition-colors"
@@ -170,14 +469,16 @@
                             @click="$refs['fileInput_' + index].click()">
                             <input type="file" :x-ref="'fileInput_' + index" class="hidden" accept="image/*"
                                 @change="handleFileGroup($event, index)">
-                            <i data-lucide="image-plus" class="w-8 h-8 text-slate-400 mx-auto mb-2"></i>
-                            <p class="text-sm text-slate-500">Drag diagram here or click to upload</p>
+                            <i data-lucide="image-plus"
+                                class="w-8 h-8 text-slate-400 mx-auto mb-2 pointer-events-none"></i>
+                            <p class="text-sm text-slate-500 pointer-events-none">Drag diagram here or click to upload
+                            </p>
                         </div>
 
                         <div x-show="question.image_path" class="relative group/image">
-                            <img :src="'/' + question.image_path" class="max-h-64 rounded mx-auto">
+                            <img :src="'/' + question.image_path" class="max-h-64 rounded mx-auto object-contain">
                             <button @click="question.image_path = null"
-                                class="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover/image:opacity-100 transition-opacity">
+                                class="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover/image:opacity-100 transition-opacity hover:bg-red-600">
                                 <i data-lucide="x" class="w-4 h-4"></i>
                             </button>
                         </div>
@@ -205,11 +506,58 @@
                 totalPages: 0,
                 examMetadata: {
                     name: 'Extracted Exam',
-                    date: '',
-                    semester: ''
+                    year: '',
+                    semester: '',
+                    course_name: '',
+                    exam_type: '',
+                    exam_id: null
                 },
                 isSaving: false,
                 isExtracting: false,
+                isAnalyzing: false,
+
+                initData() {
+                    this.questions = [];
+
+                    // Hydrate from user input (preserved across reload)
+                    if (window.initialMetadata) {
+                        this.examMetadata = { ...this.examMetadata, ...window.initialMetadata };
+                    }
+
+                    // Check for extracted data
+                    if (window.extractedData) {
+                        const data = window.extractedData;
+                        // Map questions to include isAnalyzing state and other UI flags
+                        this.questions = (data.questions || []).map(q => ({
+                            ...q,
+                            isAnalyzing: false
+                        }));
+
+                        // Metadata hydration from extraction (fallback if not set by user)
+                        const meta = data.exam_metadata || {};
+                        if (!this.examMetadata.year && meta.year) this.examMetadata.year = meta.year;
+                        if (!this.examMetadata.semester && meta.semester) this.examMetadata.semester = meta.semester;
+                        if (!this.examMetadata.course_name && meta.course_name) this.examMetadata.course_name = meta.course_name;
+                        if (!this.examMetadata.exam_type && meta.exam_type) this.examMetadata.exam_type = meta.exam_type;
+                        if (data.exam_id) this.examMetadata.exam_id = data.exam_id;
+
+                        // Name logic
+                        if (meta.exam_name) {
+                            this.examMetadata.name = meta.exam_name;
+                        } else if (this.examMetadata.course_name && this.examMetadata.exam_type) {
+                            this.examMetadata.name = `${this.examMetadata.course_name} ${this.examMetadata.exam_type}`;
+                        } else if (this.examMetadata.exam_type) {
+                            this.examMetadata.name = this.examMetadata.exam_type;
+                        }
+
+                        // Trigger MathJax after DOM update
+                        this.$nextTick(() => {
+                            if (window.MathJax) {
+                                MathJax.typesetPromise();
+                            }
+                        });
+                    }
+                },
 
                 adjustHeight(el) {
                     el.style.height = "auto";
@@ -244,7 +592,7 @@
                         if (response.ok) {
                             const data = await response.json();
                             // Update just this question's image path
-                            // Use spread to trigger abundance reactivity if needed, or normal assignment
+                            // Re-evaluate reactivity if needed, usually simple assignment works in Alpine v3
                             this.questions[index].image_path = data.path;
                         } else {
                             alert('Upload failed');
@@ -255,13 +603,92 @@
                     }
                 },
 
+                async analyzeQuestion(index) {
+                    const question = this.questions[index];
+                    if (!question) return;
+
+                    // Set loading state on the question object itself
+                    // Note: Alpine v3 proxies might need explicit assignment if property didn't exist
+                    this.questions[index].isAnalyzing = true;
+
+                    try {
+                        // Send just this one question as a list
+                        const response = await fetch('/api/solve-extracted-exam', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ questions: [question] })
+                        });
+
+                        if (!response.ok) throw new Error('Analysis failed');
+
+                        const result = await response.json();
+
+                        if (result.analyzed_questions && result.analyzed_questions.length > 0) {
+                            // Update the specific question with the result
+                            // We spread the result to keep other properties (though backend returns full object usually)
+                            this.questions[index] = { ...this.questions[index], ...result.analyzed_questions[0] };
+                            this.questions[index].isAnalyzing = false;
+
+                            this.$nextTick(() => { if (window.MathJax) MathJax.typesetPromise(); });
+
+                            // Show small toast or alert? Maybe just the icon stopping spin is enough.
+                        }
+
+                    } catch (e) {
+                        console.error(e);
+                        alert('Error analyzing question: ' + e.message);
+                        this.questions[index].isAnalyzing = false;
+                    }
+                },
+
+                async analyzeExam() {
+                    const confirmAnalyze = confirm("This triggers the AI to solve all questions and generate step-by-step guides. This might take a minute. Continue?");
+                    if (!confirmAnalyze) return;
+
+                    this.isAnalyzing = true;
+                    try {
+                        const response = await fetch('/api/solve-extracted-exam', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ questions: this.questions })
+                        });
+
+                        if (!response.ok) throw new Error('Analysis failed');
+
+                        const result = await response.json();
+
+                        // Merge results back into questions
+                        // result.analyzed_questions should be an array matching indices
+                        if (result.analyzed_questions) {
+                            this.questions = result.analyzed_questions;
+                            // Trigger typeset again to render any new math in the solutions (if we show them)
+                            this.$nextTick(() => { if (window.MathJax) MathJax.typesetPromise(); });
+                            alert('Analysis complete! Solutions generated.');
+                        }
+
+                    } catch (e) {
+                        console.error(e);
+                        alert('Error analyzing exam: ' + e.message);
+                    } finally {
+                        this.isAnalyzing = false;
+                    }
+                },
+
                 async saveExam() {
+                    if (!this.examMetadata.course_name) {
+                        alert('Course Name is required!');
+                        return;
+                    }
+
                     this.isSaving = true;
                     try {
                         const payload = {
                             exam_name: this.examMetadata.name,
-                            exam_date: this.examMetadata.date,
+                            exam_year: this.examMetadata.year,
                             semester: this.examMetadata.semester,
+                            course_name: this.examMetadata.course_name,
+                            exam_type: this.examMetadata.exam_type,
+                            exam_id: this.examMetadata.exam_id,
                             questions: this.questions,
                             total_pages: this.totalPages
                         };
@@ -277,9 +704,9 @@
                         const data = await response.json();
 
                         if (response.ok) {
-                            alert('Exam saved successfully! ID: ' + data.exam_id);
-                            // Redirect to exam listing?
-                            window.location.href = "{{ url_for('documents') }}";
+                            alert('Exam saved successfully!');
+                            // Redirect to dashboard where exams are listed
+                            window.location.href = "{{ url_for('dashboard') }}";
                         } else {
                             alert('Error saving exam: ' + data.error);
                         }

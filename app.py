@@ -34,7 +34,7 @@ from challenges import (create_direct_challenge, get_challenge_by_link, get_rece
                        accept_challenge, complete_challenge, submit_community_question,
                        get_community_questions, vote_community_question)
 from exam_ocr import process_exam_file
-from exam_gemini import extract_exam_questions_with_gemini, save_exam_questions_to_db
+from exam_gemini import extract_exam_questions_with_gemini, save_exam_questions_to_db, solve_exam_questions
 from exam_gemini_incremental import process_exam_incremental
 import threading
 
@@ -81,12 +81,12 @@ else:
 # Models - using gemini-2.5-flash-lite (only initialize if API key is set)
 if GEMINI_API_KEY:
     try:
-        text_model = genai.GenerativeModel('gemini-2.5-flash-lite')
-        vision_model = genai.GenerativeModel('gemini-2.5-flash-lite')
-        print("Initialized models: gemini-2.5-flash-lite")
+        text_model = genai.GenerativeModel('gemini-3-flash-preview')
+        vision_model = genai.GenerativeModel('gemini-3-flash-preview')
+        print("Initialized models: gemini-3-flash-preview")
     except Exception as e:
-        print(f"Error initializing gemini-2.5-flash-lite: {e}")
-        # Fallback to gemini-2.0-flash-lite if 2.5-flash-lite is not available
+        print(f"Error initializing gemini-3-flash-preview: {e}")
+        # Fallback to gemini-2.0-flash-lite if 3-flash-preview is not available
         try:
             text_model = genai.GenerativeModel('gemini-2.0-flash-lite')
             vision_model = genai.GenerativeModel('gemini-2.0-flash-lite')
@@ -384,7 +384,39 @@ def index():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template('dashboard.html')
+    exams_by_course = {}
+    try:
+        db = get_db()
+        # Fetch exams with metadata
+        db.cursor.execute('''
+            SELECT exam_id, exam_name, course_name, exam_type, exam_year, created_at, total_questions 
+            FROM exams 
+            WHERE user_id = ? 
+            ORDER BY course_name DESC, created_at DESC
+        ''', (current_user.id,))
+        exams = db.cursor.fetchall()
+        
+        # Group by course name
+        for exam in exams:
+            c_name = exam['course_name'] or "Uncategorized"
+            if c_name not in exams_by_course:
+                exams_by_course[c_name] = []
+                
+            exams_by_course[c_name].append({
+                'id': exam['exam_id'],
+                'name': exam['exam_name'],
+                'type': exam['exam_type'],
+                'year': exam['exam_year'],
+                'date': exam['created_at'].split(' ')[0],
+                'questions': exam['total_questions']
+            })
+    except Exception as e:
+        print(f"Error fetching dashboard exams: {e}")
+    finally:
+        if 'db' in locals():
+            db.disconnect()
+            
+    return render_template('dashboard.html', exams_by_course=exams_by_course)
 
 @app.route('/study')
 @login_required
@@ -467,16 +499,44 @@ def exam_detail(exam_id):
     """View specific exam for taking."""
     db = get_db()
     try:
-        # Get exam details
-        # Get exam details (allow if own exam OR shared with course)
-        db.cursor.execute('''
-            SELECT * FROM exams 
-            WHERE exam_id = ? AND (user_id = ? OR (course_code = ? AND course_code IS NOT NULL))
-        ''', (exam_id, current_user.id, current_user.course_code))
+        # Get exam details first
+        db.cursor.execute('SELECT * FROM exams WHERE exam_id = ?', (exam_id,))
         exam = db.cursor.fetchone()
         
         if not exam:
             return redirect(url_for('exams'))
+            
+        # Check permissions
+        is_owner = exam['user_id'] == current_user.id
+        
+        # Check if user is enrolled in the course this exam belongs to
+        is_enrolled = False
+        if exam['course_name']:
+            # Check legacy/primary course code
+            if current_user.course_code == exam['course_name']:
+                is_enrolled = True
+            else:
+                # Check user_courses table
+                db.cursor.execute(
+                    'SELECT 1 FROM user_courses WHERE user_id = ? AND course_name = ?',
+                    (current_user.id, exam['course_name'])
+                )
+                if db.cursor.fetchone():
+                    is_enrolled = True
+        
+        # Also maintain legacy course_code check (from exams table column vs users table column)
+        # The previous logic checked: (user_id = ? OR (course_code = ? AND course_code IS NOT NULL))
+        # Note: exam['course_code'] in previous schema might be the same as 'course_name' or different.
+        # Based on schema in database.py, exams has 'course_code' AND 'course_name' (newly added).
+        # We should check both if they exist.
+        
+        legacy_shared = False
+        if 'course_code' in exam.keys() and exam['course_code'] and exam['course_code'] == current_user.course_code:
+            legacy_shared = True
+            
+        if not (is_owner or is_enrolled or legacy_shared):
+            # No access
+            return redirect(url_for('dashboard'))
             
         # Get all questions for this exam
         db.cursor.execute('''
@@ -651,6 +711,163 @@ def auth_config():
     return jsonify({
         "google_client_id": os.getenv('GOOGLE_CLIENT_ID', '')
     })
+
+@app.route('/my-courses')
+@login_required
+def my_courses():
+    """View enrolled courses and their exams."""
+    db = get_db()
+    courses = []
+    exams_by_course = {}
+    
+    try:
+        # Get enrolled courses
+        db.cursor.execute('SELECT course_name FROM user_courses WHERE user_id = ? ORDER BY created_at DESC', (current_user.id,))
+        course_rows = db.cursor.fetchall()
+        enrolled_courses = [row['course_name'] for row in course_rows]
+        
+        # Also include the "primary" course from users table if set
+        if current_user.course_code and current_user.course_code not in enrolled_courses:
+            enrolled_courses.append(current_user.course_code)
+
+        # Build courses list with exams
+        for course_name in enrolled_courses:
+            # Get exams for this course
+            db.cursor.execute('''
+                SELECT exam_id, exam_name, exam_type, exam_year, created_at, total_questions, user_id
+                FROM exams 
+                WHERE course_name = ?
+                ORDER BY created_at DESC
+            ''', (course_name,))
+            exams = db.cursor.fetchall()
+            
+            exam_list = []
+            for exam in exams:
+                exam_list.append({
+                    'id': exam['exam_id'],
+                    'name': exam['exam_name'],
+                    'type': exam['exam_type'],
+                    'year': exam['exam_year'],
+                    'date': exam['created_at'].split(' ')[0],
+                    'questions': exam['total_questions'],
+                    'is_owner': exam['user_id'] == current_user.id
+                })
+            
+            courses.append({
+                'name': course_name,
+                'exams': exam_list
+            })
+            
+    except Exception as e:
+        print(f"Error loading my courses: {e}")
+    finally:
+        db.disconnect()
+        
+    return render_template('my_courses.html', courses=courses)
+
+
+@app.route('/api/add-course', methods=['POST'])
+@login_required
+def add_course_api():
+    """Add a course to user's list."""
+    try:
+        data = request.json
+        course_name = data.get('course_name')
+        
+        if not course_name:
+            return jsonify({"error": "Course name required"}), 400
+            
+        db = get_db()
+        try:
+            db.cursor.execute(
+                'INSERT INTO user_courses (user_id, course_name) VALUES (?, ?)',
+                (current_user.id, course_name)
+            )
+            db.conn.commit()
+            return jsonify({"success": True})
+        except Exception as e:
+            # Likely duplicate constraint
+            return jsonify({"error": "Course already added"}), 400
+        finally:
+            db.disconnect()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/courses')
+@login_required
+def get_courses():
+    """Get list of all unique courses that have exams."""
+    db = get_db()
+    try:
+        # Get unique course names from exams table
+        # Only include non-empty, non-null course names
+        db.cursor.execute('''
+            SELECT DISTINCT course_name 
+            FROM exams 
+            WHERE course_name IS NOT NULL AND course_name != ''
+            ORDER BY course_name ASC
+        ''')
+        rows = db.cursor.fetchall()
+        
+        courses = [row['course_name'] for row in rows]
+        
+        return jsonify({
+            'success': True,
+            'courses': courses
+        })
+        
+    except Exception as e:
+        print(f"Error fetching courses: {e}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        db.disconnect()
+
+@app.route('/api/course/<course_name>/topics')
+@login_required
+def get_course_topics(course_name):
+    """Get all unique topics available for a specific course."""
+    db = get_db()
+    try:
+        # Get all topics from questions in exams for this course
+        db.cursor.execute('''
+            SELECT eq.topics_json 
+            FROM exam_questions eq
+            JOIN exams e ON eq.exam_id = e.exam_id
+            WHERE e.course_name = ? AND eq.topics_json IS NOT NULL
+        ''', (course_name,))
+        rows = db.cursor.fetchall()
+        
+        unique_topics = {}
+        
+        for row in rows:
+            try:
+                if not row['topics_json']:
+                    continue
+                    
+                data = json.loads(row['topics_json'])
+                topics = data.get('topics', [])
+                
+                for topic in topics:
+                    t_id = topic.get('topic_id')
+                    if t_id and t_id not in unique_topics:
+                        unique_topics[t_id] = {
+                            'topic_id': t_id,
+                            'name': topic.get('name', 'Unknown Topic'),
+                            'explanation': topic.get('explanation', '')
+                        }
+            except json.JSONDecodeError:
+                continue
+                
+        return jsonify({
+            'success': True,
+            'topics': list(unique_topics.values())
+        })
+        
+    except Exception as e:
+        print(f"Error fetching course topics: {e}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        db.disconnect()
 
 @app.route('/api/save-course', methods=['POST'])
 @login_required
@@ -2487,10 +2704,18 @@ def dev_exam_upload():
 
             result = extract_exam_questions_with_gemini(file_bytes, file_type, vision_model)
             
+            # Capture metadata from form to persist it
+            metadata = {
+                'year': request.form.get('exam_year'),
+                'semester': request.form.get('semester'),
+                'course_name': request.form.get('course_name'),
+                'exam_type': request.form.get('exam_type')
+            }
+            
             if 'error' in result:
-                return render_template('dev_exam_upload.html', error=result['error'])
+                return render_template('dev_exam_upload.html', error=result['error'], metadata=metadata)
                 
-            return render_template('dev_exam_upload.html', extraction_result=result)
+            return render_template('dev_exam_upload.html', extraction_result=result, metadata=metadata)
             
         except Exception as e:
             print(f"Dev upload error: {e}")
@@ -2533,6 +2758,31 @@ def upload_diagram():
             return jsonify({"error": str(e)}), 500
 
 
+
+@app.route('/api/solve-extracted-exam', methods=['POST'])
+@login_required
+def solve_extracted_exam():
+    """Analyze questions to find answers and steps."""
+    try:
+        data = request.json
+        questions = data.get('questions', [])
+        
+        if not questions:
+            return jsonify({"error": "No questions provided"}), 400
+            
+        if not text_model:
+             return jsonify({"error": "AI model not initialized"}), 503
+
+        analyzed_questions = solve_exam_questions(questions, text_model)
+        
+        return jsonify({"success": True, "analyzed_questions": analyzed_questions})
+        
+    except Exception as e:
+        print(f"Analysis error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/save-exam', methods=['POST'])
 @login_required
 def save_exam():
@@ -2543,8 +2793,11 @@ def save_exam():
             return jsonify({"error": "No data provided"}), 400
             
         exam_name = data.get('exam_name', 'Untitled Exam')
-        exam_date = data.get('exam_date')
+        exam_id = data.get('exam_id')  # Optional, for updates
+        exam_year = data.get('exam_year')
         semester = data.get('semester')
+        course_name = data.get('course_name')
+        exam_type = data.get('exam_type')
         file_type = data.get('file_type', 'unknown')
         questions = data.get('questions', [])
         total_pages = data.get('total_pages', 1)
@@ -2558,8 +2811,11 @@ def save_exam():
             file_type=file_type,
             questions_data=questions,
             total_pages=total_pages,
-            exam_date=exam_date,
-            semester=semester
+            exam_year=exam_year,
+            semester=semester,
+            course_name=course_name,
+            exam_type=exam_type,
+            exam_id=exam_id
         )
         
         return jsonify({"success": True, "exam_id": result['exam_id']})
@@ -2569,8 +2825,97 @@ def save_exam():
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
+
+@app.route('/exam/<int:exam_id>/edit', methods=['GET'])
+@login_required
+def edit_exam(exam_id):
+    """Edit an existing exam."""
+    try:
+        db = get_db()
+        try:
+            # Get exam metadata
+            exam = db.cursor.execute('''
+                SELECT exam_id, exam_name, exam_year, semester, course_name, exam_type, file_type, total_pages
+                FROM exams
+                WHERE exam_id = ? AND user_id = ?
+            ''', (exam_id, current_user.id)).fetchone()
             
-    return render_template('dev_exam_upload.html')
+            if not exam:
+                return "Exam not found", 404
+                
+            # Get questions
+            questions = db.cursor.execute('''
+                SELECT question_id, page_number, question_number, raw_text, ocr_confidence,
+                       image_path, solved_json, difficulty, diagram_note
+                FROM exam_questions
+                WHERE exam_id = ?
+                ORDER BY page_number, 
+                         CASE 
+                             WHEN question_number GLOB '[0-9]*' THEN CAST(question_number AS INTEGER)
+                             ELSE 999999
+                         END
+            ''', (exam_id,)).fetchall()
+            
+            # Format questions for the frontend editor
+            formatted_questions = []
+            for q in questions:
+                q_data = {
+                    'text': q['raw_text'],
+                    'question_number': q['question_number'] or str(len(formatted_questions) + 1),
+                    'choices': [], # Will be re-populated from solved_json if available
+                    'correct_answer': '',
+                    'explanation': '',
+                    'key_concept': '',
+                    'image_path': q['image_path'],
+                    'diagram_note': q['diagram_note'],
+                    # Pass-through existing analysis data to preserve it
+                    'solved_json': q['solved_json'] 
+                }
+                
+                # Hydrate from solved_json if available
+                if q['solved_json']:
+                    try:
+                        solved = json.loads(q['solved_json'])
+                        q_data['choices'] = solved.get('options', [])
+                        q_data['correct_answer'] = solved.get('correct_answer', '')
+                        q_data['explanation'] = solved.get('explanation', '')
+                        q_data['key_concept'] = solved.get('key_concept', '')
+                        q_data['guiding_questions'] = solved.get('guiding_questions', [])
+                        q_data['solution'] = solved.get('solution', []) # Legacy steps
+                        q_data['steps'] = solved.get('steps', [])
+                        
+                        # Fallback for choices if not in solved_json (should be there for analyzed/extracted q's)
+                        if not q_data['choices'] and 'answer' in solved:
+                             # Try to infer options from answer text if structured? Unlikely needed if extraction worked.
+                             pass
+                    except:
+                        pass
+                
+                formatted_questions.append(q_data)
+            
+            # Construct extraction result object for the frontend
+            extraction_result = {
+                'questions': formatted_questions,
+                'exam_metadata': {
+                    'year': exam['exam_year'],
+                    'semester': exam['semester'],
+                    'exam_name': exam['exam_name'],
+                    'course_name': exam['course_name'],
+                    'exam_type': exam['exam_type']
+                },
+                'exam_id': exam_id, # Signal edit mode
+                'file_type': exam['file_type']
+            }
+            
+            return render_template('dev_exam_upload.html', extraction_result=extraction_result)
+            
+        finally:
+            db.disconnect()
+            
+    except Exception as e:
+        print(f"Edit exam error: {e}")
+        return str(e), 500
 
 
 if __name__ == '__main__':

@@ -227,6 +227,19 @@ function app() {
                         // Initial load if authenticated
                         if (this.isAuthenticated) {
                             this.loadHeatmapData();
+
+                            // Check for topic query param to start study session
+                            const urlParams = new URLSearchParams(window.location.search);
+                            const topicId = urlParams.get('topic');
+                            if (topicId) {
+                                // Clear the param from URL without reloading
+                                window.history.replaceState({}, document.title, window.location.pathname);
+                                // Give a moment for app to stabilize then start
+                                setTimeout(() => {
+                                    this.currentView = 'study';
+                                    this.generateQuestionForTopic(topicId);
+                                }, 500);
+                            }
                         }
                     });
                 }

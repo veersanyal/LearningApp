@@ -96,6 +96,45 @@
         </div>
     </div>
 
+    <!-- My Exams Section -->
+    {% if exams_by_course %}
+    <div class="mb-8">
+        <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-4">My Exams</h2>
+        <div class="space-y-6">
+            {% for course, exams in exams_by_course.items() %}
+            <div>
+                <h3 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">{{ course }}</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {% for exam in exams %}
+                    <div class="surface-card p-4 hover:border-indigo-500/50 transition-colors group relative">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h4 class="font-semibold text-slate-900 dark:text-white">{{ exam.name }}</h4>
+                                <p class="text-xs text-slate-500">{{ exam.type }} • {{ exam.year }}</p>
+                            </div>
+                            <span class="text-xs text-slate-400">{{ exam.date }}</span>
+                        </div>
+                        <div class="flex items-center justify-between mt-4">
+                            <div class="text-xs text-slate-500">
+                                <span class="font-medium text-slate-900 dark:text-white">{{ exam.questions }}</span>
+                                questions
+                            </div>
+                            <div class="flex gap-2">
+                                <a href="{{ url_for('exam_detail', exam_id=exam.id) }}"
+                                    class="text-xs font-medium text-indigo-600 hover:text-indigo-500">Solve</a>
+                                <a href="{{ url_for('edit_exam', exam_id=exam.id) }}"
+                                    class="text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">Edit</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     <!-- KPI Cards (Uniform Row) -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6"> <!-- 24px gap to Retention -->
         <!-- Streak -->

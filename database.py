@@ -319,6 +319,7 @@ class Database:
                 total_questions INTEGER,
                 exam_date DATE,
                 semester TEXT,
+                exam_year INTEGER,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
             )
@@ -334,6 +335,28 @@ class Database:
             self.cursor.execute('ALTER TABLE exams ADD COLUMN semester TEXT')
         except sqlite3.OperationalError:
             pass  # Column already exists
+
+        try:
+            self.cursor.execute('ALTER TABLE exams ADD COLUMN exam_year INTEGER')
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+            
+        try:
+            self.cursor.execute('ALTER TABLE exams ADD COLUMN course_name TEXT')
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+        
+        # User courses table (for multiple course enrollments)
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS user_courses (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                course_name TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+                UNIQUE(user_id, course_name)
+            )
+        ''')
         
         # Exam questions table (for storing OCR'd questions)
         self.cursor.execute('''
